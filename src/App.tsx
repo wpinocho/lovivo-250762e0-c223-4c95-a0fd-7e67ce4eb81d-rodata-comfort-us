@@ -65,19 +65,22 @@ const App = () => (
                     <Suspense fallback={<div className="min-h-screen" />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
+                        <Route path="/products/:slug" element={<Product />} />
                         <Route path="/productos/:slug" element={<Product />} />
-                        <Route path="/paquete/:slug" element={<Bundle />} />
-                        <Route path="/carrito" element={<Cart />} />
-                        <Route path="/pagar" element={<Checkout />} />
+                        <Route path="/bundle/:slug" element={<Bundle />} />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/thank-you" element={<ThankYou />} />
+                        <Route path="/thank-you/:orderId" element={<ThankYou />} />
                         <Route path="/gracias" element={<ThankYou />} />
                         <Route path="/gracias/:orderId" element={<ThankYou />} />
-                        <Route path="/mis-pedidos" element={<MyOrders />} />
-                        <Route path="/mis-suscripciones" element={<MySubscriptions />} />
+                        <Route path="/my-orders" element={<MyOrders />} />
+                        <Route path="/my-subscriptions" element={<MySubscriptions />} />
                         <Route path="/blog" element={<Blog />} />
                         <Route path="/blog/:slug" element={<BlogPost />} />
-                        <Route path="/terminos-y-condiciones" element={<TermsAndConditions />} />
-                        <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
-                        <Route path="/pago-pendiente/:orderId" element={<PendingPayment />} />
+                        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/pending-payment/:orderId" element={<PendingPayment />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

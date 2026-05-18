@@ -38,7 +38,7 @@ const PROBLEMA_REAL_IMG = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/o
 const PRODUCT_WORN = '/product-worn.jpg'
 const PRODUCT_FLAT = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775767354281-gqxi2j4hklp.webp'
 const PRODUCT_FEATURES = '/product-worn.jpg'
-const BUY_URL = '/productos/soporte-lumbar-rodata-one'
+const BUY_URL = '/products/soporte-lumbar-rodata-one'
 
 interface IndexUIProps {
   logic: UseIndexLogicReturn
@@ -46,7 +46,7 @@ interface IndexUIProps {
 
 export const IndexUI = ({ logic }: IndexUIProps) => {
   const productSlug = logic.filteredProducts[0]?.slug
-  const buyUrl = productSlug ? `/productos/${productSlug}` : BUY_URL
+  const buyUrl = productSlug ? `/products/${productSlug}` : BUY_URL
 
   return (
     <EcommerceTemplate showCart layout="full-width" noPadding>
@@ -62,7 +62,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="absolute inset-0 z-0">
           <img
             src={HERO_IMG}
-            alt="Rider en ciudad con soporte lumbar Rodata One"
+            alt="Rider in the city with Rodata One lumbar support"
             className="w-full h-full object-cover object-center opacity-80"
             loading="eager"
             fetchPriority="high"
@@ -82,27 +82,27 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             <div className="flex items-center gap-2 mb-5">
               <span className="h-px w-8 bg-brand-amber block" />
               <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em]">
-                Soporte premium para motociclistas
+                Premium support for motorcyclists
               </span>
             </div>
 
             {/* Headline */}
             <h1 className="font-sora font-bold text-brand-offwhite text-5xl sm:text-6xl lg:text-7xl leading-[1.05] mb-5">
-              Rueda más.<br />
-              <span className="text-brand-amber">Llega mejor.</span>
+              Ride more.<br />
+              <span className="text-brand-amber">Arrive better.</span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-brand-smoke text-lg sm:text-xl leading-relaxed mb-8 max-w-xl font-inter">
-              Soporte lumbar diseñado para reducir la fatiga y mejorar la comodidad en trayectos urbanos y rodadas largas.
+              Lumbar support designed to reduce fatigue and improve comfort on urban commutes and long rides.
             </p>
 
             {/* Bullets */}
             <ul className="space-y-2.5 mb-10">
               {[
-                'Cómodo debajo de tu equipo',
-                'Ajuste firme y ligero',
-                'Ideal para ciudad y carretera',
+                'Comfortable under your riding gear',
+                'Firm, lightweight support',
+                'Perfect for city and highway',
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-brand-smoke text-sm font-inter">
                   <span className="flex-shrink-0 h-5 w-5 rounded-full bg-brand-amber/15 border border-brand-amber/30 flex items-center justify-center">
@@ -115,10 +115,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-8">
-              <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">MX$699</span>
-              <span className="text-brand-steel text-xl line-through font-inter">MX$999</span>
+              <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">$69</span>
+              <span className="text-brand-steel text-xl line-through font-inter">$99</span>
               <span className="bg-brand-amber/15 border border-brand-amber/30 text-brand-amber text-xs font-semibold px-2.5 py-1 rounded font-sora">
-                25% OFF
+                30% OFF
               </span>
             </div>
 
@@ -126,20 +126,20 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Link to={buyUrl}>
                 <button className="btn-amber-lg amber-glow w-full sm:w-auto font-sora">
-                  Comprar ahora
+                  Buy now
                   <ArrowRight size={16} />
                 </button>
               </Link>
-              <a href="#como-funciona">
+              <a href="#how-it-works">
                 <button className="btn-outline-light w-full sm:w-auto font-sora">
-                  Ver cómo funciona
+                  See how it works
                 </button>
               </a>
             </div>
 
             {/* Micro trust */}
             <p className="text-brand-steel text-xs font-inter">
-              Envío gratis · 30 días de prueba · Cambio de talla fácil
+              Free shipping · 30-day trial · Easy size exchange
             </p>
           </div>
         </div>
@@ -154,10 +154,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: Activity, label: 'Menos fatiga lumbar', desc: 'Soporte continuo durante el trayecto' },
-              { icon: SlidersHorizontal, label: 'Ajuste firme y cómodo', desc: 'Doble tensor de precisión' },
-              { icon: Shield, label: 'Diseñado para riders', desc: 'No para uso genérico' },
-              { icon: Route, label: 'Ciudad y carretera', desc: 'Ideal para uso frecuente' },
+              { icon: Activity, label: 'Less lumbar fatigue', desc: 'Continuous support throughout your ride' },
+              { icon: SlidersHorizontal, label: 'Firm, comfortable fit', desc: 'Dual precision tensioner' },
+              { icon: Shield, label: 'Built for riders', desc: 'Not a generic back brace' },
+              { icon: Route, label: 'City and highway', desc: 'Ideal for frequent use' },
             ].map(({ icon: Icon, label, desc }) => (
               <div key={label} className="flex flex-col items-center text-center gap-3">
                 <div className="h-12 w-12 rounded-full bg-brand-amber/10 border border-brand-amber/20 flex items-center justify-center">
@@ -181,22 +181,22 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
               <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-4 block">
-                El problema real
+                The real problem
               </span>
               <h2 className="font-sora font-bold text-brand-carbon text-3xl sm:text-4xl lg:text-5xl leading-tight mb-6">
-                Después de cierto tiempo en la moto, el cuerpo lo empieza a sentir
+                After a while on the bike, your body starts to feel it
               </h2>
               <p className="text-brand-steel text-lg leading-relaxed mb-6 font-inter">
-                La postura, la vibración y los trayectos largos terminan cargando la zona lumbar. Cuando eso pasa, disfrutas menos la rodada y llegas más cansado de lo que deberías.
+                The posture, the vibration, and long rides all end up loading your lumbar area. When that happens, you enjoy the ride less and arrive more tired than you should.
               </p>
               <div className="h-px w-12 bg-brand-amber mb-6" />
               <p className="text-brand-carbon text-base font-medium leading-relaxed font-inter">
-                Rodata One fue pensado para ayudarte a rodar con más soporte y terminar mejor cada trayecto.
+                Rodata One was designed to help you ride with more support and finish every trip feeling better.
               </p>
               <div className="mt-8">
                 <Link to={buyUrl}>
                   <button className="btn-amber amber-glow font-sora">
-                    Conocer el Rodata One
+                    Discover Rodata One
                     <ChevronRight size={16} />
                   </button>
                 </Link>
@@ -207,14 +207,14 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
               <div className="relative rounded-lg overflow-hidden aspect-square shadow-2xl">
                 <img
                   src={PROBLEMA_REAL_IMG}
-                  alt="Rider en carretera con Soporte Lumbar Rodata One y efecto de soporte lumbar"
+                  alt="Rider on the road with Rodata One Lumbar Support"
                   className="w-full h-full object-cover object-center"
                   loading="lazy"
                 />
               </div>
               <div className="absolute -bottom-6 -left-6 bg-brand-graphite border border-white/[0.08] rounded-lg p-5 shadow-2xl max-w-[220px]">
                 <p className="font-sora font-bold text-brand-amber text-2xl mb-1">+80%</p>
-                <p className="text-brand-smoke text-xs font-inter">de riders siente fatiga en zona lumbar después de trayectos frecuentes</p>
+                <p className="text-brand-smoke text-xs font-inter">of riders experience lower back fatigue after frequent rides</p>
               </div>
             </div>
           </div>
@@ -224,14 +224,14 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
       {/* ══════════════════════════════════════════════
           4. HOW IT WORKS
       ══════════════════════════════════════════════ */}
-      <section id="como-funciona" className="section-dark py-20 lg:py-28">
+      <section id="how-it-works" className="section-dark py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              Tecnología de soporte
+              Support technology
             </span>
             <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl lg:text-5xl">
-              Soporte donde más lo necesitas
+              Support exactly where you need it
             </h2>
           </div>
 
@@ -239,20 +239,20 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             {[
               {
                 number: '01',
-                title: 'Compresión estable',
-                desc: 'Aporta una sensación de soporte firme en la zona lumbar durante todo el trayecto, sin afectar tu rango de movimiento.',
+                title: 'Stable compression',
+                desc: 'Provides a firm support sensation in the lumbar zone throughout the entire ride, without affecting your range of motion.',
                 icon: Shield,
               },
               {
                 number: '02',
-                title: 'Mejor sensación de postura',
-                desc: 'Ayuda a mantener una posición de manejo más cómoda por más tiempo, ciudad tras ciudad o tramo tras tramo.',
+                title: 'Better riding posture',
+                desc: 'Helps maintain a more comfortable riding position for longer — mile after mile, city after city.',
                 icon: Activity,
               },
               {
                 number: '03',
-                title: 'Menos fatiga acumulada',
-                desc: 'Ideal para quienes ruedan seguido o hacen trayectos largos. Llegas más fresco al final de cada rodada.',
+                title: 'Less accumulated fatigue',
+                desc: 'Ideal for frequent riders and long-haul trips. You arrive fresher at the end of every ride.',
                 icon: Route,
               },
             ].map(({ number, title, desc, icon: Icon }) => (
@@ -276,7 +276,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           <div className="mt-16 rounded-2xl overflow-hidden relative">
             <img
               src={PRODUCT_FEATURES}
-              alt="Características técnicas del Soporte Lumbar Rodata One"
+              alt="Technical features of the Rodata One Lumbar Support"
               className="w-full max-h-[500px] object-cover object-center"
               loading="lazy"
             />
@@ -286,11 +286,11 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             />
             <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
               <p className="font-sora font-semibold text-brand-offwhite text-xl mb-4">
-                Panel lumbar hexagonal · Correas de doble ajuste · Malla transpirable
+                Hexagonal lumbar panel · Dual-adjustment straps · Breathable mesh
               </p>
               <Link to={buyUrl}>
                 <button className="btn-amber amber-glow font-sora">
-                  Ver el producto completo
+                  See the full product
                   <ArrowRight size={16} />
                 </button>
               </Link>
@@ -309,20 +309,20 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             <div className="grid grid-cols-2 gap-3">
               <img
                 src={LIFESTYLE_WORN}
-                alt="Rider usando Soporte Lumbar Rodata One por detrás"
+                alt="Rider wearing the Rodata One Lumbar Support from behind"
                 className="col-span-2 rounded-xl object-cover aspect-video shadow-lg"
                 style={{ objectPosition: 'center 40%' }}
                 loading="lazy"
               />
               <img
                 src={LIFESTYLE_BELT}
-                alt="Soporte Lumbar Rodata One — vista del producto completo"
+                alt="Rodata One Lumbar Support — full product view"
                 className="rounded-xl object-cover aspect-square shadow-lg"
                 loading="lazy"
               />
               <img
                 src={LIFESTYLE_DETAIL}
-                alt="Detalle de malla transpirable y correas del Rodata One"
+                alt="Detail of breathable mesh and straps of the Rodata One"
                 className="rounded-xl object-cover aspect-square shadow-lg"
                 loading="lazy"
               />
@@ -331,21 +331,21 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             {/* Copy */}
             <div>
               <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-4 block">
-                Parte del equipo
+                Part of your gear
               </span>
               <h2 className="font-sora font-bold text-brand-carbon text-3xl sm:text-4xl lg:text-5xl leading-tight mb-6">
-                Hecho para sentirse parte de tu equipo
+                Built to feel like part of your gear
               </h2>
               <p className="text-brand-steel text-lg leading-relaxed mb-8 font-inter">
-                Ligero, discreto y pensado para usarse cómodamente debajo de tu chamarra o equipo habitual. No importa si rodas en ciudad o carretera — el Rodata One va contigo sin que lo notes.
+                Lightweight, discreet, and designed to wear comfortably under your jacket or regular riding gear. Whether you ride in the city or on the highway — Rodata One goes with you without you noticing it.
               </p>
 
               <div className="space-y-4 mb-8">
                 {[
-                  'No estorba debajo de la chamarra',
-                  'Construcción técnica en textil negro mate',
-                  'Panel lumbar de perfil bajo',
-                  'Doble tensor de ajuste preciso',
+                  'Fits invisibly under your jacket',
+                  'Technical matte black textile construction',
+                  'Low-profile lumbar panel',
+                  'Dual precision-adjustment tensioner',
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-full bg-brand-carbon/10 border border-brand-carbon/20 flex items-center justify-center flex-shrink-0">
@@ -358,7 +358,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
               <Link to={buyUrl}>
                 <button className="btn-amber amber-glow font-sora">
-                  Comprar ahora — MX$699
+                  Buy now — $69
                   <ArrowRight size={16} />
                 </button>
               </Link>
@@ -374,31 +374,31 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-14">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              Para quién es
+              Who it's for
             </span>
             <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4">
-              Diseñado para riders que quieren llegar mejor
+              Designed for riders who want to arrive feeling better
             </h2>
-            <p className="text-brand-smoke text-lg font-inter">Rodata One es ideal para:</p>
+            <p className="text-brand-smoke text-lg font-inter">Rodata One is ideal for:</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
-                title: 'Rider urbano frecuente',
-                desc: 'Quienes usan la moto varias veces por semana en la ciudad.',
+                title: 'Frequent urban rider',
+                desc: 'Those who use their bike several times a week commuting in the city.',
               },
               {
-                title: 'Trayectos medianos y largos',
-                desc: 'Riders con rutas largas que terminan sintiendo la zona lumbar.',
+                title: 'Medium and long-distance riders',
+                desc: 'Riders with long routes who end up feeling it in the lower back.',
               },
               {
-                title: 'Escapadas de fin de semana',
-                desc: 'Quienes salen a carretera los fines de semana y quieren llegar frescos.',
+                title: 'Weekend getaway riders',
+                desc: 'Those who hit the highway on weekends and want to arrive fresh.',
               },
               {
-                title: 'Equipo serio en mente',
-                desc: 'Motociclistas que cuidan su experiencia y ya invierten en buen equipo.',
+                title: 'Serious gear mindset',
+                desc: 'Motorcyclists who care about their experience and already invest in quality gear.',
               },
             ].map(({ title, desc }) => (
               <div
@@ -423,10 +423,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              La diferencia es clara
+              The difference is clear
             </span>
             <h2 className="font-sora font-bold text-brand-carbon text-3xl sm:text-4xl lg:text-5xl leading-tight">
-              No es otro soporte genérico de internet
+              Not another generic back brace from the internet
             </h2>
           </div>
 
@@ -434,25 +434,25 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             {/* Table Header */}
             <div className="grid grid-cols-3 bg-brand-carbon text-brand-offwhite">
               <div className="p-5 col-span-1">
-                <span className="text-brand-steel text-xs font-sora uppercase tracking-wider">Característica</span>
+                <span className="text-brand-steel text-xs font-sora uppercase tracking-wider">Feature</span>
               </div>
               <div className="p-5 text-center border-l border-white/[0.08]">
                 <span className="font-sora font-bold text-brand-amber text-sm">Rodata One</span>
               </div>
               <div className="p-5 text-center border-l border-white/[0.08]">
-                <span className="font-sora font-medium text-brand-steel text-sm">Soportes genéricos</span>
+                <span className="font-sora font-medium text-brand-steel text-sm">Generic braces</span>
               </div>
             </div>
 
             {/* Rows */}
             {[
-              'Diseñado para motociclistas',
-              'Look premium',
-              'Guía de talla clara',
-              'Cambio de talla fácil',
-              'Envío en México',
-              'Atención por WhatsApp',
-              'Experiencia de marca enfocada en riders',
+              'Designed for motorcyclists',
+              'Premium look',
+              'Clear size guide',
+              'Easy size exchange',
+              'US shipping',
+              'Real human support',
+              'Brand experience focused on riders',
             ].map((feature, i) => (
               <div
                 key={feature}
@@ -479,7 +479,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           <div className="mt-10 text-center">
             <Link to={buyUrl}>
               <button className="btn-amber-lg amber-glow font-sora">
-                Comprar Rodata One — MX$699
+                Buy Rodata One — $69
                 <ArrowRight size={16} />
               </button>
             </Link>
@@ -490,37 +490,37 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
       {/* ══════════════════════════════════════════════
           8. TESTIMONIALS
       ══════════════════════════════════════════════ */}
-      <section id="opiniones" className="section-dark py-20 lg:py-28">
+      <section id="reviews" className="section-dark py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              Prueba social
+              Social proof
             </span>
             <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl lg:text-5xl">
-              Riders que ya notaron la diferencia
+              Riders who already felt the difference
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                text: 'Lo usé en un trayecto largo y la diferencia al bajarme de la moto sí se sintió. Mucho más cómodo de lo que esperaba.',
+                text: 'Used it on a long ride and the difference when I got off the bike was real. Way more comfortable than I expected.',
                 name: 'Carlos',
-                city: 'CDMX',
+                city: 'Los Angeles',
                 stars: 5,
                 photo: REVIEW_IMG_1,
               },
               {
-                text: 'Se siente firme pero no incómodo. Lo mejor es que no estorba debajo de la chamarra.',
+                text: "Feels firm but not uncomfortable. The best part is it doesn't get in the way under my jacket.",
                 name: 'Jorge',
-                city: 'Guadalajara',
+                city: 'Houston',
                 stars: 5,
                 photo: REVIEW_IMG_2,
               },
               {
-                text: 'Me gustó que se ve como parte del equipo y no como una faja cualquiera. La calidad se nota.',
-                name: 'Andrés',
-                city: 'Monterrey',
+                text: "I liked that it looks like part of your gear, not just a random back brace. You can feel the quality.",
+                name: 'Andres',
+                city: 'Chicago',
                 stars: 5,
                 photo: REVIEW_IMG_3,
               },
@@ -531,10 +531,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
               >
                 {/* Customer photo */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={photo} alt={`${name} usando el Rodata One`} className="w-full h-full object-cover" loading="lazy"/>
+                  <img src={photo} alt={`${name} using the Rodata One`} className="w-full h-full object-cover" loading="lazy"/>
                   <div className="absolute inset-0" style={{background:'linear-gradient(to bottom, transparent 50%, rgba(17,19,21,0.65) 100%)'}}/>
                   <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                    <Check size={10} className="text-brand-amber"/><span className="text-brand-amber text-[10px] font-inter font-medium">Compra verificada</span>
+                    <Check size={10} className="text-brand-amber"/><span className="text-brand-amber text-[10px] font-inter font-medium">Verified purchase</span>
                   </div>
                 </div>
                 {/* Content */}
@@ -570,10 +570,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              Compra sin riesgo
+              Risk-free purchase
             </span>
             <h2 className="font-sora font-bold text-brand-carbon text-3xl sm:text-4xl lg:text-5xl">
-              Pruébalo sin complicarte
+              Try it without the hassle
             </h2>
           </div>
 
@@ -581,23 +581,23 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             {[
               {
                 icon: RotateCcw,
-                title: '30 días de prueba',
-                desc: 'Si no te convence, te ayudamos a resolverlo sin complicaciones.',
+                title: '30-day trial',
+                desc: "If it doesn't work for you, we'll make it right — no hassle.",
               },
               {
                 icon: Ruler,
-                title: 'Cambio de talla fácil',
-                desc: 'Para que encuentres el ajuste correcto. Te guiamos en el proceso.',
+                title: 'Easy size exchange',
+                desc: 'We help you find the right fit. We guide you through the process.',
               },
               {
                 icon: Truck,
-                title: 'Envío gratis en México',
-                desc: 'Compra sin fricción desde el inicio. Sin costo adicional de envío.',
+                title: 'Free US shipping',
+                desc: 'Shop with zero friction. No extra shipping cost.',
               },
               {
                 icon: MessageSquare,
-                title: 'Atención por WhatsApp',
-                desc: 'Resolvemos tus dudas directamente, con personas reales.',
+                title: 'Real human support',
+                desc: 'We answer your questions directly — real people, not bots.',
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div
@@ -622,42 +622,42 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">
-              Resolvemos tus dudas
+              Got questions?
             </span>
             <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl">
-              Preguntas frecuentes
+              Frequently asked questions
             </h2>
           </div>
 
           <Accordion type="single" collapsible className="space-y-3">
             {[
               {
-                q: '¿Se puede usar debajo de la chamarra?',
-                a: 'Sí. Está pensado para sentirse cómodo y discreto debajo de tu equipo habitual. Su perfil bajo lo hace prácticamente invisible bajo la chamarra.',
+                q: 'Can I wear it under my jacket?',
+                a: "Yes. It's designed to feel comfortable and discreet under your regular riding gear. Its low profile makes it virtually invisible under your jacket.",
               },
               {
-                q: '¿Cómo elijo mi talla?',
-                a: 'Puedes apoyarte en nuestra guía de tallas que encontrarás en la página del producto. Si aún así no te queda como esperabas, te ayudamos con el cambio sin costo.',
+                q: 'How do I choose my size?',
+                a: "Use our size guide on the product page. If it doesn't fit as expected, we'll help you exchange it at no cost.",
               },
               {
-                q: '¿Sirve para trayectos largos?',
-                a: 'Está diseñado justamente para riders que buscan más comodidad y menos fatiga en trayectos frecuentes o prolongados. Ciudad o carretera.',
+                q: 'Is it good for long rides?',
+                a: "That's exactly what it's designed for — riders who want more comfort and less fatigue on frequent or long-distance trips. City or highway.",
               },
               {
-                q: '¿Se siente muy rígido?',
-                a: 'Tiene un ajuste firme pero pensado para ser cómodo en uso real. No restringe el movimiento ni se siente invasivo durante la rodada.',
+                q: 'Does it feel too stiff?',
+                a: "It has a firm fit but it's designed to be comfortable in real-world use. It doesn't restrict movement or feel invasive while riding.",
               },
               {
-                q: '¿Lo puedo usar diario?',
-                a: 'Sí, especialmente si usas la moto varias veces por semana. Está construido para uso frecuente y continuo.',
+                q: 'Can I use it daily?',
+                a: "Yes, especially if you ride several times a week. It's built for frequent, continuous use.",
               },
               {
-                q: '¿Cuánto tarda el envío?',
-                a: 'Mostramos tiempos estimados al momento de compra dentro de México. El envío es gratis a todo el país.',
+                q: 'How long does shipping take?',
+                a: 'Estimated shipping times are shown at checkout. Shipping is free across the US.',
               },
               {
-                q: '¿Cómo funciona el cambio de talla?',
-                a: 'Si tu talla no fue la ideal, contáctanos por WhatsApp y te guiamos para hacer el cambio de manera simple. Queremos que el ajuste sea el correcto.',
+                q: 'How does the size exchange work?',
+                a: "If your size isn't right, contact us and we'll guide you through a simple exchange. We want you to have the right fit.",
               },
             ].map(({ q, a }, i) => (
               <AccordionItem
@@ -702,27 +702,27 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             Rodata One
           </span>
           <h2 className="font-sora font-bold text-brand-offwhite text-4xl sm:text-5xl lg:text-6xl leading-tight mb-6">
-            Haz que tus trayectos se sientan mejor
+            Make every ride feel better
           </h2>
           <p className="text-brand-smoke text-lg leading-relaxed mb-10 font-inter max-w-2xl mx-auto">
-            Rodata One fue creado para riders que quieren más soporte, más comodidad y menos fatiga al final de cada rodada.
+            Rodata One was built for riders who want more support, more comfort, and less fatigue at the end of every ride.
           </p>
 
           {/* Price */}
           <div className="flex items-baseline justify-center gap-3 mb-8">
-            <span className="font-sora font-bold text-brand-offwhite text-4xl">MX$699</span>
-            <span className="text-brand-steel text-xl line-through font-inter">MX$999</span>
+            <span className="font-sora font-bold text-brand-offwhite text-4xl">$69</span>
+            <span className="text-brand-steel text-xl line-through font-inter">$99</span>
           </div>
 
           <Link to={buyUrl}>
             <button className="btn-amber-lg amber-glow font-sora text-lg px-12">
-              Comprar ahora
+              Buy now
               <ArrowRight size={18} />
             </button>
           </Link>
 
           <p className="mt-5 text-brand-steel text-sm font-inter">
-            Envío gratis en México · 30 días de prueba · Cambio de talla fácil
+            Free US shipping · 30-day trial · Easy size exchange
           </p>
         </div>
       </section>
