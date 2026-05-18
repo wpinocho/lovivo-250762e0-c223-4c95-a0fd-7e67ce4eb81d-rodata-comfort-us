@@ -1,3 +1,3 @@
-export const STORE_ID = 'cdddcb57-6bb6-4cd1-8062-d3fa8617d1cf'
+export const STORE_ID = '250762e0-c223-4c95-a0fd-7e67ce4eb81d'
 export const STRIPE_PUBLISHABLE_KEY = 'pk_live_51Rk9SNP66p9BDoW4lgxDnuqvNZYEaL400FCX0GStvuaslkEMBZNRqln5M5bDcBSBmFmR7hlY0pDcA4u4VIi8CRIg00KkqRzlVs'
 export const LOVIVO_STRIPE_ACCOUNT_ID = 'acct_1Rk9SNP66p9BDoW4'
