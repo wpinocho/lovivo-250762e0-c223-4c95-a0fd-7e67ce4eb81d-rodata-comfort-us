@@ -1,89 +1,86 @@
 import { EcommerceTemplate } from '@/templates/EcommerceTemplate'
-import { useSettings } from '@/contexts/SettingsContext'
 
 const TermsAndConditions = () => {
-  const { storeName } = useSettings()
-
   return (
     <EcommerceTemplate>
-      <div className="max-w-3xl mx-auto py-8 px-4 space-y-8">
-        <h1 className="text-3xl font-bold text-foreground">Términos y Condiciones</h1>
-        <p className="text-muted-foreground text-sm">Última actualización: abril 2025</p>
+      <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
+        <h1 className="text-3xl font-bold text-foreground">Terms and Conditions</h1>
+        <p className="text-muted-foreground text-sm">Last updated: April 2025</p>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">1. Aceptación de los Términos</h2>
+          <h2 className="text-xl font-semibold text-foreground">1. Acceptance of Terms</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Al acceder y utilizar el sitio web de {storeName}, aceptas cumplir con estos Términos y Condiciones. Si no estás de acuerdo con alguna parte de estos términos, te pedimos que no utilices nuestro sitio.
+            By accessing and using this website, you agree to comply with these Terms and Conditions. If you disagree with any part of these terms, please do not use our site.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">2. Uso del Sitio</h2>
+          <h2 className="text-xl font-semibold text-foreground">2. Use of Site</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Te comprometes a utilizar el sitio únicamente con fines legales y de manera que no infrinja los derechos de terceros ni restrinja el uso del sitio por parte de otros usuarios. Queda prohibido el uso del sitio para actividades fraudulentas o ilegales.
+            You agree to use this site only for lawful purposes and in a way that does not infringe the rights of others or restrict other users' access. Use of the site for fraudulent or illegal activities is strictly prohibited.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">3. Productos y Precios</h2>
+          <h2 className="text-xl font-semibold text-foreground">3. Products and Prices</h2>
           <p className="text-foreground/80 leading-relaxed">
-            {storeName} se esfuerza por mostrar información precisa sobre los productos, incluyendo descripciones, imágenes y precios. Sin embargo, no garantizamos que toda la información sea completamente exacta. Los precios pueden cambiar sin previo aviso. Nos reservamos el derecho de corregir errores en precios o descripciones y de cancelar pedidos afectados.
+            We strive to display accurate product information, including descriptions, images, and prices. However, we do not guarantee that all information is completely accurate. Prices are subject to change without notice. We reserve the right to correct any pricing or description errors and to cancel affected orders.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">4. Proceso de Compra</h2>
+          <h2 className="text-xl font-semibold text-foreground">4. Purchase Process</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Al realizar un pedido, estás haciendo una oferta de compra. Nos reservamos el derecho de aceptar o rechazar cualquier pedido. Una vez confirmado el pedido, recibirás una confirmación por correo electrónico. El contrato de compraventa se perfecciona en el momento en que procesamos tu pago.
+            By placing an order, you are making an offer to purchase. We reserve the right to accept or decline any order. Once confirmed, you will receive an email confirmation. The purchase contract is formed at the moment we process your payment.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">5. Métodos de Pago</h2>
+          <h2 className="text-xl font-semibold text-foreground">5. Payment Methods</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Aceptamos los métodos de pago indicados en nuestro sitio. Toda la información de pago se procesa de forma segura a través de proveedores de pago certificados. {storeName} no almacena datos de tarjetas de crédito o débito.
+            We accept the payment methods listed on our site. All payment information is processed securely through certified payment providers. We do not store credit or debit card details.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">6. Envíos y Entregas</h2>
+          <h2 className="text-xl font-semibold text-foreground">6. Shipping and Delivery</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Los tiempos y costos de envío varían según la ubicación y el método de envío seleccionado. {storeName} no se hace responsable por retrasos causados por el servicio de paquetería, aduanas o eventos fuera de nuestro control. Los plazos de entrega son estimados y no constituyen una garantía.
+            Shipping times and costs vary by location and selected shipping method. We are not responsible for delays caused by the carrier, customs, or events beyond our control. Delivery timeframes are estimates and do not constitute a guarantee.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">7. Devoluciones y Reembolsos</h2>
+          <h2 className="text-xl font-semibold text-foreground">7. Returns and Refunds</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Si no estás satisfecho con tu compra, puedes solicitar una devolución dentro del plazo establecido en nuestra política de devoluciones. Los productos deben estar en su estado original, sin usar y con su empaque completo. Los reembolsos se procesarán al mismo método de pago utilizado en la compra original.
+            If you are not satisfied with your purchase, you may request a return within the timeframe stated in our return policy. Products must be in their original condition, unused, and with all original packaging. Refunds will be processed to the same payment method used in the original purchase.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">8. Propiedad Intelectual</h2>
+          <h2 className="text-xl font-semibold text-foreground">8. Intellectual Property</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Todo el contenido del sitio, incluyendo textos, imágenes, logotipos, gráficos y software, es propiedad de {storeName} o sus proveedores de contenido y está protegido por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o modificación sin autorización expresa.
+            All content on this site, including text, images, logos, graphics, and software, is protected by intellectual property laws. Reproduction, distribution, or modification without express written authorization is prohibited.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">9. Limitación de Responsabilidad</h2>
+          <h2 className="text-xl font-semibold text-foreground">9. Limitation of Liability</h2>
           <p className="text-foreground/80 leading-relaxed">
-            {storeName} no será responsable por daños indirectos, incidentales o consecuentes que resulten del uso o la imposibilidad de uso de nuestro sitio o productos. Nuestra responsabilidad máxima se limita al monto pagado por el producto en cuestión.
+            We shall not be liable for any indirect, incidental, or consequential damages arising from the use of or inability to use our site or products. Our maximum liability is limited to the amount paid for the product in question.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">10. Modificaciones</h2>
+          <h2 className="text-xl font-semibold text-foreground">10. Modifications</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Nos reservamos el derecho de modificar estos Términos y Condiciones en cualquier momento. Los cambios entrarán en vigor desde su publicación en el sitio. El uso continuado del sitio después de cualquier modificación constituye la aceptación de los nuevos términos.
+            We reserve the right to modify these Terms and Conditions at any time. Changes take effect upon publication on the site. Continued use of the site after any modification constitutes acceptance of the new terms.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">11. Contacto</h2>
+          <h2 className="text-xl font-semibold text-foreground">11. Contact</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Si tienes preguntas sobre estos Términos y Condiciones, puedes contactarnos a través de los canales de atención disponibles en nuestro sitio web.
+            If you have questions about these Terms and Conditions, please contact us through the support channels available on our website.
           </p>
         </section>
       </div>

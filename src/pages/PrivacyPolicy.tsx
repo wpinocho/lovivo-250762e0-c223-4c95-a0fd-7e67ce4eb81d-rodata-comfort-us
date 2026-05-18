@@ -1,110 +1,105 @@
 import { EcommerceTemplate } from '@/templates/EcommerceTemplate'
-import { useSettings } from '@/contexts/SettingsContext'
 
 const PrivacyPolicy = () => {
-  const { storeName } = useSettings()
-
   return (
     <EcommerceTemplate>
-      <div className="max-w-3xl mx-auto py-8 px-4 space-y-8">
-        <h1 className="text-3xl font-bold text-foreground">Aviso de Privacidad</h1>
-        <p className="text-muted-foreground text-sm">Última actualización: abril 2025</p>
+      <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
+        <h1 className="text-3xl font-bold text-foreground">Privacy Policy</h1>
+        <p className="text-muted-foreground text-sm">Last updated: April 2025</p>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">1. Responsable del Tratamiento</h2>
+          <h2 className="text-xl font-semibold text-foreground">1. Data Controller</h2>
           <p className="text-foreground/80 leading-relaxed">
-            {storeName} es responsable del tratamiento de tus datos personales. Este Aviso de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal cuando utilizas nuestro sitio web y servicios.
+            Rodata is responsible for the processing of your personal data. This Privacy Policy describes how we collect, use, store, and protect your personal information when you use our website and services.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">2. Datos que Recopilamos</h2>
-          <p className="text-foreground/80 leading-relaxed">Recopilamos los siguientes tipos de información:</p>
+          <h2 className="text-xl font-semibold text-foreground">2. Data We Collect</h2>
+          <p className="text-foreground/80 leading-relaxed">We may collect the following types of information:</p>
           <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-            <li><strong>Datos de identificación:</strong> nombre, apellidos, correo electrónico y número de teléfono.</li>
-            <li><strong>Datos de envío:</strong> dirección postal, ciudad, estado, código postal y país.</li>
-            <li><strong>Datos de pago:</strong> procesados de forma segura por proveedores de pago certificados. {storeName} no almacena datos de tarjetas.</li>
-            <li><strong>Datos de navegación:</strong> dirección IP, tipo de navegador, páginas visitadas y tiempo de permanencia.</li>
-            <li><strong>Datos de pedidos:</strong> historial de compras, productos adquiridos y preferencias.</li>
+            <li><strong>Identity data:</strong> first name, last name, email address, and phone number.</li>
+            <li><strong>Shipping data:</strong> mailing address, city, state, ZIP code, and country.</li>
+            <li><strong>Payment data:</strong> processed securely by certified payment providers. We do not store card details.</li>
+            <li><strong>Browsing data:</strong> IP address, browser type, pages visited, and time on site.</li>
+            <li><strong>Order data:</strong> purchase history, products ordered, and preferences.</li>
           </ul>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">3. Finalidad del Tratamiento</h2>
-          <p className="text-foreground/80 leading-relaxed">Utilizamos tus datos personales para:</p>
+          <h2 className="text-xl font-semibold text-foreground">3. Purpose of Processing</h2>
+          <p className="text-foreground/80 leading-relaxed">We use your personal data to:</p>
           <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-            <li>Procesar y gestionar tus pedidos y pagos.</li>
-            <li>Enviarte confirmaciones de pedido y actualizaciones de envío.</li>
-            <li>Brindarte atención al cliente y soporte.</li>
-            <li>Enviarte comunicaciones comerciales y promocionales (solo con tu consentimiento).</li>
-            <li>Mejorar nuestro sitio web y la experiencia de usuario.</li>
-            <li>Cumplir con obligaciones legales y fiscales.</li>
+            <li>Process and fulfill your orders and payments.</li>
+            <li>Send you order confirmations and shipping updates.</li>
+            <li>Provide customer service and support.</li>
+            <li>Send marketing and promotional communications (only with your consent).</li>
+            <li>Improve our website and user experience.</li>
+            <li>Comply with legal and fiscal obligations.</li>
           </ul>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">4. Cookies y Tecnologías de Rastreo</h2>
+          <h2 className="text-xl font-semibold text-foreground">4. Cookies and Tracking</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Nuestro sitio utiliza cookies y tecnologías similares para mejorar tu experiencia de navegación, analizar el tráfico del sitio y personalizar el contenido. Las cookies esenciales son necesarias para el funcionamiento del sitio. Las cookies de análisis nos ayudan a entender cómo interactúas con el sitio. Puedes configurar tu navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.
+            Our site uses cookies and similar technologies to improve your browsing experience, analyze site traffic, and personalize content. Essential cookies are required for the site to function. Analytics cookies help us understand how you interact with our pages. You may configure your browser to reject cookies, though this may affect site functionality.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">5. Compartir Datos con Terceros</h2>
-          <p className="text-foreground/80 leading-relaxed">
-            Podemos compartir tu información personal con terceros de confianza únicamente cuando sea necesario para:
-          </p>
+          <h2 className="text-xl font-semibold text-foreground">5. Sharing Data with Third Parties</h2>
+          <p className="text-foreground/80 leading-relaxed">We may share your information with trusted third parties only when necessary to:</p>
           <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-            <li><strong>Procesamiento de pagos:</strong> proveedores de pago seguros para completar transacciones.</li>
-            <li><strong>Envío y logística:</strong> empresas de paquetería para entregar tus pedidos.</li>
-            <li><strong>Análisis:</strong> herramientas de análisis para mejorar nuestros servicios.</li>
-            <li><strong>Obligaciones legales:</strong> cuando sea requerido por ley o autoridades competentes.</li>
+            <li><strong>Process payments:</strong> via certified payment processors.</li>
+            <li><strong>Ship orders:</strong> via carriers and fulfillment services.</li>
+            <li><strong>Analyze site performance:</strong> via analytics tools.</li>
+            <li><strong>Comply with law:</strong> when required by authorities.</li>
           </ul>
           <p className="text-foreground/80 leading-relaxed">
-            No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines de marketing sin tu consentimiento explícito.
+            We do not sell, rent, or share your personal data with third parties for marketing purposes without your explicit consent.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">6. Seguridad de los Datos</h2>
+          <h2 className="text-xl font-semibold text-foreground">6. Data Security</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Implementamos medidas de seguridad técnicas, administrativas y físicas para proteger tu información personal contra acceso no autorizado, pérdida, alteración o destrucción. Sin embargo, ningún sistema de transmisión o almacenamiento de datos es completamente seguro, por lo que no podemos garantizar la seguridad absoluta de tu información.
+            We implement technical, administrative, and physical security measures to protect your personal information against unauthorized access, loss, alteration, or destruction. No data transmission or storage system is completely secure, and we cannot guarantee absolute security.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">7. Tus Derechos</h2>
-          <p className="text-foreground/80 leading-relaxed">Tienes derecho a:</p>
+          <h2 className="text-xl font-semibold text-foreground">7. Your Rights</h2>
+          <p className="text-foreground/80 leading-relaxed">You have the right to:</p>
           <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-            <li><strong>Acceso:</strong> solicitar una copia de los datos personales que tenemos sobre ti.</li>
-            <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>
-            <li><strong>Cancelación:</strong> solicitar la eliminación de tus datos personales.</li>
-            <li><strong>Oposición:</strong> oponerte al tratamiento de tus datos para ciertos fines.</li>
-            <li><strong>Portabilidad:</strong> recibir tus datos en un formato estructurado y de uso común.</li>
+            <li><strong>Access:</strong> request a copy of the personal data we hold about you.</li>
+            <li><strong>Rectification:</strong> correct inaccurate or incomplete data.</li>
+            <li><strong>Erasure:</strong> request deletion of your personal data.</li>
+            <li><strong>Objection:</strong> object to the processing of your data for certain purposes.</li>
+            <li><strong>Portability:</strong> receive your data in a structured, commonly used format.</li>
           </ul>
           <p className="text-foreground/80 leading-relaxed">
-            Para ejercer cualquiera de estos derechos, contáctanos a través de los canales disponibles en nuestro sitio web.
+            To exercise any of these rights, contact us through the support channels available on our website.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">8. Retención de Datos</h2>
+          <h2 className="text-xl font-semibold text-foreground">8. Data Retention</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Conservamos tus datos personales solo durante el tiempo necesario para cumplir con los fines para los que fueron recopilados, incluyendo obligaciones legales, contables o de reporte.
+            We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, including any legal, accounting, or reporting requirements.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">9. Modificaciones al Aviso</h2>
+          <h2 className="text-xl font-semibold text-foreground">9. Policy Updates</h2>
           <p className="text-foreground/80 leading-relaxed">
-            {storeName} se reserva el derecho de actualizar este Aviso de Privacidad en cualquier momento. Cualquier cambio será publicado en esta página con la fecha de última actualización. Te recomendamos revisarlo periódicamente.
+            We reserve the right to update this Privacy Policy at any time. Changes will be posted on this page with the updated date. We recommend reviewing it periodically.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold text-foreground">10. Contacto</h2>
+          <h2 className="text-xl font-semibold text-foreground">10. Contact</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Si tienes preguntas o inquietudes sobre este Aviso de Privacidad o el tratamiento de tus datos personales, puedes contactarnos a través de los canales de atención disponibles en nuestro sitio web.
+            If you have questions or concerns about this Privacy Policy or the processing of your personal data, please contact us through the support channels available on our website.
           </p>
         </section>
       </div>

@@ -101,7 +101,7 @@ export default function CheckoutUI() {
                     </div>
                   </div>
                   <div className="font-semibold text-brand-amber">
-                    {method.hasPrice && method.price ? formatMoney(parseFloat(method.price), logic.currencyCode) : 'GRATIS'}
+                    {method.hasPrice && method.price ? formatMoney(parseFloat(method.price), logic.currencyCode) : 'FREE'}
                   </div>
                 </label>
               </div>
@@ -145,7 +145,7 @@ export default function CheckoutUI() {
                           }}
                           className="w-4 h-4"
                         />
-                        <label htmlFor="use-pickup" className="text-sm font-medium text-brand-smoke">Recoger en tienda</label>
+                        <label htmlFor="use-pickup" className="text-sm font-medium text-brand-smoke">Store pickup</label>
                       </div>
 
                       {logic.usePickup && (
@@ -178,18 +178,18 @@ export default function CheckoutUI() {
                                     <div className="text-sm text-brand-steel mt-1">
                                       {location.line1}{location.line2 && `, ${location.line2}`}, {location.city}, {location.country}
                                     </div>
-                                    {!isExpanded && <div className="text-sm text-brand-amber mt-1">Te esperamos</div>}
+                                    {!isExpanded && <div className="text-sm text-brand-amber mt-1">We'll be waiting</div>}
                                     {isExpanded && (
                                       <>
                                         <div className="text-sm text-brand-steel mt-1">
                                           {location.city}, {location.state}, {location.country} - {location.postal_code}
                                         </div>
-                                        {location.schedule && <div className="text-sm text-brand-steel">Horario: {location.schedule}</div>}
+                                        {location.schedule && <div className="text-sm text-brand-steel">Hours: {location.schedule}</div>}
                                         {location.instructions && <div className="text-sm text-brand-amber mt-1">{location.instructions}</div>}
                                       </>
                                     )}
                                   </div>
-                                  <div className="font-semibold text-brand-amber">GRATIS</div>
+                                  <div className="font-semibold text-brand-amber">FREE</div>
                                 </label>
                               </div>
                             );
@@ -203,7 +203,7 @@ export default function CheckoutUI() {
                   <section>
                     <div className="flex items-center gap-2 text-brand-steel text-[11px] font-inter mb-4 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
                       <Lock size={11} className="text-brand-amber flex-shrink-0" />
-                      Pago 100% seguro · Cifrado SSL · Procesado por Stripe
+                      100% secure payment · SSL encrypted · Powered by Stripe
                     </div>
 
                     {(() => {
@@ -241,7 +241,7 @@ export default function CheckoutUI() {
                           key={stripeKey}
                           amountCents={Math.round(logic.finalTotal * 100)}
                           currency={logic.currencyCode.toLowerCase()}
-                          description={`Pedido #${logic.orderId ?? 's/n'}`}
+                          description={`Order #${logic.orderId ?? 's/n'}`}
                           metadata={{
                             order_id: logic.orderId ?? '',
                             ...(logic.discount?.code ? { discount_code: logic.discount.code } : {})
@@ -257,17 +257,18 @@ export default function CheckoutUI() {
                             if (!logic.usePickup) {
                               const missing: string[] = [];
                               const emailOk = !!logic.email?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(logic.email);
-                              if (!emailOk) missing.push('email v\u00e1lido');
-                              if (!addressElementComplete) missing.push('direcci\u00f3n completa');
+                              if (!emailOk) missing.push('valid email');
+                              if (!addressElementComplete) missing.push('complete address');
                               if (
                                 Array.isArray(logic.deliveryExpectations) &&
                                 logic.deliveryExpectations.length > 0 &&
                                 !logic.selectedDeliveryMethod
-                              ) missing.push('m\u00e9todo de env\u00edo');
+                              ) missing.push('shipping method');
                               if (missing.length > 0) {
                                 toast({
-                                  title: 'Campos requeridos',
-                                  description: `Por favor completa: ${missing.join(', ')}`,
+                                  title: 'Required fields',
+                                  description: `Please complete: ${missing.join(', ')}`,
+
                                   variant: 'destructive',
                                   duration: 5000,
                                 });
@@ -292,7 +293,7 @@ export default function CheckoutUI() {
                           } : logic.billingAddress)}
                           items={logic.orderItems}
                           deliveryExpectations={logic.usePickup ?
-                            [{ type: "pickup", description: "Recoger en tienda" }] :
+                            [{ type: "pickup", description: "Store pickup" }] :
                             (logic.deliveryExpectations || [])
                           }
                           pickupLocations={logic.usePickup ?
@@ -358,7 +359,7 @@ export default function CheckoutUI() {
                     {logic.itemsLoading && logic.summaryItems.length === 0 ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-amber mx-auto"></div>
-                        <p className="mt-2 text-brand-smoke text-sm">Cargando productos...</p>
+                        <p className="mt-2 text-brand-smoke text-sm">Loading products...</p>
                       </div>
                     ) : null}
 
@@ -377,7 +378,7 @@ export default function CheckoutUI() {
                               )}
                             </div>
                             <span className="text-sm text-yellow-400">
-                              {logic.revalidating ? 'Restaurando tu carrito...' : 'Mostrando datos guardados'}
+                              {logic.revalidating ? 'Restoring your cart...' : 'Showing saved data'}
                             </span>
                           </div>
                           {!logic.revalidating && (
@@ -387,7 +388,7 @@ export default function CheckoutUI() {
                               onClick={logic.refreshItems}
                               className="text-yellow-400 hover:text-yellow-300"
                             >
-                              Actualizar
+                              Refresh
                             </Button>
                           )}
                         </div>
@@ -400,13 +401,13 @@ export default function CheckoutUI() {
                         <div className="w-16 h-16 bg-brand-graphite rounded-full flex items-center justify-center">
                           <ShoppingBag className="w-8 h-8 text-brand-steel" />
                         </div>
-                        <h3 className="text-lg font-sora font-semibold text-brand-offwhite">Tu carrito está vacío</h3>
-                        <p className="text-brand-steel text-center text-sm">Agrega un producto para iniciar tu compra</p>
+                        <h3 className="text-lg font-sora font-semibold text-brand-offwhite">Your cart is empty</h3>
+                        <p className="text-brand-steel text-center text-sm">Add a product to start your purchase</p>
                         <Button
                           onClick={() => navigate('/')}
                           className="mt-4 bg-brand-amber text-brand-carbon hover:bg-brand-amber/90 font-sora font-semibold"
                         >
-                          Comenzar a Comprar
+                          Start Shopping
                         </Button>
                       </div>
                     ) : (
@@ -429,12 +430,12 @@ export default function CheckoutUI() {
                               <div className="flex items-center gap-1 mt-0.5">
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-brand-amber/10 text-brand-amber border-brand-amber/20">
                                   <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
-                                  Suscripción
+                                  Subscription
                                 </Badge>
                               </div>
                             )}
                             <div className="flex items-center justify-between mt-1">
-                              <span className="text-sm text-brand-steel">Cantidad</span>
+                              <span className="text-sm text-brand-steel">Quantity</span>
                               <div className="flex items-center space-x-2">
                                 <Button
                                   variant="outline"
@@ -469,11 +470,11 @@ export default function CheckoutUI() {
 
                     {/* Código de descuento */}
                     <div className="space-y-2">
-                      <div className="text-sm font-medium text-brand-smoke">Código de descuento</div>
+                      <div className="text-sm font-medium text-brand-smoke">Discount code</div>
                       {!logic.discount ? (
                         <div className="flex gap-2">
                           <Input
-                            placeholder="Ingresa tu cupón"
+                            placeholder="Enter your coupon"
                             value={logic.couponCode}
                             onChange={e => logic.setCouponCode(e.target.value.toUpperCase())}
                             className={`text-sm ${INP}`}
@@ -488,13 +489,13 @@ export default function CheckoutUI() {
                             className="border-white/[0.15] bg-transparent text-brand-smoke hover:bg-white/[0.06] hover:text-brand-offwhite disabled:opacity-40"
                           >
                             <Tag className="h-4 w-4 mr-1" />
-                            {logic.isValidatingCoupon ? '...' : 'Aplicar'}
+                            {logic.isValidatingCoupon ? '...' : 'Apply'}
                           </Button>
                         </div>
                       ) : (
                         <div className="flex items-center justify-between text-sm bg-brand-amber/10 border border-brand-amber/20 p-3 rounded-lg">
                           <span className="text-brand-smoke font-medium">
-                            Cupón aplicado: {logic.couponCode}
+                            Coupon applied: {logic.couponCode}
                           </span>
                           <Button
                             variant="ghost"
@@ -515,10 +516,10 @@ export default function CheckoutUI() {
                         <span>{formatMoney(logic.summaryTotal, logic.currencyCode)}</span>
                       </div>
                       <div className="flex justify-between text-brand-smoke text-sm">
-                        <span>Envío</span>
+                        <span>Shipping</span>
                         <span className={`${logic.isCalculatingShipping ? 'opacity-50 blur-sm' : ''} transition-all duration-200`}>
-                          {logic.selectedPickupLocation ? 'GRATIS (Recoger en tienda)' :
-                           logic.shippingCost > 0 ? formatMoney(logic.shippingCost, logic.currencyCode) : 'GRATIS'}
+                          {logic.selectedPickupLocation ? 'FREE (Store pickup)' :
+                           logic.shippingCost > 0 ? formatMoney(logic.shippingCost, logic.currencyCode) : 'FREE'}
                         </span>
                       </div>
 
@@ -533,7 +534,7 @@ export default function CheckoutUI() {
                       {/* Manual discount */}
                       {logic.discount && logic.backendDiscountAmount === 0 && (
                         <div className="flex justify-between text-brand-amber text-sm">
-                          <span>Descuento ({logic.getDiscountDisplayText(logic.discount, logic.totalQuantity)})</span>
+                          <span>Discount ({logic.getDiscountDisplayText(logic.discount, logic.totalQuantity)})</span>
                           <span>- {formatMoney(logic.discountAmount, logic.currencyCode)}</span>
                         </div>
                       )}
@@ -573,7 +574,7 @@ function MobileOrderSummary({ logic }: { logic: any }) {
       >
         <span className="flex items-center gap-2">
           <ShoppingBag className="h-4 w-4 text-brand-amber" />
-          Resumen del pedido ({logic.totalQuantity})
+          Order summary ({logic.totalQuantity})
           {open ? <ChevronUp className="h-4 w-4 text-brand-steel" /> : <ChevronDown className="h-4 w-4 text-brand-steel" />}
         </span>
         <span className="font-sora font-bold text-brand-amber">{formatMoney(logic.finalTotal, logic.currencyCode)}</span>
@@ -609,18 +610,18 @@ function MobileOrderSummary({ logic }: { logic: any }) {
               <span className="text-brand-smoke">{formatMoney(logic.summaryTotal, logic.currencyCode)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-brand-steel">Envío</span>
+              <span className="text-brand-steel">Shipping</span>
               <span className="text-brand-smoke">
                 {logic.selectedPickupLocation
-                  ? "GRATIS"
+                  ? "FREE"
                   : logic.shippingCost > 0
                   ? formatMoney(logic.shippingCost, logic.currencyCode)
-                  : "Pendiente"}
+                  : "Pending"}
               </span>
             </div>
             {logic.discountAmount > 0 && (
               <div className="flex justify-between text-brand-amber">
-                <span>Descuento</span>
+                <span>Discount</span>
                 <span>- {formatMoney(logic.discountAmount, logic.currencyCode)}</span>
               </div>
             )}
@@ -655,7 +656,7 @@ function BillingCheckboxSection({ logic }: { logic: any }) {
             onCheckedChange={(v: boolean) => logic.setUseSameAddress(!!v)}
           />
           <Label htmlFor="same-billing" className="text-sm cursor-pointer text-brand-smoke">
-            Usar la dirección de envío como dirección de facturación
+            Use shipping address as billing address
           </Label>
         </div>
       )}
@@ -667,39 +668,39 @@ function BillingCheckboxSection({ logic }: { logic: any }) {
               <Input
                 value={logic.billingAddress.first_name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, first_name: e.target.value }))}
-                placeholder="Nombre"
+                placeholder="First name"
                 className={INP_B}
               />
               <Input
                 value={logic.billingAddress.last_name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, last_name: e.target.value }))}
-                placeholder="Apellidos"
+                placeholder="Last name"
                 className={INP_B}
               />
             </div>
             <Input
               value={logic.billingAddress.line1}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, line1: e.target.value }))}
-              placeholder="Dirección"
+              placeholder="Address"
               className={INP_B}
             />
             <Input
               value={logic.billingAddress.line2}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, line2: e.target.value }))}
-              placeholder="Apartamento, suite, etc. (opcional)"
+              placeholder="Apartment, suite, etc. (optional)"
               className={INP_B}
             />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
                 value={logic.billingAddress.postal_code}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, postal_code: e.target.value }))}
-                placeholder="C.P."
+                placeholder="ZIP code"
                 className={INP_B}
               />
               <Input
                 value={logic.billingAddress.city}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setBillingAddress((prev: any) => ({ ...prev, city: e.target.value }))}
-                placeholder="Ciudad"
+                placeholder="City"
                 className={INP_B}
               />
               <Select
@@ -707,7 +708,7 @@ function BillingCheckboxSection({ logic }: { logic: any }) {
                 onValueChange={(value: string) => logic.setBillingAddress((prev: any) => ({ ...prev, state: value }))}
               >
                 <SelectTrigger className={SEL_TB}>
-                  <SelectValue placeholder="Estado" />
+                  <SelectValue placeholder="State" />
                 </SelectTrigger>
                 <SelectContent className={SEL_CB}>
                   {(() => {
@@ -732,7 +733,7 @@ function BillingCheckboxSection({ logic }: { logic: any }) {
               onValueChange={(value: string) => logic.setBillingAddress((prev: any) => ({ ...prev, country: value }))}
             >
               <SelectTrigger className={SEL_TB}>
-                <SelectValue placeholder="País" />
+                <SelectValue placeholder="Country" />
               </SelectTrigger>
               <SelectContent className={SEL_CB}>
                 {Array.isArray(logic.availableCountries) &&
@@ -765,13 +766,13 @@ function MobileCouponSection({ logic }: { logic: any }) {
             className="text-xs text-brand-amber font-medium flex items-center gap-1"
           >
             <Tag className="h-3 w-3" />
-            ¿Tienes un cupón?
+            Have a coupon?
             {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </button>
           {open && (
             <div className="flex gap-2 mt-2">
               <Input
-                placeholder="Código de descuento"
+                placeholder="Discount code"
                 value={logic.couponCode}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setCouponCode(e.target.value.toUpperCase())}
                 className={`text-sm h-9 ${INP_M}`}
@@ -784,7 +785,7 @@ function MobileCouponSection({ logic }: { logic: any }) {
                 disabled={logic.isValidatingCoupon || !logic.couponCode.trim()}
                 className="h-9 shrink-0 border-white/[0.15] bg-transparent text-brand-smoke hover:bg-white/[0.06] hover:text-brand-offwhite disabled:opacity-40"
               >
-                {logic.isValidatingCoupon ? '...' : 'Aplicar'}
+                {logic.isValidatingCoupon ? '...' : 'Apply'}
               </Button>
             </div>
           )}
@@ -792,7 +793,7 @@ function MobileCouponSection({ logic }: { logic: any }) {
       ) : (
         <div className="flex items-center justify-between text-xs bg-brand-amber/10 border border-brand-amber/20 p-2 rounded-lg">
           <span className="text-brand-smoke font-medium">
-            Cupón: {logic.couponCode}
+            Coupon: {logic.couponCode}
           </span>
           <Button
             variant="ghost"

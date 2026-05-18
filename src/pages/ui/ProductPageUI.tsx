@@ -26,42 +26,42 @@ const FEAT_IMG_2 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/p
 const FEAT_IMG_3 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775777133672-dzkdrl1lt2.webp'
 
 const SIZE_GUIDE = [
-  { size: 'S',  waist: '60–75 cm',   recom: 'Cintura delgada' },
-  { size: 'M',  waist: '75–90 cm',   recom: 'Talla promedio'  },
-  { size: 'L',  waist: '90–100 cm',  recom: 'Talla grande'    },
-  { size: 'XL', waist: '100–115 cm', recom: 'Extra grande'    },
+  { size: 'S',  waist: '24–30 in',   recom: 'Slim waist'   },
+  { size: 'M',  waist: '30–35 in',   recom: 'Average fit'  },
+  { size: 'L',  waist: '35–39 in',   recom: 'Large fit'    },
+  { size: 'XL', waist: '39–45 in',   recom: 'Extra large'  },
 ]
 
 const FEATURES: { number: string; icon: React.ElementType; title: string; desc: React.ReactNode; image: string }[] = [
-  { number: '01', icon: Layers, title: 'Termina cada rodada sin el dolor de siempre',
+  { number: '01', icon: Layers, title: 'Finish every ride without the pain that\'s been piling up',
     desc: (
       <>
-        En la moto, tu cuerpo va inclinado hacia adelante durante horas,{' '}
-        <strong className="text-brand-smoke">esa postura carga tu zona lumbar de una forma que no te das cuenta hasta que ya duele</strong>.
-        El Rodata One actúa exactamente ahí:{' '}
-        <strong className="text-brand-smoke">soporte firme que distribuye esa tensión</strong> sin restringirte.
-        Lo pones, arrancas y te olvidas de él.
+        On a motorcycle, your body leans forward for hours.{' '}
+        <strong className="text-brand-smoke">That posture loads your lumbar spine in ways you don't notice until it already hurts</strong>.
+        The Rodata One acts right there:{' '}
+        <strong className="text-brand-smoke">firm support that distributes that tension</strong> without restricting you.
+        You put it on, start riding, and forget it's there.
       </>
     ), image: FEAT_IMG_1 },
-  { number: '02', icon: SlidersHorizontal, title: 'Rueda horas sin detenerte a ajustar nada',
+  { number: '02', icon: SlidersHorizontal, title: 'Ride for hours without stopping to adjust anything',
     desc: (
       <>
-        No es rígido como una faja de gimnasio,{' '}
-        <strong className="text-brand-smoke">es flexible y se mueve contigo mientras manejas</strong>, sin restricciones.
-        El sistema de doble correa lo mantiene{' '}
-        <strong className="text-brand-smoke">exactamente en el mismo lugar desde que arrancas hasta que bajas</strong>.
-        Sin que se corra. Sin que apriete de más. En trayectos largos, el equipo tiene que trabajar contigo — no en tu contra.
+        It's not rigid like a gym brace.{' '}
+        <strong className="text-brand-smoke">It's flexible and moves with you while you ride</strong>, without restricting you.
+        The dual-strap system keeps it{' '}
+        <strong className="text-brand-smoke">in the exact same spot from when you start to when you dismount</strong>.
+        No shifting. No over-tightening. On long rides, your gear should work with you — not against you.
       </>
     ), image: FEAT_IMG_2 },
-  { number: '03', icon: Wind, title: 'Bajo la chamarra, sin que lo notes',
+  { number: '03', icon: Wind, title: 'Under your jacket, completely undetected',
     desc: (
       <>
-        <strong className="text-brand-smoke">Textil negro mate con malla perforada transpirable</strong>: construcción técnica y perfil bajo
-        diseñado para{' '}
-        <strong className="text-brand-smoke">no estorbar debajo de cualquier chamarra de moto</strong>.
-        A diferencia de los soportes genéricos, no presiona donde no debe ni sobresale.
-        Resiste el uso diario, los climas y las temporadas largas{' '}
-        <strong className="text-brand-smoke">sin deformarse ni perder estructura</strong>.
+        <strong className="text-brand-smoke">Matte black textile with breathable perforated mesh</strong>: technical construction and a low profile
+        designed to{' '}
+        <strong className="text-brand-smoke">sit invisibly under any motorcycle jacket</strong>.
+        Unlike generic supports, it doesn't press where it shouldn't or bulk out.
+        Built to handle daily use, all weather, and long seasons{' '}
+        <strong className="text-brand-smoke">without losing shape or structure</strong>.
       </>
     ), image: FEAT_IMG_3 },
 ]
@@ -73,20 +73,20 @@ const REVIEW_IMG_4 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object
 const REVIEW_IMG_5 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/product-images/cdddcb57-6bb6-4cd1-8062-d3fa8617d1cf/review-5.webp'
 
 const REVIEWS = [
-  { name: 'Carlos M.', city: 'CDMX',        stars: 5, initial: 'C', date: 'Mar 2025', photo: REVIEW_IMG_1, text: 'Trayecto CDMX–Querétaro y llegué mucho menos tenso. Ya es parte de mi equipo en cada salida.' },
-  { name: 'Jorge R.',  city: 'Guadalajara', stars: 5, initial: 'J', date: 'Feb 2025', photo: REVIEW_IMG_2, text: 'Firme y cómodo. Cabe perfecto bajo la chamarra, no se nota y no estorba. La calidad se siente.' },
-  { name: 'Andrés V.', city: 'Monterrey',   stars: 5, initial: 'A', date: 'Mar 2025', photo: REVIEW_IMG_3, text: 'Llevo años rodando y siempre terminaba tenso. Con el Rodata One llego mucho más fresco. Vale la pena.' },
-  { name: 'Miguel T.', city: 'Puebla',      stars: 4, initial: 'M', date: 'Ene 2025', photo: REVIEW_IMG_4, text: 'La talla M me quedó exacta con la guía. El ajuste con las correas es muy fácil. Lo recomiendo.' },
-  { name: 'Rodrigo S.', city: 'CDMX',       stars: 5, initial: 'R', date: 'Feb 2025', photo: REVIEW_IMG_5, text: 'Compré dudando si iba a ser incómodo — es todo lo contrario. Sale conmigo en cada rodada.' },
+  { name: 'Carlos M.',  city: 'Los Angeles', stars: 5, initial: 'C', date: 'Mar 2025', photo: REVIEW_IMG_1, text: 'LA to San Diego and arrived way less tense. It\'s now part of my gear on every single ride.' },
+  { name: 'Jorge R.',   city: 'Houston',     stars: 5, initial: 'J', date: 'Feb 2025', photo: REVIEW_IMG_2, text: 'Firm and comfortable. Fits perfectly under my jacket — you don\'t notice it and it doesn\'t get in the way. You can feel the quality.' },
+  { name: 'Andrés V.',  city: 'Chicago',     stars: 5, initial: 'A', date: 'Mar 2025', photo: REVIEW_IMG_3, text: 'I\'ve been riding for years and always finished tense. With the Rodata One I arrive way fresher. Worth every dollar.' },
+  { name: 'Miguel T.',  city: 'Phoenix',     stars: 4, initial: 'M', date: 'Jan 2025', photo: REVIEW_IMG_4, text: 'Size M fit me perfectly with the guide. Adjusting the straps is super easy. Would recommend.' },
+  { name: 'Rodrigo S.', city: 'Miami',       stars: 5, initial: 'R', date: 'Feb 2025', photo: REVIEW_IMG_5, text: 'Bought it unsure if it would be uncomfortable — it\'s the exact opposite. Goes with me on every ride.' },
 ]
 
 const FAQS = [
-  { q: '¿Se puede usar debajo de la chamarra?', a: 'Sí, está diseñado para eso. Su perfil bajo lo hace prácticamente invisible bajo tu equipo habitual.' },
-  { q: '¿Cómo elijo mi talla?', a: 'Mide tu cintura a la altura del ombligo y compara con la guía en esta página. Entre dos tallas, elige la mayor.' },
-  { q: '¿Sirve para trayectos largos y uso diario?', a: 'Sí para ambos. Construido para uso frecuente en ciudad y carretera. Varios clientes lo usan todos los días.' },
-  { q: '¿Se siente muy apretado?', a: 'El panel da soporte firme pero no restringe el movimiento. El nivel de compresión depende de cómo ajustes las correas.' },
-  { q: '¿Cuánto tarda el envío?', a: 'Enviamos a todo México. El tiempo estimado se muestra al hacer la compra. El envío es sin costo.' },
-  { q: '¿Cómo funciona el cambio de talla?', a: 'Contáctanos por WhatsApp y te guiamos. Queremos que el ajuste sea el correcto para ti.' },
+  { q: 'Can I wear it under my jacket?', a: 'Yes, it\'s designed for exactly that. Its low profile makes it practically invisible under your regular riding gear.' },
+  { q: 'How do I choose my size?', a: 'Measure your waist at belly button height and compare with the size guide on this page. When between sizes, go with the larger one.' },
+  { q: 'Does it work for long trips and daily use?', a: 'Yes to both. Built for frequent use in the city and on the highway. Several customers wear it every single day.' },
+  { q: 'Does it feel too tight?', a: 'The panel provides firm support without restricting your movement. The compression level depends on how you adjust the straps.' },
+  { q: 'How long does shipping take?', a: 'We ship US-wide. The estimated delivery time is shown at checkout. Shipping is free.' },
+  { q: 'How does the size exchange work?', a: 'Reach out via the contact options on our site and we\'ll guide you through it. We want the fit to be just right for you.' },
 ]
 
 const Stars = ({ count, size = 14 }: { count: number; size?: number }) => (
@@ -139,9 +139,9 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   if (logic.notFound) return (
     <EcommerceTemplate>
       <div className="text-center py-20">
-        <h1 className="font-sora font-bold text-brand-carbon text-4xl mb-4">Producto no encontrado</h1>
-        <p className="text-brand-steel mb-8 font-inter">El producto no existe o fue eliminado.</p>
-        <Link to="/"><button className="btn-amber font-sora"><ArrowLeft size={16} />Volver</button></Link>
+        <h1 className="font-sora font-bold text-brand-carbon text-4xl mb-4">Product not found</h1>
+        <p className="text-brand-steel mb-8 font-inter">The product doesn't exist or was removed.</p>
+        <Link to="/"><button className="btn-amber font-sora"><ArrowLeft size={16} />Back</button></Link>
       </div>
     </EcommerceTemplate>
   )
@@ -155,8 +155,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       noPadding
       hideFloatingCartOnMobile
       navLinks={[
-        { label: 'Por qué funciona', href: '#por-que-funciona' },
-        { label: 'Opiniones', href: '#opiniones' },
+        { label: 'Why it works', href: '#por-que-funciona' },
+        { label: 'Reviews', href: '#opiniones' },
         { label: 'FAQ', href: '#faq' },
       ]}
     >
@@ -165,7 +165,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section style={{ backgroundColor: '#111315' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-14">
           <button onClick={logic.handleNavigateBack} className="flex items-center gap-1.5 text-brand-steel hover:text-brand-smoke text-xs font-inter mb-6 transition-colors">
-            <ArrowLeft size={13} />Volver
+            <ArrowLeft size={13} />Back
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
@@ -174,7 +174,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               <div className="hidden md:block relative rounded-2xl overflow-hidden bg-brand-graphite aspect-square">
                 <img src={displayImage} alt={logic.product.title} className="w-full h-full object-cover" loading="eager" />
                 {discountPct && <div className="absolute top-4 left-4 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
-                <div className="absolute bottom-3 right-3 bg-brand-carbon/80 backdrop-blur-sm text-brand-smoke text-[10px] font-inter px-2 py-1 rounded border border-white/[0.08]">rodata.mx</div>
+                <div className="absolute bottom-3 right-3 bg-brand-carbon/80 backdrop-blur-sm text-brand-smoke text-[10px] font-inter px-2 py-1 rounded border border-white/[0.08]">Rodata</div>
               </div>
               <div className="md:hidden relative">
                 {productImages.length > 1 ? (
@@ -206,12 +206,12 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
             <div className="space-y-5">
               <div className="flex items-center gap-2">
                 <span className="h-px w-6 bg-brand-amber block" />
-                <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em]">Diseñado para la postura de manejo</span>
+                <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em]">Designed for the riding posture</span>
               </div>
               <h1 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl leading-tight">{logic.product.title}</h1>
               <div className="flex items-center gap-3">
                 <Stars count={5} size={15} />
-                <span className="text-brand-smoke text-sm font-inter">4.9 <span className="text-brand-steel">· 127 reseñas verificadas</span></span>
+                <span className="text-brand-smoke text-sm font-inter">4.9 <span className="text-brand-steel">· 127 verified reviews</span></span>
               </div>
               <div className="flex items-baseline gap-3">
                 <span className="font-sora font-bold text-brand-offwhite text-4xl">{logic.formatMoney(logic.currentPrice)}</span>
@@ -222,10 +222,10 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               </div>
               <div className="border-t border-white/[0.08] pt-5 space-y-3">
                 <p className="text-brand-smoke text-sm leading-relaxed font-inter">
-                  El soporte confiado por los motociclistas mexicanos diseñado para eliminar el dolor de espalda.
+                  The back support trusted by riders — designed to eliminate back pain on every ride.
                 </p>
                 <div className="space-y-2">
-                  {['Baja de la moto sin ese dolor que acumulas en cada rodada', 'Flexible: se mueve contigo y no estorba el manejo ni bajo la chamarra', 'Ajuste en segundos y se queda exactamente donde lo pusiste'].map(item => (
+                  {['Get off the bike without the pain you\'ve been accumulating ride after ride', 'Flexible: moves with you and stays out of the way — both while riding and under your jacket', 'Adjusts in seconds and stays exactly where you put it'].map(item => (
                     <div key={item} className="flex items-center gap-2.5">
                       <div className="h-4 w-4 rounded-full bg-brand-amber/15 border border-brand-amber/30 flex items-center justify-center flex-shrink-0"><Check size={9} className="text-brand-amber" /></div>
                       <span className="text-brand-smoke text-xs font-inter">{item}</span>
@@ -245,12 +245,12 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                           {logic.selected[option.name] && <span className="text-brand-steel font-inter font-normal ml-2">· {SIZE_GUIDE.find(s => s.size === logic.selected[option.name])?.waist ?? logic.selected[option.name]}</span>}
                         </p>
                         <button onClick={() => setShowSizeGuide(!showSizeGuide)} className="flex items-center gap-1 text-brand-amber text-xs font-inter underline underline-offset-2">
-                          Guía de tallas {showSizeGuide ? <ChevronUp size={11}/> : <ChevronDown size={11}/>}
+                          Size guide {showSizeGuide ? <ChevronUp size={11}/> : <ChevronDown size={11}/>}
                         </button>
                       </div>
                       {showSizeGuide && (
                         <div className="mb-3 rounded-xl overflow-hidden border border-white/[0.08]">
-                          <div className="grid grid-cols-3 bg-brand-graphite px-4 py-2 text-[10px] font-sora text-brand-steel uppercase tracking-wider"><span>Talla</span><span>Cintura</span><span>Tipo</span></div>
+                          <div className="grid grid-cols-3 bg-brand-graphite px-4 py-2 text-[10px] font-sora text-brand-steel uppercase tracking-wider"><span>Size</span><span>Waist</span><span>Fit</span></div>
                           {SIZE_GUIDE.map(sg => (
                             <div key={sg.size} className={cn("grid grid-cols-3 px-4 py-2.5 text-xs font-inter border-t border-white/[0.06]", logic.selected[option.name] === sg.size ? "bg-brand-amber/10 text-brand-offwhite" : "text-brand-steel")}>
                               <span className="font-sora font-semibold text-brand-smoke">{sg.size}</span><span>{sg.waist}</span><span>{sg.recom}</span>
@@ -282,7 +282,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
               {/* Quantity */}
               <div className="flex items-center gap-4">
-                <span className="text-brand-smoke text-sm font-inter">Cantidad:</span>
+                <span className="text-brand-smoke text-sm font-inter">Quantity:</span>
                 <div className="flex items-center rounded-xl overflow-hidden border border-white/[0.12]">
                   <button onClick={() => logic.handleQuantityChange(Math.max(1, logic.quantity - 1))} disabled={logic.quantity <= 1} className="px-3.5 py-2.5 text-brand-smoke hover:text-brand-offwhite hover:bg-brand-graphite transition-colors disabled:opacity-40"><Minus size={14}/></button>
                   <span className="px-4 py-2.5 text-brand-offwhite font-sora font-bold text-sm border-x border-white/[0.12] min-w-[44px] text-center">{logic.quantity}</span>
@@ -294,7 +294,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               {logic.inStock && (
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
-                  <span className="text-brand-smoke text-xs font-inter">En stock · Envío en 24–48 hrs</span>
+                  <span className="text-brand-smoke text-xs font-inter">In stock · Ships in 24–48 hrs</span>
                 </div>
               )}
 
@@ -314,26 +314,26 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                     {expressAvailable && (
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-px bg-white/[0.1]" />
-                        <span className="text-brand-steel text-[10px] font-inter uppercase tracking-wider">o</span>
+                        <span className="text-brand-steel text-[10px] font-inter uppercase tracking-wider">or</span>
                         <div className="flex-1 h-px bg-white/[0.1]" />
                       </div>
                     )}
                     <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora w-full text-base">
-                      <ShoppingCart size={18}/>Comprar ahora · {logic.formatMoney(logic.currentPrice)}
+                      <ShoppingCart size={18}/>Buy now · {logic.formatMoney(logic.currentPrice)}
                     </button>
-                    <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora w-full">Agregar al carrito</button>
+                    <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora w-full">Add to cart</button>
                     <p className="text-brand-steel text-[11px] font-inter text-center">
-                      🔒 Pago seguro · Envío gratis · 30 días de prueba
+                      🔒 Secure checkout · Free shipping · 30-day trial
                     </p>
                   </>
                 ) : (
-                  <button disabled className="btn-amber-lg font-sora w-full opacity-50 cursor-not-allowed">Agotado temporalmente</button>
+                  <button disabled className="btn-amber-lg font-sora w-full opacity-50 cursor-not-allowed">Temporarily out of stock</button>
                 )}
               </div>
 
               {/* Trust row */}
               <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/[0.08]">
-                {[{icon: Truck, label: 'Envío gratis', sub: 'A todo México'}, {icon: RotateCcw, label: '30 días', sub: 'De prueba'}, {icon: Ruler, label: 'Cambio talla', sub: 'Sin costo'}].map(({icon: Icon, label, sub}) => (
+                {[{icon: Truck, label: 'Free shipping', sub: 'US-wide'}, {icon: RotateCcw, label: '30 days', sub: 'Trial'}, {icon: Ruler, label: 'Size exchange', sub: 'No charge'}].map(({icon: Icon, label, sub}) => (
                   <div key={label} className="flex flex-col items-center text-center gap-1">
                     <div className="h-8 w-8 rounded-full bg-brand-amber/10 border border-brand-amber/20 flex items-center justify-center"><Icon size={13} className="text-brand-amber"/></div>
                     <p className="text-brand-smoke text-[11px] font-sora font-semibold leading-tight">{label}</p>
@@ -342,7 +342,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 ))}
               </div>
               <a href="https://wa.me/525531215386?text=Hola,%20tengo%20una%20pregunta%20sobre%20el%20Rodata%20One" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#25D366] text-xs font-inter hover:underline">
-                <MessageSquare size={13}/>¿Tienes dudas? Escríbenos por WhatsApp
+                <MessageSquare size={13}/>Questions? Chat with us on WhatsApp
               </a>
             </div>
           </div>
@@ -353,7 +353,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section style={{ backgroundColor: '#1D2125' }} className="border-y border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-3 gap-4 text-center divide-x divide-white/[0.06]">
-            {[{value:'+800', label:'Riders satisfechos'},{value:'4.9 ★', label:'Calificación promedio'},{value:'100%', label:'Envíos en México'}].map(({value, label}) => (
+            {[{value:'+800', label:'Happy riders'},{value:'4.9 ★', label:'Average rating'},{value:'100%', label:'US shipping'}].map(({value, label}) => (
               <div key={label} className="py-1">
                 <p className="font-sora font-bold text-brand-amber text-xl sm:text-2xl">{value}</p>
                 <p className="text-brand-steel text-xs font-inter mt-0.5">{label}</p>
@@ -366,14 +366,14 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       {/* ── 3. LIFESTYLE BREAK ── */}
       <section className="relative min-h-[55vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={LIFESTYLE_HIGHWAY} alt="Rider mexicano con Soporte Lumbar Rodata One en carretera" className="w-full h-full object-cover" loading="lazy"/>
+          <img src={LIFESTYLE_HIGHWAY} alt="Rider with Rodata One Lumbar Support on the highway" className="w-full h-full object-cover" loading="lazy"/>
           <div className="absolute inset-0" style={{background:'linear-gradient(to right, rgba(17,19,21,0.92) 0%, rgba(17,19,21,0.55) 55%, rgba(17,19,21,0.2) 100%)'}}/>
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="max-w-xl">
-            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-4 block">Para riders que no se rinden antes de tiempo</span>
-            <h2 className="font-sora font-bold text-brand-offwhite text-4xl sm:text-5xl leading-[1.05] mb-5">Deja de bajar a estirar. Empieza a llegar mejor.</h2>
-            <p className="text-brand-smoke text-lg font-inter leading-relaxed">El dolor de espalda no avisa. Simplemente llega en algún punto de la rodada. El Rodata One retrasa ese punto hasta mucho más lejos de lo que estás acostumbrado.</p>
+            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-4 block">For riders who don't quit before their time</span>
+            <h2 className="font-sora font-bold text-brand-offwhite text-4xl sm:text-5xl leading-[1.05] mb-5">Stop pulling over to stretch. Start arriving better.</h2>
+            <p className="text-brand-smoke text-lg font-inter leading-relaxed">Back pain doesn't warn you. It just shows up at some point during the ride. The Rodata One pushes that point way further than you're used to.</p>
           </div>
         </div>
       </section>
@@ -382,8 +382,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section id="por-que-funciona" style={{backgroundColor:'#111315'}} className="py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">Por qué funciona</span>
-            <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl lg:text-5xl">Diseñado para que dures más en el camino</h2>
+            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">Why it works</span>
+            <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl lg:text-5xl">Built to keep you going longer</h2>
           </div>
           <div className="space-y-24">
             {FEATURES.map(({number, icon: Icon, title, desc, image}, idx) => (
@@ -409,13 +409,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
       {/* ── 7. CITY LIFESTYLE ── */}
       <section className="relative overflow-hidden" style={{minHeight:'40vh'}}>
-        <img src={LIFESTYLE_CITY} alt="Rider urbano con Rodata One en CDMX" className="w-full h-full object-cover absolute inset-0" loading="lazy"/>
+        <img src={LIFESTYLE_CITY} alt="Urban rider with Rodata One" className="w-full h-full object-cover absolute inset-0" loading="lazy"/>
         <div className="absolute inset-0" style={{background:'linear-gradient(to bottom, rgba(17,19,21,0.3) 0%, rgba(17,19,21,0.75) 100%)'}}/>
         <div className="relative z-10 flex items-end min-h-[40vh] pb-10">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
             <blockquote>
-              <p className="font-sora font-semibold text-brand-offwhite text-xl sm:text-2xl mb-2">"Ahora el Rodata One sale conmigo en cada rodada."</p>
-              <cite className="text-brand-smoke text-sm font-inter not-italic">Carlos M., CDMX</cite>
+              <p className="font-sora font-semibold text-brand-offwhite text-xl sm:text-2xl mb-2">"Now the Rodata One goes with me on every single ride."</p>
+              <cite className="text-brand-smoke text-sm font-inter not-italic">Carlos M., Los Angeles</cite>
             </blockquote>
           </div>
         </div>
@@ -426,13 +426,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 mb-12">
             <div>
-              <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-2 block">Reseñas verificadas</span>
-              <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl">Lo que dicen los riders</h2>
+              <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-2 block">Verified reviews</span>
+              <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl">What riders are saying</h2>
             </div>
             <div className="flex items-center gap-4 bg-brand-graphite border border-white/[0.08] rounded-2xl px-6 py-4 flex-shrink-0">
               <div><p className="font-sora font-bold text-brand-amber text-3xl leading-none">4.9</p><div className="mt-1.5"><Stars count={5} size={11}/></div></div>
               <div className="h-12 w-px bg-white/[0.08]"/>
-              <div><p className="text-brand-offwhite font-sora font-bold text-lg leading-none">127</p><p className="text-brand-steel text-xs font-inter mt-1">reseñas</p></div>
+              <div><p className="text-brand-offwhite font-sora font-bold text-lg leading-none">127</p><p className="text-brand-steel text-xs font-inter mt-1">reviews</p></div>
             </div>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -440,10 +440,10 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               <div key={name} className="bg-brand-graphite border border-white/[0.07] rounded-2xl overflow-hidden flex flex-col hover:border-brand-amber/20 transition-colors duration-300">
                 {/* Photo */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={photo} alt={`Foto de ${name} usando el Rodata One`} className="w-full h-full object-cover" loading="lazy"/>
+                  <img src={photo} alt={`Photo of ${name} wearing the Rodata One`} className="w-full h-full object-cover" loading="lazy"/>
                   <div className="absolute inset-0" style={{background:'linear-gradient(to bottom, transparent 50%, rgba(17,19,21,0.7) 100%)'}}/>
                   <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                    <Check size={10} className="text-brand-amber"/><span className="text-brand-amber text-[10px] font-inter font-medium">Compra verificada</span>
+                    <Check size={10} className="text-brand-amber"/><span className="text-brand-amber text-[10px] font-inter font-medium">Verified purchase</span>
                   </div>
                 </div>
                 {/* Content */}
@@ -470,14 +470,14 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section style={{backgroundColor:'#1D2125'}} className="border-y border-white/[0.06] py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">Simple de usar · Compra sin riesgo</span>
-            <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl">Listo en segundos. Sin riesgo.</h2>
+            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">Easy to use · Risk-free purchase</span>
+            <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl">Ready in seconds. Zero risk.</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 lg:gap-10">
             {[
-              {step:'1', title:'Ajusta las correas', desc:'Coloca a la altura lumbar y ajusta hasta sentirlo firme.'},
-              {step:'2', title:'Ponlo bajo tu chamarra', desc:'El perfil bajo lo hace discreto bajo cualquier chamarra.'},
-              {step:'3', title:'Sale a rodar', desc:'Notarás la diferencia al bajarte.'},
+              {step:'1', title:'Adjust the straps', desc:'Position it at lumbar height and tighten until it feels firm.'},
+              {step:'2', title:'Slide it under your jacket', desc:'Its low profile keeps it hidden under any jacket.'},
+              {step:'3', title:'Ride out', desc:'You\'ll feel the difference when you get off.'},
             ].map(({step, title, desc}) => (
               <div key={step} className="flex flex-col items-center text-center group">
                 <div className="h-10 w-10 rounded-full bg-brand-amber text-brand-carbon font-sora font-bold text-base flex items-center justify-center mb-4 amber-glow group-hover:scale-105 transition-transform">{step}</div>
@@ -489,10 +489,10 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
           <div className="border-t border-white/[0.06] my-10" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              {icon:RotateCcw, title:'30 días de prueba', desc:'Si no te convence, lo resolvemos.'},
-              {icon:Ruler, title:'Cambio de talla fácil', desc:'Para que el ajuste sea el correcto.'},
-              {icon:Truck, title:'Envío gratis', desc:'Sin costo a todo México.'},
-              {icon:MessageSquare, title:'Soporte WhatsApp', desc:'Personas reales que responden.'},
+              {icon:RotateCcw, title:'30-day trial', desc:'If it\'s not right for you, we\'ll make it right.'},
+              {icon:Ruler, title:'Easy size exchange', desc:'So you always get the perfect fit.'},
+              {icon:Truck, title:'Free shipping', desc:'Free US-wide delivery.'},
+              {icon:MessageSquare, title:'Live support', desc:'Real people who respond.'},
             ].map(({icon: Icon, title, desc}) => (
               <div key={title} className="bg-brand-carbon border border-white/[0.07] rounded-xl p-5 flex items-center gap-4 hover:border-brand-amber/20 transition-colors">
                 <div className="h-10 w-10 rounded-full bg-brand-amber/10 border border-brand-amber/20 flex items-center justify-center flex-shrink-0"><Icon size={17} className="text-brand-amber"/></div>
@@ -510,8 +510,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section id="faq" style={{backgroundColor:'#1D2125'}} className="border-t border-white/[0.06] py-20 lg:py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">Resolvemos tus dudas</span>
-            <h2 className="font-sora font-bold text-brand-offwhite text-3xl">Preguntas frecuentes</h2>
+            <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-3 block">We've got answers</span>
+            <h2 className="font-sora font-bold text-brand-offwhite text-3xl">Frequently asked questions</h2>
           </div>
           <Accordion type="single" collapsible className="space-y-3">
             {FAQS.map(({q, a}, i) => (
@@ -528,13 +528,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section style={{backgroundColor:'#111315'}} className="border-t border-white/[0.08] py-16 lg:py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="text-brand-amber text-xs font-sora font-semibold uppercase tracking-[0.18em] mb-4 block">Rodata One</span>
-          <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl leading-tight mb-4">¿Cuántas rodadas más vas a terminar con dolor de espalda?</h2>
-          <p className="text-brand-smoke font-inter text-sm mb-8">Envío gratis en México · 30 días de prueba · Cambio de talla fácil</p>
+          <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl leading-tight mb-4">How many more rides will you end with back pain?</h2>
+          <p className="text-brand-smoke font-inter text-sm mb-8">Free US shipping · 30-day trial · Easy size exchange</p>
           <div className="flex items-baseline justify-center gap-3 mb-7">
             <span className="font-sora font-bold text-brand-offwhite text-4xl">{logic.formatMoney(logic.currentPrice)}</span>
             {logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice && <span className="text-brand-steel text-xl line-through font-inter">{logic.formatMoney(logic.currentCompareAt)}</span>}
           </div>
-          <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora text-base px-12">Comprar ahora<ChevronRight size={18}/></button>
+          <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora text-base px-12">Buy now<ChevronRight size={18}/></button>
         </div>
       </section>
 
@@ -551,8 +551,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <button onClick={handlePrimary} className="btn-amber amber-glow font-sora px-8"><ShoppingCart size={14}/>Comprar ahora</button>
-                <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora">Agregar al carrito</button>
+                <button onClick={handlePrimary} className="btn-amber amber-glow font-sora px-8"><ShoppingCart size={14}/>Buy now</button>
+                <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora">Add to cart</button>
               </div>
             </div>
             <div className="md:hidden flex items-center gap-3">
@@ -560,7 +560,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 <p className="font-sora font-bold text-brand-offwhite text-sm">{logic.formatMoney(logic.currentPrice)}</p>
                 <p className="text-brand-steel text-xs font-inter truncate">{logic.product.title}</p>
               </div>
-              <button onClick={handlePrimary} className="btn-amber amber-glow font-sora flex-shrink-0"><ShoppingCart size={14}/>Comprar ahora</button>
+              <button onClick={handlePrimary} className="btn-amber amber-glow font-sora flex-shrink-0"><ShoppingCart size={14}/>Buy now</button>
             </div>
           </div>
         </div>
