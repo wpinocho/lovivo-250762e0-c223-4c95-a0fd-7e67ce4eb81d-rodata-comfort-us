@@ -1,165 +1,106 @@
-# Rodata.mx — Plan
+# Rodata.mx US Store — Plan
 
-## Current State
-Premium moto lumbar support PDP + Checkout dark-branded. Cart sidebar dark-themed. Store is ready for paid traffic.
+## 1. Brand & Context
+- **Product**: Rodata One — premium motorcycle lumbar support belt
+- **Market**: US riders (cloned from rodata.mx Mexico store)
+- **Target**: Frequent urban riders, long-distance riders who want comfort
+- **Voice**: Premium, no-BS, rider-to-rider. Dark brand aesthetic.
+- **Store ID**: 250762e0-c223-4c95-a0fd-7e67ce4eb81d
+- **Preview URL**: https://250762e0-c223-4c95-a0fd-7e67ce4eb81d.preview.lovivo.app
 
-## Recent Changes
-- Added urgency/stock signal above CTA on PDP
-- Added checkout dark rebrand
-- Phone input autofill fix
-- Cart Sidebar dark rebrand (DONE ✅)
-- **BUG FIX: "Comprar Ahora" → checkout vacío — RESUELTO ✅**
-- **Precio actualizado: MX$749 → MX$699** (compare_at_price: MX$999) ✅
-- **BUG FIX: /gracias mostraba "Recoger en Tienda" — RESUELTO ✅**
-- **Migración Express Checkout — Pasos 1-5 COMPLETADOS ✅**
-- **Stripe Elements dark theme — RESUELTO ✅** (`src/lib/stripe-appearance.ts` + `StripePayment.tsx`)
-- **ExpressCheckoutElement: paymentMethodOrder + maxRows + buttonHeight ✅**
-- **BUG FIX: validateCheckoutFields bloqueaba pago con AddressElement — RESUELTO ✅**
-- **trackPurchase en Express Checkout handler — RESUELTO ✅** (PostHog + Meta Pixel se disparan al pagar con GPay/Apple Pay)
-- **BUG FIX: isValidPhone rechazaba E.164 sin espacio (+525531245632) — RESUELTO ✅**
+## 2. Design System
+- **Colors**: brand-amber (#C98B2E), brand-carbon (#111315), brand-graphite (#1D2125), brand-offwhite, brand-smoke, brand-steel
+- **Fonts**: Sora (headings), Inter (body)
+- **Theme**: Dark, premium, moto culture
+- **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
----
+## 3. Active Plan — US Localization
 
-## ✅ RESUELTO: Phone no llegaba a clients-upsert
+### STATUS: PENDING — needs Craft Mode
 
-### Root Cause
-`isValidPhone` usaba `/^\+\d+\s?/` (greedy) para quitar el prefijo de `+525531245632`.
-El `\d+` consumía TODOS los dígitos → `phoneWithoutPrefix = ''` → `digitsOnly.length = 0` → retornaba `false`.
-`normalizePhoneNumber` llama primero a `isValidPhone` → retornaba `null` → teléfono excluido del payload.
+### What needs to change for US launch:
 
-### Fix aplicado en `src/adapters/CheckoutAdapter.tsx`
-Reemplazada `isValidPhone` para contar el total de dígitos (incluye código de país):
-```js
-const isValidPhone = (phoneValue: string) => {
-  if (!phoneValue.trim()) return false;
-  const digitsOnly = phoneValue.replace(/[^\d]/g, '');
-  return digitsOnly.length >= 7 && digitsOnly.length <= 15;
-};
-```
-MX: +52 (2) + 10 local = 12 dígitos → pasa. Mínimo 7 excluye números claramente inválidos.
+#### 🔴 CRITICAL (must do before first sale):
 
----
+**A. Translate entire storefront to English** (Craft Mode)
+Files to edit:
+- `src/pages/ui/IndexUI.tsx` — ALL copy: hero, benefits bar, problem section, how it works, comparison table, testimonials, guarantee, FAQ, final CTA
+- `src/pages/ui/ProductPageUI.tsx` — ALL copy: product description, size guide (headers "Talla/Cintura/Tipo"), features, reviews (change cities from MX to US), FAQ, trust signals, stats bar, sticky bar
+- `src/templates/EcommerceTemplate.tsx` — trust bar, nav links, footer (copyright, "Hecho para riders mexicanos", WhatsApp message text, nav labels), footer nav labels
+- `src/pages/ui/CheckoutUI.tsx` — "Cargando orden...", "Error al cargar la orden" and any other Spanish strings
 
-## ✅ COMPLETADO: trackPurchase en Express Checkout
+**B. Fix hardcoded MX$ prices in UI** (Craft Mode)
+- `src/pages/ui/IndexUI.tsx`: "MX$699", "MX$999", "25% OFF" badges, "Comprar Rodata One — MX$699" buttons — need to show USD price dynamically from the product, OR be hardcoded in USD
+- Dynamic price blocks (using `logic.formatMoney`) should auto-convert if currency is set to USD in dashboard
 
-### Cambio aplicado en `StripePayment.tsx`
-Dentro del handler `onConfirm` del `ExpressCheckoutElement`, inmediatamente después de `if (pi?.status === 'succeeded') {`:
-```ts
-trackPurchase({
-  products: paymentItems.map((item: any) => tracking.createTrackingProduct({
-    id: item.product_id, title: item.product_name || item.title,
-    price: item.price / 100, category: 'product',
-    variant: item.variant_id ? { id: item.variant_id } : undefined
-  })),
-  value: totalCents / 100, currency: tracking.getCurrencyFromSettings(currency),
-  order_id: orderId,
-  custom_parameters: { payment_method: 'express_checkout', checkout_token: checkoutToken }
-})
-```
-- `payment_method: 'express_checkout'` diferencia GPay/Apple Pay del flujo Stripe normal (`'stripe'`)
-- Todos los parámetros (`paymentItems`, `totalCents`, `checkoutToken`, etc.) ya estaban en scope
+**C. Update shipping/trust messaging to US context**
+- "Envío gratis en México" → "Free shipping to the US"
+- "A todo México" → "Across the US"  
+- "Envío en 24–48 hrs" → "Ships in 1-3 business days"
+- "100% Envíos en México" (stats bar) → "100% US Shipping"
+- All WhatsApp links: change +525531215386 to US support number AND translate message text to English
 
----
+**D. Update reviews to US context**
+- Change cities: CDMX → Los Angeles, Guadalajara → Houston, Monterrey → Chicago, Puebla → Miami, CDMX → New York
+- Review dates can stay (Mar 2025 etc.)
+- Review text needs English translation
 
-## ✅ COMPLETADO: Fix validación checkout con Stripe AddressElement
+**E. Translate product itself in Dashboard**
+- Product title: "Soporte Lumbar Rodata One" → "Rodata One Lumbar Support"
+- Product description
+- Variant option names (if in Spanish)
+- Set price in USD (should already be USD if currency is configured)
 
-### Root Cause
-`validateCheckoutFields` en `CheckoutAdapter` validaba campos de React state (`phone`, `address.state`, etc.) que ahora maneja el `AddressElement` de Stripe. Cuando Link pre-rellena la dirección sin que el usuario la toque, el `onChange` no necesariamente sincroniza el estado antes de que el usuario presione "Completar Compra", causando el error "Campos requeridos: teléfono, estado".
+**F. Set up US shipping zones in Dashboard**
+- Add US shipping zone
+- Configure shipping rates for continental US, Alaska, Hawaii
 
-### Fix aplicado en `CheckoutUI.tsx`
-- Reemplazado `onValidationRequired={logic.validateCheckoutFields}` por una función custom inline
-- Si `!logic.usePickup`: valida solo `email` (regex) + `addressElementComplete` (flag del `onChange` de Stripe AddressElement) + método de envío si aplica
-- Si `logic.usePickup`: sigue usando `logic.validateCheckoutFields()` completo (campos manuales)
-- Añadido `useToast` import en CheckoutUI para mostrar errores
+#### 🟡 IMPORTANT (do before paid traffic):
 
----
+**G. Update product page slug** (Dashboard)
+- Current: `/productos/soporte-lumbar-rodata-one`
+- US: `/products/rodata-one-lumbar-support`
+- BUY_URL const in IndexUI.tsx and EcommerceTemplate.tsx also needs update
 
-## ✅ COMPLETADO: Express Checkout — Orden de botones y altura
+**H. Footer cleanup**
+- "© 2025 rodata.mx" — update if brand has US name (e.g. rodata.com or keep rodata.mx)
+- "Hecho para riders mexicanos" → "Made for riders." or "Built for the road."
+- Footer nav links in Spanish: "Inicio" → "Home", "Cómo funciona" → "How it works", "Opiniones" → "Reviews"
+- Privacy/Terms page URLs: `/aviso-de-privacidad` → `/privacy-policy`, `/terms` — these pages need English content too
 
-### Fix aplicado en `StripePayment.tsx`
-Dentro del objeto `options` del `<ExpressCheckoutElement>`:
-```
-layout: { overflow: 'auto', maxColumns: 2, maxRows: 1 },
-buttonHeight: 44,
-paymentMethodOrder: ['applePay', 'googlePay', 'link'],
-```
+**I. Comparison table — fix Mexico-specific row**
+- "Envío en México" → "US Shipping"
 
----
+**J. WhatsApp support — reconsider**
+- For US market, consider email or live chat instead of WhatsApp (lower adoption in US)
+- Alternative: keep WhatsApp but add email option
 
-## ✅ COMPLETADO: Stripe Elements Dark Theme
+#### 🟢 NICE TO HAVE (can do later):
+- Translate Blog pages if any
+- US-specific Meta Ads (separate ad account or campaigns)
+- US phone number for support
+- Update SEO metadata (meta title, description) to English
 
-### Root Cause
-`getComputedStyle(document.documentElement)` leía variables de `:root` (tema claro → `--background: 200 18% 97%` ≈ blanco), porque la página de checkout usa fondos oscuros hardcodeados (`bg-[#111315]`) sin agregar `.dark` al `<html>`.
+## 4. Recent Changes
+- 2026-05-18: Store cloned from rodata.mx Mexico store for US market expansion
+- Previous MX store changes: Express Checkout, Stripe dark theme, phone validation fix, trackPurchase, intentOrder fix, price MX$749→MX$699
 
-### Solución
-- Creado `src/lib/stripe-appearance.ts` con `getStripeAppearance('dark' | 'light')`
-- Modo `'dark'`: usa `theme: 'night'` + tokens dark de rodata.mx hardcodeados
-- Modo `'light'`: lee CSS vars de `:root` en runtime (para stores futuras en modo claro)
-- `StripePayment.tsx`: reemplazado bloque de appearance inline por `getStripeAppearance('dark')`
+## 5. Image Inventory
+All product/lifestyle images are the same as MX store — OK to reuse:
+- Hero: `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775772513540-16g7elmcuii.webp`
+- Reviews: `product-images/cdddcb57-6bb6-4cd1-8062-d3fa8617d1cf/review-[1-5].webp`
+- Features: message-images/...1775777133671 through 1775777133672
 
----
+## 6. Known Issues
+- Store config shows `currency: usd (Peso Mexicano (MXN))` — label is misleading but actual currency code appears to be USD. Verify in Dashboard.
+- Chrome autofill can paint checkout inputs white (CSS override already in index.css)
+- All hardcoded prices in IndexUI.tsx are "MX$699" / "MX$999" — need to either replace with dynamic `logic.formatMoney()` calls or hardcode USD values
 
-## ✅ COMPLETADO: Migración Express Checkout (Stripe PaymentElement + Apple Pay / Google Pay)
-
-### Pasos completados
-1. ✅ `src/lib/country-codes.ts` — mapeo bidireccional ISO ↔ nombre en español
-2. ✅ `src/components/ProductExpressCheckout.tsx` — PaymentRequestButton en PDP; settings-gated mount (no IntersectionObserver)
-3. ✅ `src/components/StripePayment.tsx` — PaymentElement + LinkAuthenticationElement + AddressElement + ExpressCheckoutElement; fix de `intentOrder` preservado; dark appearance via `getStripeAppearance('dark')`
-4. ✅ `src/pages/ui/CheckoutUI.tsx` — integrado: `allowedCountries`, `deliveryMethodSlot`, `onAddressChange`, `onEmailChange`, `onLinkAuthChange`, `showAddressElement`, `addressElementComplete`, `stripeKey` estable, `isStripeReady` guard; dark theme 100% preservado; validación custom bypasa fields de Stripe AddressElement
-5. ✅ `src/pages/ui/ProductPageUI.tsx` — Express Checkout insertado encima de los CTAs
-
-### CTA Order (PDP)
-1. `<ProductExpressCheckout>` — aparece solo si Apple Pay / Google Pay disponibles
-2. Divider "— o —" — solo si `expressAvailable === true`
-3. **Comprar ahora** (btn-amber-lg, primario)
-4. **Agregar al carrito** (btn-outline-light, secundario)
-
-### CRITICAL: intentOrder fix preservado en StripePayment.tsx
-```
-// After successful payment:
-if (intentOrder) {
-  localStorage.setItem('completed_order', JSON.stringify(intentOrder))
-} else {
-  const checkoutData = localStorage.getItem(`checkout:${STORE_ID}`)
-  if (checkoutData) {
-    const parsed = JSON.parse(checkoutData)
-    if (parsed.order) localStorage.setItem('completed_order', JSON.stringify(parsed.order))
-  }
-}
-```
-
----
-
-## ✅ BUG RESUELTO: /gracias → dirección incorrecta
-
-### Fix Applied
-- `StripePayment.tsx`: captura `intentOrder = data?.order` y lo guarda en localStorage
-- `ThankYou.tsx`: lectura de campos con fallback dual: `line1 || address1`, `state || province`, etc.
-
----
-
-## Known Issues
-- Chrome autofill puede pintar inputs del checkout en blanco (workaround: CSS autofill override ya aplicado en index.css)
-
-## Key Files
-- `src/pages/ui/ProductPageUI.tsx` — main PDP ✅ (Express Checkout + CTAs ordenados)
-- `src/pages/ui/CheckoutUI.tsx` — checkout ✅ (dark brand rebrand done + Express Checkout integrado + validación custom)
-- `src/templates/EcommerceTemplate.tsx` — header/footer/nav
-- `src/components/StripePayment.tsx` — payment form ✅ (intentOrder fix + PaymentElement + AddressElement + dark appearance + paymentMethodOrder + trackPurchase en express)
-- `src/lib/stripe-appearance.ts` — ✅ helper getStripeAppearance('dark'|'light')
-- `src/components/ProductExpressCheckout.tsx` — PaymentRequestButton en PDP ✅ (settings-gated, no lazy observer)
-- `src/lib/country-codes.ts` — mapeo ISO ↔ español ✅
-- `src/components/CartSidebar.tsx` — cart lateral ✅ dark theme complete
-- `src/index.css` — design system
-- `src/adapters/CheckoutAdapter.tsx` — checkout logic ✅ isValidPhone fix aplicado
-- `src/hooks/useCheckout.ts` — checkoutWithItems agregado
-- `src/hooks/useCheckoutState.ts` — manages localStorage state
-- `src/components/headless/HeadlessProduct.tsx` — handleBuyNow corregido ✅
-- `src/pages/ThankYou.tsx` — ✅ field names fixed (line1/state/postal_code/name)
-
----
-
-## PENDING: Post-Launch (nice to have)
-- Add a "También les encantó" section at bottom of cart/checkout (upsell)
-- Consider a post-purchase email sequence (set up from Dashboard)
-- Video testimonial section if user has video content
+## 7. Key Files
+- `src/pages/ui/IndexUI.tsx` — homepage (**ALL SPANISH — needs full English translation**)
+- `src/pages/ui/ProductPageUI.tsx` — PDP (**ALL SPANISH — needs full English translation**)
+- `src/templates/EcommerceTemplate.tsx` — header/footer (**ALL SPANISH — needs translation**)
+- `src/pages/ui/CheckoutUI.tsx` — checkout (a few Spanish strings)
+- `src/pages/ThankYou.tsx` — post-purchase page
+- `src/components/StripePayment.tsx` — payment form
+- `src/adapters/CheckoutAdapter.tsx` — checkout logic
