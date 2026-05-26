@@ -7,6 +7,7 @@
 - **Voice**: Premium, no-BS, rider-to-rider. Dark brand aesthetic.
 - **Store ID**: 250762e0-c223-4c95-a0fd-7e67ce4eb81d
 - **Preview URL**: https://250762e0-c223-4c95-a0fd-7e67ce4eb81d.preview.lovivo.app
+- **Brand name for US store**: RODATA (no .mx)
 
 ## 2. Design System
 - **Colors**: brand-amber (#C98B2E), brand-carbon (#111315), brand-graphite (#1D2125), brand-offwhite, brand-smoke, brand-steel
@@ -30,6 +31,11 @@
 ### ✅ IMAGES FIXED
 - IndexUI.tsx `PROBLEMA_REAL_IMG` — replaced with English version uploaded by user
 
+### ✅ BRANDING UPDATED (2026-05-26)
+- BrandLogoLeft.tsx — "rodata.mx" → "RODATA" (ROD in offwhite, ATA in amber, uppercase tracking-widest)
+- public/logo.svg — Updated to "RODATA" with brand colors
+- public/favicon.svg — Updated to dark background (#111315) + amber "R"
+
 ### 🟡 NEXT STEPS (post-launch)
 - Configure US shipping zones in Dashboard (Settings > Shipping)
 - Consider US phone/email support (WhatsApp is less common in US)
@@ -38,6 +44,7 @@
 - CartSidebar still has some Spanish text ("Carrito de Compras", "Pagar", etc.) — could translate if needed
 
 ## 4. Recent Changes
+- 2026-05-26: **BrandLogoLeft.tsx + logo.svg + favicon.svg** — Updated branding from "rodata.mx" to "RODATA"
 - 2026-05-26: **IndexUI.tsx** — Replaced `PROBLEMA_REAL_IMG` with English version (user uploaded)
 - 2026-05-26: **CartAdapter.tsx + CartSidebar.tsx** — Fixed `navigate('/pagar')` → `navigate('/checkout')`
 - 2026-05-26: **App.tsx** — Added `/pagar` as alias route → `<Checkout />` (safety net for external links)
@@ -63,6 +70,9 @@
 - CartSidebar has some residual Spanish ("Carrito de Compras", "Pagar" button, empty state text)
 
 ## 7. Key Files — ALL DONE ✅
+- `src/components/BrandLogoLeft.tsx` — ✅ RODATA (no .mx)
+- `public/logo.svg` — ✅ RODATA brand SVG
+- `public/favicon.svg` — ✅ Dark + amber "R"
 - `src/pages/ui/IndexUI.tsx` — ✅ English + EN image
 - `src/templates/EcommerceTemplate.tsx` — ✅ English
 - `src/App.tsx` — ✅ English routes + /pagar alias
