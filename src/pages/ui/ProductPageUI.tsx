@@ -32,6 +32,10 @@ const SIZE_GUIDE = [
   { size: 'XL', waist: '39–45 in',   recom: 'Extra large'  },
 ]
 
+// Extracts just the size letter from values like "S (60-75 cm)" → "S"
+const getSizeKey = (value: string): string =>
+  value.includes('(') ? value.split('(')[0].trim() : value
+
 const FEATURES: { number: string; icon: React.ElementType; title: string; desc: React.ReactNode; image: string }[] = [
   { number: '01', icon: Layers, title: 'Finish every ride without the pain that\'s been piling up',
     desc: (
@@ -242,7 +246,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-brand-smoke text-sm font-sora font-semibold">
                           {option.name}
-                          {logic.selected[option.name] && <span className="text-brand-steel font-inter font-normal ml-2">· {SIZE_GUIDE.find(s => s.size === logic.selected[option.name])?.waist ?? logic.selected[option.name]}</span>}
+                          {logic.selected[option.name] && <span className="text-brand-steel font-inter font-normal ml-2">· {SIZE_GUIDE.find(s => s.size === getSizeKey(logic.selected[option.name]))?.waist ?? logic.selected[option.name]}</span>}
                         </p>
                         <button onClick={() => setShowSizeGuide(!showSizeGuide)} className="flex items-center gap-1 text-brand-amber text-xs font-inter underline underline-offset-2">
                           Size guide {showSizeGuide ? <ChevronUp size={11}/> : <ChevronDown size={11}/>}
@@ -262,14 +266,14 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                         {option.values.map((value: string) => {
                           const isSelected = logic.selected[option.name] === value
                           const isAvailable = logic.isOptionValueAvailable(option.name, value)
-                          const sg = SIZE_GUIDE.find(s => s.size === value)
+                          const sg = SIZE_GUIDE.find(s => s.size === getSizeKey(value))
                           return (
                             <button key={value} disabled={!isAvailable} onClick={() => logic.handleOptionSelect(option.name, value)}
                               className={cn("flex flex-col items-center min-w-[68px] px-3 py-2.5 rounded-xl border text-sm transition-all font-sora",
                                 isSelected ? "bg-brand-amber text-brand-carbon border-brand-amber font-bold shadow-[0_0_16px_rgba(201,139,46,0.3)]"
                                 : isAvailable ? "bg-brand-graphite border-white/[0.12] text-brand-smoke hover:border-brand-amber/50"
                                 : "opacity-40 cursor-not-allowed bg-brand-graphite border-white/[0.08] text-brand-steel")}>
-                              <span className="font-bold">{value}</span>
+                              <span className="font-bold">{getSizeKey(value)}</span>
                               {sg && <span className={cn("text-[10px] font-inter mt-0.5", isSelected ? "text-brand-carbon/70" : "text-brand-steel")}>{sg.waist}</span>}
                             </button>
                           )
