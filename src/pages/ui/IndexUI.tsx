@@ -115,10 +115,10 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-8">
-              <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">$69</span>
-              <span className="text-brand-steel text-xl line-through font-inter">$99</span>
+              <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">$49</span>
+              <span className="text-brand-steel text-xl line-through font-inter">$75</span>
               <span className="bg-brand-amber/15 border border-brand-amber/30 text-brand-amber text-xs font-semibold px-2.5 py-1 rounded font-sora">
-                30% OFF
+                35% OFF
               </span>
             </div>
 
@@ -358,7 +358,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
               <Link to={buyUrl}>
                 <button className="btn-amber amber-glow font-sora">
-                  Buy now — $69
+                  Buy now — $49
                   <ArrowRight size={16} />
                 </button>
               </Link>
@@ -479,7 +479,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           <div className="mt-10 text-center">
             <Link to={buyUrl}>
               <button className="btn-amber-lg amber-glow font-sora">
-                Buy Rodata One — $69
+                Buy Rodata One — $49
                 <ArrowRight size={16} />
               </button>
             </Link>
@@ -710,8 +710,8 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
           {/* Price */}
           <div className="flex items-baseline justify-center gap-3 mb-8">
-            <span className="font-sora font-bold text-brand-offwhite text-4xl">$69</span>
-            <span className="text-brand-steel text-xl line-through font-inter">$99</span>
+            <span className="font-sora font-bold text-brand-offwhite text-4xl">$49</span>
+            <span className="text-brand-steel text-xl line-through font-inter">$75</span>
           </div>
 
           <Link to={buyUrl}>
