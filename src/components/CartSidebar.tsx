@@ -93,7 +93,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
       }
 
       onClose()
-      navigate('/pagar')
+      navigate('/checkout')
     } catch (error) {
       console.error('Error in handleCreateCheckout:', error)
     }

@@ -103,7 +103,7 @@ export const useCartLogic = () => {
         console.error('Error saving to sessionStorage:', e)
       }
 
-      navigate('/pagar')
+      navigate('/checkout')
     } catch (error) {
       console.error('Error in handleCreateCheckout:', error)
     }

@@ -70,6 +70,7 @@ const App = () => (
                         <Route path="/bundle/:slug" element={<Bundle />} />
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/pagar" element={<Checkout />} />
                         <Route path="/thank-you" element={<ThankYou />} />
                         <Route path="/thank-you/:orderId" element={<ThankYou />} />
                         <Route path="/gracias" element={<ThankYou />} />
