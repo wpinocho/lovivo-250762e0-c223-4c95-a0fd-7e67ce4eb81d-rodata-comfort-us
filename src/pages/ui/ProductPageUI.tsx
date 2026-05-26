@@ -78,10 +78,10 @@ const REVIEW_IMG_5 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object
 
 const REVIEWS = [
   { name: 'Carlos M.',  city: 'Los Angeles', stars: 5, initial: 'C', date: 'Mar 2025', photo: REVIEW_IMG_1, text: 'LA to San Diego and arrived way less tense. It\'s now part of my gear on every single ride.' },
-  { name: 'Jorge R.',   city: 'Houston',     stars: 5, initial: 'J', date: 'Feb 2025', photo: REVIEW_IMG_2, text: 'Firm and comfortable. Fits perfectly under my jacket — you don\'t notice it and it doesn\'t get in the way. You can feel the quality.' },
-  { name: 'Andrés V.',  city: 'Chicago',     stars: 5, initial: 'A', date: 'Mar 2025', photo: REVIEW_IMG_3, text: 'I\'ve been riding for years and always finished tense. With the Rodata One I arrive way fresher. Worth every dollar.' },
-  { name: 'Miguel T.',  city: 'Phoenix',     stars: 4, initial: 'M', date: 'Jan 2025', photo: REVIEW_IMG_4, text: 'Size M fit me perfectly with the guide. Adjusting the straps is super easy. Would recommend.' },
-  { name: 'Rodrigo S.', city: 'Miami',       stars: 5, initial: 'R', date: 'Feb 2025', photo: REVIEW_IMG_5, text: 'Bought it unsure if it would be uncomfortable — it\'s the exact opposite. Goes with me on every ride.' },
+  { name: 'Jason R.',   city: 'Houston',     stars: 5, initial: 'J', date: 'Feb 2025', photo: REVIEW_IMG_2, text: 'Firm and comfortable. Fits perfectly under my jacket — you don\'t notice it and it doesn\'t get in the way. You can feel the quality.' },
+  { name: 'Tyler V.',   city: 'Chicago',     stars: 5, initial: 'T', date: 'Mar 2025', photo: REVIEW_IMG_3, text: 'I\'ve been riding for years and always finished tense. With the Rodata One I arrive way fresher. Worth every dollar.' },
+  { name: 'Marcus T.',  city: 'Phoenix',     stars: 4, initial: 'M', date: 'Jan 2025', photo: REVIEW_IMG_4, text: 'Size M fit me perfectly with the guide. Adjusting the straps is super easy. Would recommend.' },
+  { name: 'Ryan S.',    city: 'Miami',       stars: 5, initial: 'R', date: 'Feb 2025', photo: REVIEW_IMG_5, text: 'Bought it unsure if it would be uncomfortable — it\'s the exact opposite. Goes with me on every ride.' },
 ]
 
 const FAQS = [

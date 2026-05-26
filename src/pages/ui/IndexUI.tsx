@@ -512,14 +512,14 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
               },
               {
                 text: "Feels firm but not uncomfortable. The best part is it doesn't get in the way under my jacket.",
-                name: 'Jorge',
+                name: 'Jason',
                 city: 'Houston',
                 stars: 5,
                 photo: REVIEW_IMG_2,
               },
               {
                 text: "I liked that it looks like part of your gear, not just a random back brace. You can feel the quality.",
-                name: 'Andres',
+                name: 'Tyler',
                 city: 'Chicago',
                 stars: 5,
                 photo: REVIEW_IMG_3,
