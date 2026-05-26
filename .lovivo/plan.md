@@ -27,6 +27,9 @@
 - CartAdapter.tsx — Fixed `/pagar` → `/checkout`
 - CartSidebar.tsx — Fixed `/pagar` → `/checkout`
 
+### ✅ IMAGES FIXED
+- IndexUI.tsx `PROBLEMA_REAL_IMG` — replaced with English version uploaded by user
+
 ### 🟡 NEXT STEPS (post-launch)
 - Configure US shipping zones in Dashboard (Settings > Shipping)
 - Consider US phone/email support (WhatsApp is less common in US)
@@ -35,20 +38,20 @@
 - CartSidebar still has some Spanish text ("Carrito de Compras", "Pagar", etc.) — could translate if needed
 
 ## 4. Recent Changes
+- 2026-05-26: **IndexUI.tsx** — Replaced `PROBLEMA_REAL_IMG` with English version (user uploaded)
 - 2026-05-26: **CartAdapter.tsx + CartSidebar.tsx** — Fixed `navigate('/pagar')` → `navigate('/checkout')`
 - 2026-05-26: **App.tsx** — Added `/pagar` as alias route → `<Checkout />` (safety net for external links)
 - 2026-05-18: **ProductPageUI.tsx** — 49 string replacements: sizes in inches, US city reviews, all UI copy in English
 - 2026-05-18: **CheckoutUI.tsx** — 44 string replacements: all Spanish labels translated
 - 2026-05-18: **PrivacyPolicy.tsx** — Full English rewrite (10 sections)
 - 2026-05-18: **TermsAndConditions.tsx** — Full English rewrite (11 sections)
-- 2026-05-18: Read ProductPageUI, CheckoutUI, PrivacyPolicy, TermsAndConditions — full edit plan documented
 - 2026-05-18: **IndexUI.tsx** — Full English translation, $69/$99 USD, US cities in reviews
 - 2026-05-18: **EcommerceTemplate.tsx** — Full English translation (nav, trust bar, footer)
 - 2026-05-18: **App.tsx** — English URL routes added
 - 2026-05-18: Store cloned from rodata.mx Mexico store for US market expansion
 
 ## 5. Image Inventory
-All product/lifestyle images reused from MX store:
+- Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/message-images/f67d4ec0-4d70-431e-b117-75f07c0e7880/1779817823430-uv5gvuf1tv.webp` (EN version, user uploaded 2026-05-26)
 - Hero: `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/object/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775772513540-16g7elmcuii.webp`
 - Reviews: `product-images/cdddcb57-6bb6-4cd1-8062-d3fa8617d1cf/review-[1-5].webp`
 - Features: message-images/...1775777133671 through 1775777133672
@@ -60,7 +63,7 @@ All product/lifestyle images reused from MX store:
 - CartSidebar has some residual Spanish ("Carrito de Compras", "Pagar" button, empty state text)
 
 ## 7. Key Files — ALL DONE ✅
-- `src/pages/ui/IndexUI.tsx` — ✅ English
+- `src/pages/ui/IndexUI.tsx` — ✅ English + EN image
 - `src/templates/EcommerceTemplate.tsx` — ✅ English
 - `src/App.tsx` — ✅ English routes + /pagar alias
 - `src/pages/ui/ProductPageUI.tsx` — ✅ English
