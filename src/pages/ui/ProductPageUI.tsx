@@ -121,6 +121,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [expressAvailable, setExpressAvailable] = useState(false)
+  const [ctaHasLeftView, setCtaHasLeftView] = useState(false)
   const { ref: ctaRef, inView: ctaInView } = useInView({ threshold: 0, initialInView: true })
 
   const productImages: string[] = logic.displayImages?.length ? logic.displayImages : [PRODUCT_FLAT, PRODUCT_WORN]
@@ -130,6 +131,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
   useEffect(() => { setSelectedImage(null) }, [logic.matchingVariant])
   useEffect(() => { window.scrollTo(0, 0) }, [])
+  useEffect(() => { if (!ctaInView) setCtaHasLeftView(true) }, [ctaInView])
 
   if (logic.loading) return (
     <EcommerceTemplate>
@@ -185,7 +187,14 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                     </div>
                   ))}
                 </div>
-                {discountPct && <div className="absolute top-4 left-8 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
+                {discountPct && <div className="absolute top-3 right-4 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
+                {productImages.length > 1 && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-0.5 pointer-events-none">
+                    <div className="bg-brand-carbon/65 backdrop-blur-sm rounded-full p-1.5 border border-white/10">
+                      <ChevronRight size={14} className="text-brand-offwhite" />
+                    </div>
+                  </div>
+                )}
               </div>
               {productImages.length > 1 && (
                 <div className="hidden md:flex gap-2 overflow-x-auto pb-1">
@@ -553,7 +562,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
       {/* ── STICKY BAR ── */}
       {logic.inStock && (
-        <div className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-white/[0.1] transition-transform duration-300 ease-out pb-[env(safe-area-inset-bottom)]", ctaInView ? "translate-y-full" : "translate-y-0")} style={{backgroundColor:'rgba(17,19,21,0.96)'}}>
+        <div className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-white/[0.1] transition-transform duration-300 ease-out pb-[env(safe-area-inset-bottom)]", (ctaHasLeftView && !ctaInView) ? "translate-y-0" : "translate-y-full")} style={{backgroundColor:'rgba(17,19,21,0.96)'}}>
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="hidden md:flex items-center justify-between gap-6">
               <div className="flex items-center gap-4 min-w-0">
