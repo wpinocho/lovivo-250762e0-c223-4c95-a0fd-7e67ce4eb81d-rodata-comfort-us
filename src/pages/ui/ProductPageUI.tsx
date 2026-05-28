@@ -123,11 +123,22 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const [expressAvailable, setExpressAvailable] = useState(false)
   const [showStickyBar, setShowStickyBar] = useState(false)
   const ctaRef = useRef<HTMLDivElement>(null)
+  // Only show sticky bar AFTER the CTA has been visible at least once.
+  // This prevents it from flashing on page load if the observer fires before layout settles.
+  const hasCTABeenVisible = useRef(false)
   useEffect(() => {
+    hasCTABeenVisible.current = false   // reset on each load cycle
     const el = ctaRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hasCTABeenVisible.current = true
+          setShowStickyBar(false)
+        } else if (hasCTABeenVisible.current) {
+          setShowStickyBar(true)
+        }
+      },
       { threshold: 0 }
     )
     observer.observe(el)
