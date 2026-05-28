@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 const LIFESTYLE_CITY    = '/pdp-lifestyle-1.jpg'
+const PDP_EXTRA_1       = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0-4d70-431e-b117-75f07c0e7880/1779996935992-sw1rkxgmulj.webp?width=1200&quality=80'
+const PDP_EXTRA_2       = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0-4d70-431e-b117-75f07c0e7880/1779996935993-8juigpxnux.webp?width=1200&quality=80'
 const LIFESTYLE_HIGHWAY = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775768374485-uca4dkx21g.webp?width=1200&quality=75'
 const FEATURES_ES       = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775767354281-gqxi2j4hklp.webp?width=800&quality=75'
 const PRODUCT_WORN      = '/product-worn.jpg'
@@ -146,6 +148,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   }, [logic.loading])
 
   const productImages: string[] = logic.displayImages?.length ? logic.displayImages : [PRODUCT_FLAT, PRODUCT_WORN]
+  // Inject extra lifestyle images at position 2+
+  const carouselImages: string[] = [
+    productImages[0],
+    PDP_EXTRA_1,
+    PDP_EXTRA_2,
+    ...productImages.slice(1),
+  ]
   const displayImage = selectedImage ?? productImages[0]
   const discountPct = logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice
     ? Math.round((1 - logic.currentPrice / logic.currentCompareAt) * 100) : null
@@ -201,23 +210,24 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               </div>
               <div className="md:hidden relative -mx-4">
                 <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pl-4 pr-2 no-scrollbar">
-                  {productImages.map((img, i) => (
+                  {carouselImages.map((img, i) => (
                     <div key={i} className="flex-shrink-0 w-[88vw] snap-start aspect-square rounded-2xl overflow-hidden bg-brand-graphite">
                       <img src={img} alt={`${logic.product.title} ${i+1}`} className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} />
                     </div>
                   ))}
                 </div>
-                {discountPct && <div className="absolute top-4 left-8 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
+                {discountPct && <div className="absolute top-0 -translate-y-1/2 left-8 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora shadow-lg">-{discountPct}%</div>}
               </div>
-              {productImages.length > 1 && (
+              {carouselImages.length > 1 && (
                 <div className="hidden md:flex gap-2 overflow-x-auto pb-1">
-                  {productImages.map((img, i) => (
+                  {carouselImages.map((img, i) => (
                     <button key={i} onClick={() => setSelectedImage(img)} className={cn("flex-shrink-0 w-[70px] h-[70px] rounded-xl overflow-hidden border-2 transition-all", (selectedImage === img || (!selectedImage && i === 0)) ? "border-brand-amber" : "border-white/10 hover:border-white/30")}>
                       <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </button>
                   ))}
                 </div>
               )}
+
             </div>
 
             {/* Info panel */}
