@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel"
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 const LIFESTYLE_CITY    = '/pdp-lifestyle-1.jpg'
@@ -121,7 +121,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [expressAvailable, setExpressAvailable] = useState(false)
-  const { ref: ctaRef, inView: ctaInView } = useInView({ threshold: 0 })
+  const { ref: ctaRef, inView: ctaInView } = useInView({ threshold: 0, initialInView: true })
 
   const productImages: string[] = logic.displayImages?.length ? logic.displayImages : [PRODUCT_FLAT, PRODUCT_WORN]
   const displayImage = selectedImage ?? productImages[0]
@@ -167,10 +167,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
       {/* ── 1. MAIN PRODUCT ── */}
       <section style={{ backgroundColor: '#111315' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-14">
-          <button onClick={logic.handleNavigateBack} className="flex items-center gap-1.5 text-brand-steel hover:text-brand-smoke text-xs font-inter mb-6 transition-colors">
-            <ArrowLeft size={13} />Back
-          </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-14">
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
             {/* Gallery */}
@@ -180,20 +177,15 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 {discountPct && <div className="absolute top-4 left-4 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
                 <div className="absolute bottom-3 right-3 bg-brand-carbon/80 backdrop-blur-sm text-brand-smoke text-[10px] font-inter px-2 py-1 rounded border border-white/[0.08]">Rodata</div>
               </div>
-              <div className="md:hidden relative">
-                {productImages.length > 1 ? (
-                  <Carousel className="w-full">
-                    <CarouselContent>
-                      {productImages.map((img, i) => (
-                        <CarouselItem key={i}><div className="aspect-square rounded-2xl overflow-hidden bg-brand-graphite"><img src={img} alt={`${logic.product.title} ${i+1}`} className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} /></div></CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-3" /><CarouselNext className="right-3" />
-                  </Carousel>
-                ) : (
-                  <div className="aspect-square rounded-2xl overflow-hidden bg-brand-graphite"><img src={displayImage} alt={logic.product.title} className="w-full h-full object-cover" loading="eager" fetchPriority="high" /></div>
-                )}
-                {discountPct && <div className="absolute top-4 left-4 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
+              <div className="md:hidden relative -mx-4">
+                <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pl-4 pr-2 no-scrollbar">
+                  {productImages.map((img, i) => (
+                    <div key={i} className="flex-shrink-0 w-[88vw] snap-start aspect-square rounded-2xl overflow-hidden bg-brand-graphite">
+                      <img src={img} alt={`${logic.product.title} ${i+1}`} className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} />
+                    </div>
+                  ))}
+                </div>
+                {discountPct && <div className="absolute top-4 left-8 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
               </div>
               {productImages.length > 1 && (
                 <div className="hidden md:flex gap-2 overflow-x-auto pb-1">
@@ -345,9 +337,26 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                   </div>
                 ))}
               </div>
-              <a href="https://wa.me/525531215386?text=Hola,%20tengo%20una%20pregunta%20sobre%20el%20Rodata%20One" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#25D366] text-xs font-inter hover:underline">
-                <MessageSquare size={13}/>Questions? Chat with us on WhatsApp
-              </a>
+              {/* Social proof — verified riders */}
+              <div className="flex items-center gap-3 bg-brand-graphite border border-white/[0.08] rounded-xl px-4 py-3">
+                <div className="flex -space-x-2 flex-shrink-0">
+                  {['J','M','R'].map((letter, i) => (
+                    <div key={i} className="h-8 w-8 rounded-full bg-brand-amber/15 border-2 border-brand-carbon flex items-center justify-center" style={{zIndex: 3 - i}}>
+                      <span className="font-sora font-bold text-brand-amber text-[11px]">{letter}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-brand-smoke text-xs font-inter leading-snug flex-1">
+                  <span className="font-semibold text-brand-offwhite">Jason R.</span>
+                  {' '}
+                  <span className="inline-flex items-center align-middle">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#1877F2"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1.177 14.407-3.75-3.75 1.414-1.414 2.336 2.336 5.3-5.299 1.414 1.414-6.714 6.713z"/></svg>
+                  </span>
+                  {' '}and{' '}
+                  <span className="font-semibold text-brand-offwhite">+1,000 riders</span>
+                  {' '}love the Rodata One
+                </p>
+              </div>
             </div>
           </div>
         </div>

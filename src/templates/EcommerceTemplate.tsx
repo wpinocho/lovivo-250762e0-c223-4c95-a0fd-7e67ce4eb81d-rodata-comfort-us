@@ -59,19 +59,21 @@ export const EcommerceTemplate = ({
   const header = (
     <div className={headerClassName}>
       {/* Trust Bar */}
-      <div className="bg-brand-graphite border-b border-white/[0.06] py-2 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 sm:gap-10">
-          <div className="hidden sm:flex items-center gap-1.5 text-brand-smoke text-xs font-medium">
-            <Truck size={11} className="text-brand-amber shrink-0" />
-            <span>Free US shipping</span>
+      <div className="bg-brand-graphite border-b border-white/[0.06] py-2.5 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <Truck size={12} className="text-brand-amber shrink-0" />
+            <span className="font-semibold text-brand-smoke">Free US Shipping</span>
           </div>
-          <div className="flex items-center gap-1.5 text-brand-smoke text-xs font-medium">
-            <RotateCcw size={11} className="text-brand-amber shrink-0" />
-            <span>30-day trial</span>
+          <div className="h-3 w-px bg-white/[0.12]" />
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-brand-amber shrink-0"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span className="text-brand-smoke"><span className="font-semibold text-brand-offwhite">+1,000</span> Happy Riders</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-brand-smoke text-xs font-medium">
-            <Ruler size={11} className="text-brand-amber shrink-0" />
-            <span>Easy size exchange</span>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <div className="h-3 w-px bg-white/[0.12] mr-2" />
+            <RotateCcw size={12} className="text-brand-amber shrink-0" />
+            <span className="text-brand-smoke text-xs font-medium">30-Day Trial</span>
           </div>
         </div>
       </div>

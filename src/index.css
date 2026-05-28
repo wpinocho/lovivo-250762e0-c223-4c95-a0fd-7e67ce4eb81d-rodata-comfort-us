@@ -6,6 +6,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Hide scrollbar cross-browser */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /*
   rodata.mx Design System
   Premium moto lifestyle brand for Mexico
