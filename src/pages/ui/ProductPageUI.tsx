@@ -194,10 +194,12 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
             {/* Gallery */}
             <div className="space-y-3 lg:sticky lg:top-[80px]">
-              <div className="hidden md:block relative rounded-2xl overflow-hidden bg-brand-graphite aspect-square">
-                <img src={displayImage} alt={logic.product.title} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
-                {discountPct && <div className="absolute top-4 left-4 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
-                <div className="absolute bottom-3 right-3 bg-brand-carbon/80 backdrop-blur-sm text-brand-smoke text-[10px] font-inter px-2 py-1 rounded border border-white/[0.08]">Rodata</div>
+              <div className="hidden md:block relative">
+                <div className="relative rounded-2xl overflow-hidden bg-brand-graphite aspect-square">
+                  <img src={displayImage} alt={logic.product.title} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
+                  <div className="absolute bottom-3 right-3 bg-brand-carbon/80 backdrop-blur-sm text-brand-smoke text-[10px] font-inter px-2 py-1 rounded border border-white/[0.08]">Rodata</div>
+                </div>
+                {discountPct && <div className="absolute top-0 left-4 -translate-y-1/2 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
               </div>
               <div className="md:hidden relative -mx-4">
                 <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pl-4 pr-2 no-scrollbar">
@@ -207,7 +209,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                     </div>
                   ))}
                 </div>
-                {discountPct && <div className="absolute top-4 left-8 z-10 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
+                {discountPct && <div className="absolute top-0 left-8 z-10 -translate-y-1/2 bg-brand-amber text-brand-carbon text-xs font-bold px-2.5 py-1 rounded-md font-sora">-{discountPct}%</div>}
               </div>
               {productImages.length > 1 && (
                 <div className="hidden md:flex gap-2 overflow-x-auto pb-1">
@@ -362,9 +364,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               {/* Social proof — verified riders */}
               <div className="flex items-center gap-3 bg-brand-graphite border border-white/[0.08] rounded-xl px-4 py-3">
                 <div className="flex -space-x-2 flex-shrink-0">
-                  {['J','M','R'].map((letter, i) => (
-                    <div key={i} className="h-8 w-8 rounded-full bg-brand-amber/15 border-2 border-brand-carbon flex items-center justify-center" style={{zIndex: 3 - i}}>
-                      <span className="font-sora font-bold text-brand-amber text-[11px]">{letter}</span>
+                  {[
+                    '/avatar-j.webp',
+                    '/avatar-m.webp',
+                    '/avatar-r.webp',
+                  ].map((src, i) => (
+                    <div key={i} className="h-8 w-8 rounded-full border-2 border-brand-carbon overflow-hidden flex-shrink-0" style={{zIndex: 3 - i}}>
+                      <img src={src} alt="rider" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   ))}
                 </div>
