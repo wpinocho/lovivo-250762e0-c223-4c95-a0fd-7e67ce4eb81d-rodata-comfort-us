@@ -17,12 +17,18 @@
 
 ## 3. Active Plan
 
+### ✅ STICKY BAR FIX COMPLETE (2026-05-28)
+- Replaced `useInView({ initialInView: true })` (unreliable) with native `IntersectionObserver` + `useState(false)`
+- `showStickyBar` starts `false` → bar is **always hidden** on page load (guaranteed)
+- Observer fires only when buy button leaves viewport → bar slides in
+- Observer fires when buy button re-enters viewport → bar slides out
+- Removed `react-intersection-observer` import entirely from this file
+
 ### ✅ PDP UX IMPROVEMENTS COMPLETE (2026-05-28)
-1. ✅ **Sticky bar** — `initialInView: true` so bar starts hidden; only appears after Buy Now scrolls out of view
-2. ✅ **Back button removed** — more screen space, image starts closer to top
-3. ✅ **Mobile carousel → scroll-snap peek** — replaced Embla arrows with CSS scroll-snap; images are `w-[88vw]` so next image peeks; `no-scrollbar` class hides scrollbar; smooth swipe UX
-4. ✅ **Trust bar** — redesigned: "Free US Shipping" + "+1,000 Happy Riders" visible on mobile; "30-Day Trial" added on desktop
-5. ✅ **WhatsApp button removed** — replaced with social proof banner: "Jason R. ✓ and +1,000 riders love the Rodata One" with FB-style verified checkmark
+1. ✅ **Back button removed** — more screen space, image starts closer to top
+2. ✅ **Mobile carousel → scroll-snap peek** — replaced Embla arrows with CSS scroll-snap
+3. ✅ **Trust bar** — "Free US Shipping" + "+1,000 Happy Riders" mobile; "30-Day Trial" desktop
+4. ✅ **Social proof banner** — "Jason R. ✓ and +1,000 riders love the Rodata One"
 
 ### ✅ PERFORMANCE OPTIMIZATION COMPLETE (2026-05-28)
 - Supabase image transforms, fetchPriority, mobile carousel lazy loading, non-blocking fonts
@@ -31,7 +37,9 @@
 - All pages in English; US routing; US product copy
 
 ## 4. Recent Changes
-- 2026-05-28: **ProductPageUI.tsx** — sticky bar `initialInView:true`, removed Back button, scroll-snap peek carousel, social proof banner replacing WhatsApp
+- 2026-05-28: **ProductPageUI.tsx** — Fixed sticky bar: replaced useInView with native IntersectionObserver + useState(false); bar now always hidden on load
+- 2026-05-28: **DIAGNOSED** sticky bar shows on load — `initialInView:true` in react-intersection-observer is unreliable
+- 2026-05-28: **ProductPageUI.tsx** — removed Back button, scroll-snap peek carousel, social proof banner
 - 2026-05-28: **EcommerceTemplate.tsx** — trust bar: Free US Shipping + +1,000 Happy Riders (mobile), 30-Day Trial (desktop)
 - 2026-05-28: **index.css** — added `.no-scrollbar` utility class
 - 2026-05-28: **ProductPageUI.tsx** — Supabase image transforms + fetchPriority + carousel lazy loading
@@ -59,7 +67,7 @@
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid — consider replacing with English versions
 
 ## 7. Key Files
-- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US names + ✅ image optimization + ✅ UX improvements
+- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US names + ✅ image optimization + ✅ UX improvements + ✅ sticky bar fixed
 - `index.html` — ✅ English meta + ✅ non-blocking fonts (Sora+Inter only)
 - `src/pages/ui/IndexUI.tsx` — ✅ English + ✅ image optimization
 - `src/templates/EcommerceTemplate.tsx` — ✅ English + ✅ new trust bar

@@ -1,7 +1,7 @@
 // ProductPageUI v3 — rodata.mx premium PDP (rebuild trigger)
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import ProductExpressCheckout from "@/components/ProductExpressCheckout"
-import { useInView } from "react-intersection-observer"
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { EcommerceTemplate } from "@/templates/EcommerceTemplate"
 import {
@@ -121,7 +121,18 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [expressAvailable, setExpressAvailable] = useState(false)
-  const { ref: ctaRef, inView: ctaInView } = useInView({ threshold: 0, initialInView: true })
+  const [showStickyBar, setShowStickyBar] = useState(false)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ctaRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const productImages: string[] = logic.displayImages?.length ? logic.displayImages : [PRODUCT_FLAT, PRODUCT_WORN]
   const displayImage = selectedImage ?? productImages[0]
@@ -553,7 +564,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
 
       {/* ── STICKY BAR ── */}
       {logic.inStock && (
-        <div className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-white/[0.1] transition-transform duration-300 ease-out pb-[env(safe-area-inset-bottom)]", ctaInView ? "translate-y-full" : "translate-y-0")} style={{backgroundColor:'rgba(17,19,21,0.96)'}}>
+        <div className={cn("fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t border-white/[0.1] transition-transform duration-300 ease-out pb-[env(safe-area-inset-bottom)]", showStickyBar ? "translate-y-0" : "translate-y-full")} style={{backgroundColor:'rgba(17,19,21,0.96)'}}>
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="hidden md:flex items-center justify-between gap-6">
               <div className="flex items-center gap-4 min-w-0">
