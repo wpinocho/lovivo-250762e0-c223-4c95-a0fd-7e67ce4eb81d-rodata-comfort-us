@@ -18,13 +18,11 @@
 ## 3. Active Plan
 
 ### ✅ PDP UX IMPROVEMENTS COMPLETE (2026-05-28)
-1. ✅ **Sticky bar** — `ctaHasLeftView` state: bar NEVER shows on initial load; only appears after Buy Now has left viewport at least once
-2. ✅ **Badge** — moved to top-right of mobile carousel image (was top-left)
-3. ✅ **Swipe arrow** — small ChevronRight indicator on right edge of mobile carousel
-4. ✅ **Back button removed** — more screen space, image starts closer to top
-5. ✅ **Mobile carousel → scroll-snap peek** — CSS scroll-snap; images are `w-[88vw]` so next image peeks; `no-scrollbar` class hides scrollbar
-6. ✅ **Trust bar** — "Free US Shipping" + "+1,000 Happy Riders" visible on mobile; "30-Day Trial" on desktop
-7. ✅ **Social proof banner** — "Jason R. ✓ and +1,000 riders love the Rodata One" replacing WhatsApp
+1. ✅ **Sticky bar** — `initialInView: true` so bar starts hidden; only appears after Buy Now scrolls out of view
+2. ✅ **Back button removed** — more screen space, image starts closer to top
+3. ✅ **Mobile carousel → scroll-snap peek** — replaced Embla arrows with CSS scroll-snap; images are `w-[88vw]` so next image peeks; `no-scrollbar` class hides scrollbar; smooth swipe UX
+4. ✅ **Trust bar** — redesigned: "Free US Shipping" + "+1,000 Happy Riders" visible on mobile; "30-Day Trial" added on desktop
+5. ✅ **WhatsApp button removed** — replaced with social proof banner: "Jason R. ✓ and +1,000 riders love the Rodata One" with FB-style verified checkmark
 
 ### ✅ PERFORMANCE OPTIMIZATION COMPLETE (2026-05-28)
 - Supabase image transforms, fetchPriority, mobile carousel lazy loading, non-blocking fonts
@@ -33,7 +31,6 @@
 - All pages in English; US routing; US product copy
 
 ## 4. Recent Changes
-- 2026-05-28: **ProductPageUI.tsx** — `ctaHasLeftView` state for reliable sticky bar hide on load; badge moved right; swipe arrow added
 - 2026-05-28: **ProductPageUI.tsx** — sticky bar `initialInView:true`, removed Back button, scroll-snap peek carousel, social proof banner replacing WhatsApp
 - 2026-05-28: **EcommerceTemplate.tsx** — trust bar: Free US Shipping + +1,000 Happy Riders (mobile), 30-Day Trial (desktop)
 - 2026-05-28: **index.css** — added `.no-scrollbar` utility class
