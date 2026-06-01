@@ -16,60 +16,10 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-
-### 🔧 THANK YOU PAGE — FULL ENGLISH TRANSLATION
-**File**: `src/pages/ThankYou.tsx`
-
-All Spanish text to translate:
-
-**"Order not found" state:**
-- `"Pedido no encontrado"` → `"Order Not Found"`
-- `"Parece que aún no has completado una compra, o este enlace de pedido ha expirado."` → `"It looks like you haven't completed a purchase yet, or this order link has expired."`
-- `"Comenzar a Comprar"` → `"Start Shopping"`
-
-**Page title + confirmation header:**
-- `pageTitle="Confirmación de Pedido"` → `pageTitle="Order Confirmation"`
-- `"¡Pago Confirmado!"` → `"Payment Confirmed!"`
-- `"Gracias por tu compra. Tu pedido ha sido procesado exitosamente."` → `"Thank you for your purchase. Your order has been successfully processed."`
-- `"Pedido #"` (Badge) → `"Order #"`
-
-**Order details card:**
-- `"Detalles del Pedido"` → `"Order Details"`
-- `'Producto'` (fallback alt/name) → `'Product'`
-- `"Cantidad:"` → `"Qty:"`
-
-**Delivery info card:**
-- `"Información de Entrega"` → `"Delivery Information"`
-- `"Dirección de Envío:"` → `"Shipping Address:"`
-- `"Método de Entrega:"` → `"Delivery Method:"`
-- `"Recoger en Tienda"` → `"Store Pickup"`
-
-**Next steps:**
-- `"Próximos Pasos:"` → `"Next Steps:"`
-- `"Recibirás un correo de confirmación"` → `"You'll receive a confirmation email"`
-- `"Te notificaremos cuando tu pedido esté listo"` → `"We'll notify you when your order ships"`
-- `"Puedes rastrear tu pedido con el número #"` → `"You can track your order with number #"`
-
-**Action buttons:**
-- `"Seguir Comprando"` → `"Continue Shopping"`
-
-Also note: the country name shows as "Estados Unidos" — this comes from the shipping_address data returned by the backend, not from the UI. Nothing to fix in the UI for that.
-
-**Implementation**: Edit `src/pages/ThankYou.tsx` replacing all Spanish strings with English equivalents as listed above.
-
----
-
-### ✅ BADGE + SOCIAL PROOF POLISH (2026-05-28)
-- `-35%` badge repositioned: half inside / half outside the image top edge (desktop + mobile)
-
-### ✅ STICKY BAR FIX v2 COMPLETE (2026-05-28)
-
-### ✅ PDP UX IMPROVEMENTS COMPLETE (2026-05-28)
-
-### ✅ ALL TRANSLATION COMPLETE + ROUTING FIXED
+All major pages fully translated to English ✅
 
 ## 4. Recent Changes
-- 2026-06-01: **ThankYou.tsx** — Full English translation planned
+- 2026-06-01: **ThankYou.tsx** — Full English translation (20 strings: order not found, confirmation header, order details, delivery info, next steps, action buttons)
 - 2026-05-28: **ProductPageUI.tsx** — badge -35% half in/half out (desktop restructure + mobile -translate-y-1/2)
 - 2026-05-28: **public/avatar-j.webp, avatar-m.webp, avatar-r.webp** — Generated real rider avatar photos
 - 2026-05-28: **ProductPageUI.tsx** — Social proof banner: J/M/R letters → real person photos
@@ -103,7 +53,7 @@ Also note: the country name shows as "Estados Unidos" — this comes from the sh
 - Google Pay error on checkout: domain needs to be registered in Stripe Dashboard > Settings > Payment methods > Google Pay
 
 ## 7. Key Files
-- `src/pages/ThankYou.tsx` — 🔧 NEEDS English translation (all Spanish strings)
+- `src/pages/ThankYou.tsx` — ✅ Full English translation complete
 - `src/pages/ui/ProductPageUI.tsx` — ✅ English + US names + ✅ image optimization + ✅ UX improvements + ✅ sticky bar v2 + ✅ badge polish + ✅ real avatars
 - `index.html` — ✅ English meta + ✅ non-blocking fonts (Sora+Inter only)
 - `src/pages/ui/IndexUI.tsx` — ✅ English + ✅ image optimization

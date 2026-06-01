@@ -78,9 +78,9 @@ const ThankYou = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-xl">Pedido no encontrado</h3>
+                  <h3 className="font-semibold text-xl">Order Not Found</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto">
-                    Parece que aún no has completado una compra, o este enlace de pedido ha expirado.
+                    It looks like you haven't completed a purchase yet, or this order link has expired.
                   </p>
                 </div>
                 <Button 
@@ -90,7 +90,7 @@ const ThankYou = () => {
                 >
                   <Link to="/">
                     <ShoppingBag className="mr-2 h-4 w-4" />
-                    Comenzar a Comprar
+                    Start Shopping
                   </Link>
                 </Button>
               </div>
@@ -102,7 +102,7 @@ const ThankYou = () => {
   }
 
   return (
-    <EcommerceTemplate pageTitle="Confirmación de Pedido" showCart={true}>
+    <EcommerceTemplate pageTitle="Order Confirmation" showCart={true}>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Confirmation Header */}
         <div className="text-center mb-8">
@@ -110,13 +110,13 @@ const ThankYou = () => {
             <CheckCircle className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            ¡Pago Confirmado!
+            Payment Confirmed!
           </h1>
           <p className="text-lg text-muted-foreground mb-4">
-            Gracias por tu compra. Tu pedido ha sido procesado exitosamente.
+            Thank you for your purchase. Your order has been successfully processed.
           </p>
           <Badge variant="secondary" className="text-sm">
-            Pedido #{order.order_number}
+            Order #{order.order_number}
           </Badge>
         </div>
 
@@ -126,7 +126,7 @@ const ThankYou = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Detalles del Pedido
+                Order Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -138,7 +138,7 @@ const ThankYou = () => {
                       <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
                         <img 
                           src={item.product_images[0]} 
-                          alt={item.product_name || 'Producto'}
+                          alt={item.product_name || 'Product'}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none'
@@ -148,14 +148,14 @@ const ThankYou = () => {
                     )}
                     
                     <div className="flex-1">
-                      <p className="font-medium">{item.product_name || 'Producto'}</p>
+                      <p className="font-medium">{item.product_name || 'Product'}</p>
                       {item.variant_name && (
                         <p className="text-sm text-muted-foreground">
                           {item.variant_name}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Cantidad: {item.quantity}
+                        Qty: {item.quantity}
                       </p>
                     </div>
                     <p className="font-medium">
@@ -181,13 +181,13 @@ const ThankYou = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
-                Información de Entrega
+                Delivery Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {order.shipping_address && (order.shipping_address.line1 || order.shipping_address.address1) ? (
                 <div>
-                  <h4 className="font-medium mb-2">Dirección de Envío:</h4>
+                  <h4 className="font-medium mb-2">Shipping Address:</h4>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>{order.shipping_address.name || `${order.shipping_address.first_name || ''} ${order.shipping_address.last_name || ''}`.trim()}</p>
                     <p>{order.shipping_address.line1 || order.shipping_address.address1}</p>
@@ -201,19 +201,19 @@ const ThankYou = () => {
                 </div>
               ) : (
                 <div>
-                  <h4 className="font-medium mb-2">Método de Entrega:</h4>
-                  <p className="text-sm text-muted-foreground">Recoger en Tienda</p>
+                  <h4 className="font-medium mb-2">Delivery Method:</h4>
+                  <p className="text-sm text-muted-foreground">Store Pickup</p>
                 </div>
               )}
 
               <Separator />
 
               <div>
-                <h4 className="font-medium mb-2">Próximos Pasos:</h4>
+                <h4 className="font-medium mb-2">Next Steps:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Recibirás un correo de confirmación</li>
-                  <li>• Te notificaremos cuando tu pedido esté listo</li>
-                  <li>• Puedes rastrear tu pedido con el número #{order.order_number}</li>
+                  <li>• You'll receive a confirmation email</li>
+                  <li>• We'll notify you when your order ships</li>
+                  <li>• You can track your order with number #{order.order_number}</li>
                 </ul>
               </div>
             </CardContent>
@@ -225,7 +225,7 @@ const ThankYou = () => {
           <Button asChild variant="outline">
             <Link to="/" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Seguir Comprando
+              Continue Shopping
             </Link>
           </Button>
         </div>
