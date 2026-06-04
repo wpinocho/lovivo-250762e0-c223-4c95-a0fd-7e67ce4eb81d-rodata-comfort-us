@@ -366,7 +366,10 @@ function PaymentForm({
         trackPurchase({
           products: paymentItems.map((item: any) => tracking.createTrackingProduct({
             id: item.product_id, title: item.product_name || item.title,
-            price: item.price / 100, category: 'product',
+            // item.price is already in the currency's base unit (e.g. USD dollars)
+            // — do NOT divide by 100 here (that was a bug sending $0.49 instead of $49)
+            price: item.price,
+            category: 'product',
             variant: item.variant_id ? { id: item.variant_id } : undefined
           })),
           value: totalCents / 100, currency: tracking.getCurrencyFromSettings(currency),

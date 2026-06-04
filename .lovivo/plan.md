@@ -17,23 +17,24 @@
 
 ## 3. Active Plan
 All major pages fully translated to English ✅
+Meta tracking fixes deployed ✅
 
 ## 4. Recent Changes
-- 2026-06-01: **ThankYou.tsx** — Full English translation (20 strings: order not found, confirmation header, order details, delivery info, next steps, action buttons)
+- 2026-06-04: **PixelContext.tsx** — Persist fbclid → fbc to localStorage (_fbc_fallback) AND set first-party cookie (90 days). Survives refresh/navigation.
+- 2026-06-04: **tracking-utils.ts** — `getUserDataForCapi()` now reads `_fbc_fallback` and `_fbp_fallback` from localStorage as fallback if React state is null.
+- 2026-06-04: **StripePayment.tsx** — Fixed `item.price / 100` bug: item.price was already in dollars, division was sending $0.49 instead of $49 to Meta.
+- 2026-06-04: **ThankYou.tsx** — Added deferred Purchase tracking for Stripe 3DS redirect flow (`redirect_status=succeeded` in URL). Uses fire-once guard (`purchase_tracked_<orderId>` in localStorage).
+- 2026-06-01: **ThankYou.tsx** — Full English translation (20 strings)
 - 2026-05-28: **ProductPageUI.tsx** — badge -35% half in/half out (desktop restructure + mobile -translate-y-1/2)
 - 2026-05-28: **public/avatar-j.webp, avatar-m.webp, avatar-r.webp** — Generated real rider avatar photos
 - 2026-05-28: **ProductPageUI.tsx** — Social proof banner: J/M/R letters → real person photos
-- 2026-05-28: **ProductPageUI.tsx** — Sticky bar v2: added `hasCTABeenVisible` ref; bar only shows after CTA has entered viewport at least once
-- 2026-05-28: **ProductPageUI.tsx** — Sticky bar v1: replaced useInView with native IntersectionObserver + useState(false)
-- 2026-05-28: **ProductPageUI.tsx** — removed Back button, scroll-snap peek carousel, social proof banner
+- 2026-05-28: **ProductPageUI.tsx** — Sticky bar v2
 - 2026-05-28: **EcommerceTemplate.tsx** — trust bar: Free US Shipping + +1,000 Happy Riders (mobile), 30-Day Trial (desktop)
 - 2026-05-28: **index.css** — added `.no-scrollbar` utility class
 - 2026-05-28: **ProductPageUI.tsx** — Supabase image transforms + fetchPriority + carousel lazy loading
 - 2026-05-28: **IndexUI.tsx** — Supabase image transforms on all 9 image constants
 - 2026-05-28: **index.html** — Removed 14 unused Google Fonts, async Sora+Inter, English meta tags
 - 2026-05-26: **BrandLogoLeft.tsx + logo.svg + favicon.svg** — Updated branding
-- 2026-05-26: **CartAdapter.tsx + CartSidebar.tsx** — Fixed navigate('/checkout')
-- 2026-05-18: **ProductPageUI.tsx** — Full English + US reviews
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -45,6 +46,7 @@ All major pages fully translated to English ✅
 - Avatars: `/avatar-j.webp`, `/avatar-m.webp`, `/avatar-r.webp` (public/ repo)
 
 ## 6. Known Issues
+- **META DIAGNÓSTICO 🔴1**: Likely an expired CAPI Access Token — fix in Meta Business Manager → System Users → generate a new non-expiring token and update in Lovivo Dashboard Settings.
 - Country name "Estados Unidos" on thank you page comes from backend data, not UI — no fix needed in frontend
 - Store config shows `currency: usd (Peso Mexicano (MXN))` — label is misleading. Verify actual currency in Dashboard.
 - Product slug is still in Spanish — may want to add English slug redirect
@@ -53,11 +55,11 @@ All major pages fully translated to English ✅
 - Google Pay error on checkout: domain needs to be registered in Stripe Dashboard > Settings > Payment methods > Google Pay
 
 ## 7. Key Files
-- `src/pages/ThankYou.tsx` — ✅ Full English translation complete
-- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US names + ✅ image optimization + ✅ UX improvements + ✅ sticky bar v2 + ✅ badge polish + ✅ real avatars
-- `index.html` — ✅ English meta + ✅ non-blocking fonts (Sora+Inter only)
-- `src/pages/ui/IndexUI.tsx` — ✅ English + ✅ image optimization
-- `src/templates/EcommerceTemplate.tsx` — ✅ English + ✅ new trust bar
-- `src/App.tsx` — ✅ English routes
-- `src/pages/ui/CheckoutUI.tsx` — ✅ English
-- `src/index.css` — ✅ .no-scrollbar utility added
+- `src/contexts/PixelContext.tsx` — ✅ fbclid now persisted to localStorage + first-party cookie
+- `src/lib/tracking-utils.ts` — ✅ CAPI getUserDataForCapi reads localStorage fallback for fbc/fbp
+- `src/components/StripePayment.tsx` — ✅ Fixed item.price/100 bug + 3DS redirect support
+- `src/pages/ThankYou.tsx` — ✅ Deferred Purchase event for 3DS redirect flow
+- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements
+- `index.html` — ✅ English meta + non-blocking fonts (Sora+Inter only)
+- `src/pages/ui/IndexUI.tsx` — ✅ English + image optimization
+- `src/templates/EcommerceTemplate.tsx` — ✅ English + new trust bar

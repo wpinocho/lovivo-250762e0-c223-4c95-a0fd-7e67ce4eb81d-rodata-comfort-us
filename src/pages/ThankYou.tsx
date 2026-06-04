@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,8 @@ import { CheckCircle, Package, Mail, ArrowLeft, ShoppingBag } from 'lucide-react
 import { formatMoney } from '@/lib/money'
 import { useToast } from '@/hooks/use-toast'
 import { EcommerceTemplate } from '@/templates/EcommerceTemplate'
+import { trackPurchase, tracking } from '@/lib/tracking-utils'
+import { useCart } from '@/contexts/CartContext'
 
 interface OrderDetails {
   id: string
@@ -23,8 +25,10 @@ interface OrderDetails {
 
 const ThankYou = () => {
   const { orderId } = useParams()
+  const [searchParams] = useSearchParams()
   const [order, setOrder] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const { clearCart } = useCart()
 
   useEffect(() => {
     if (!orderId) {
@@ -54,6 +58,51 @@ const ThankYou = () => {
 
     loadOrder()
   }, [orderId])
+
+  // Fire Purchase event for Stripe 3DS redirect flow.
+  // When Stripe redirects back to /gracias/:orderId after 3DS, the payment intent
+  // status is in the URL. The in-page handlePayment() never ran to completion,
+  // so we must fire trackPurchase here — but ONLY once per order.
+  useEffect(() => {
+    const paymentIntentStatus = searchParams.get('redirect_status')
+    if (paymentIntentStatus !== 'succeeded') return
+
+    const trackingKey = `purchase_tracked_${orderId}`
+    if (localStorage.getItem(trackingKey)) return // already fired
+
+    // Mark as tracked immediately to prevent double-firing on re-renders
+    localStorage.setItem(trackingKey, '1')
+
+    // Try to read order details from completed_order (may have been set before redirect)
+    try {
+      const raw = localStorage.getItem('completed_order') || localStorage.getItem(`completed_order_${orderId}`)
+      const savedOrder = raw ? JSON.parse(raw) : null
+      const items = savedOrder?.order_items || []
+      const value = savedOrder?.total_amount || 0
+      const currency = savedOrder?.currency_code || 'usd'
+
+      trackPurchase({
+        products: items
+          .filter((it: any) => it.quantity > 0)
+          .map((it: any) => tracking.createTrackingProduct({
+            id: it.product_id || it.id,
+            title: it.product_name,
+            price: it.price || it.unit_price || 0,
+            category: 'product',
+            variant: it.variant_id ? { id: it.variant_id } : undefined
+          })),
+        value,
+        currency,
+        order_id: orderId,
+        custom_parameters: { payment_method: 'stripe_3ds', redirect: true }
+      })
+
+      // Cart may not have been cleared if user was redirected away during payment
+      clearCart()
+    } catch (err) {
+      console.error('ThankYou: error firing deferred Purchase event', err)
+    }
+  }, [orderId, searchParams])
 
   if (loading) {
     return (

@@ -26,19 +26,38 @@ export function PixelProvider({ children }: { children: React.ReactNode }) {
 
   // Capture Meta cookies on mount and when URL changes (fbc comes from click)
   useEffect(() => {
+    const LS_FBC_KEY = '_fbc_fallback';
+    const LS_FBP_KEY = '_fbp_fallback';
+
     const captureCookies = () => {
-      setFbp(getCookie('_fbp'));
-      setFbc(getCookie('_fbc'));
+      const fbpVal = getCookie('_fbp') || localStorage.getItem(LS_FBP_KEY) || null;
+      const fbcVal = getCookie('_fbc') || localStorage.getItem(LS_FBC_KEY) || null;
+      setFbp(fbpVal);
+      setFbc(fbcVal);
+
+      // Mirror cookies to localStorage so they survive navigation & refresh
+      if (fbpVal) localStorage.setItem(LS_FBP_KEY, fbpVal);
+      if (fbcVal) localStorage.setItem(LS_FBC_KEY, fbcVal);
     };
 
     captureCookies();
 
-    // Also check for fbc in URL params (fbclid)
+    // Check for fbclid in URL params (present on first ad-click landing)
     const urlParams = new URLSearchParams(window.location.search);
     const fbclid = urlParams.get('fbclid');
-    if (fbclid && !getCookie('_fbc')) {
-      // fbc format: fb.1.timestamp.fbclid
+    if (fbclid) {
+      // fbc format: fb.1.<subdomain_creation_time>.<fbclid>
       const fbcValue = `fb.1.${Date.now()}.${fbclid}`;
+
+      // Persist to localStorage FIRST so it survives all future navigations
+      localStorage.setItem(LS_FBC_KEY, fbcValue);
+
+      // Also set as a first-party cookie (90 days) as backup
+      try {
+        const expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `_fbc=${fbcValue}; path=/; expires=${expires}; SameSite=Lax`;
+      } catch {}
+
       setFbc(fbcValue);
     }
   }, []);

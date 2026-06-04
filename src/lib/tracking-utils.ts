@@ -96,11 +96,20 @@ class TrackingUtility {
     return crypto.randomUUID();
   }
 
-  // Get user data for CAPI
+  // Get user data for CAPI — always reads localStorage fallbacks so
+  // fbc/fbp survive page refresh and SPA navigation after the initial ad click.
   private getUserDataForCapi(): UserDataForCapi {
+    let fbc = this.fbc || null;
+    let fbp = this.fbp || null;
+
+    if (typeof localStorage !== 'undefined') {
+      if (!fbc) fbc = localStorage.getItem('_fbc_fallback');
+      if (!fbp) fbp = localStorage.getItem('_fbp_fallback');
+    }
+
     return {
-      fbp: this.fbp || undefined,
-      fbc: this.fbc || undefined,
+      fbp: fbp || undefined,
+      fbc: fbc || undefined,
       client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
     };
   }
