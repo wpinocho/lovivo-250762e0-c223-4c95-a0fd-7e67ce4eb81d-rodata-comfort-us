@@ -45,13 +45,13 @@ export default function CheckoutUI() {
         <div className="text-center space-y-4">
           {tokenError ? (
             <>
-              <p className="text-lg font-sora font-semibold text-destructive">Error al cargar la orden</p>
+              <p className="text-lg font-sora font-semibold text-destructive">Error loading order</p>
               <p className="text-sm text-brand-smoke">{tokenError}</p>
             </>
           ) : (
             <>
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-brand-amber" />
-              <p className="text-sm text-brand-smoke">Cargando orden...</p>
+              <p className="text-sm text-brand-smoke">Loading order...</p>
             </>
           )}
         </div>
@@ -79,7 +79,7 @@ export default function CheckoutUI() {
         // Delivery methods slot rendered inside StripePayment (between AddressElement and PaymentElement)
         const deliveryMethodSlot = !logic.usePickup && logic.deliveryExpectations && logic.deliveryExpectations.length > 0 ? (
           <div className="space-y-2">
-            <h3 className="text-sm font-sora font-semibold text-brand-offwhite">Métodos de envío</h3>
+            <h3 className="text-sm font-sora font-semibold text-brand-offwhite">Shipping methods</h3>
             {Array.isArray(logic.deliveryExpectations) && logic.deliveryExpectations.map((method: any, index: number) => (
               <div key={index} className="border border-white/[0.1] rounded-xl bg-[#111315]">
                 <label className="flex items-center justify-between p-4 cursor-pointer">

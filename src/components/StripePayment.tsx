@@ -85,7 +85,7 @@ function buildShippingRates(deliveryExpectations: any[] | undefined) {
       const amountCents = Math.max(0, Math.round((isFinite(priceNum) ? priceNum : 0) * 100))
       return {
         id: `${m.type || 'shipping'}-${idx}`,
-        displayName: m.type || 'Envío',
+        displayName: m.type || 'Shipping',
         amount: amountCents,
         deliveryEstimate: m.description ? m.description.slice(0, 22) : undefined,
       }
@@ -196,7 +196,7 @@ function PaymentForm({
     currency: currency || "mxn",
     expected_total: expectedTotal || totalCents,
     delivery_fee: deliveryFee,
-    description: description || `Pedido #${orderId ?? "s/n"}`,
+    description: description || `Order #${orderId ?? "N/A"}`,
     metadata: { order_id: orderId ?? "", ...(metadata || {}) },
     receipt_email: email,
     customer: { email, name, phone },
@@ -253,8 +253,8 @@ function PaymentForm({
         item.variant_name ? `${item.product_name} (${item.variant_name})` : item.product_name
       ).join(', ')
       toast({
-        title: "Productos agotados",
-        description: `Los siguientes productos ya no están disponibles: ${unavailableNames}. Retíralos de tu carrito para completar tu compra.`,
+        title: "Out of stock",
+        description: `The following items are no longer available: ${unavailableNames}. Remove them from your cart to complete your purchase.`,
         variant: "destructive"
       })
       updateOrderCache(normalizeOrderFromResponse(data))
@@ -265,14 +265,14 @@ function PaymentForm({
 
   const handlePayment = async () => {
     if (!stripe || !elements) {
-      toast({ title: "Error", description: "Stripe no está listo", variant: "destructive" })
+      toast({ title: "Error", description: "Stripe is not ready yet", variant: "destructive" })
       return
     }
 
     if (onValidationRequired && !onValidationRequired()) return
 
     if (deliveryExpectations?.[0]?.type === "pickup" && (!pickupLocations || pickupLocations.length === 0)) {
-      toast({ title: "Punto de recogida requerido", description: "Por favor selecciona un punto de recogida antes de continuar.", variant: "destructive" })
+      toast({ title: "Pickup required", description: "Please select a pickup location before continuing.", variant: "destructive" })
       return
     }
 
@@ -282,7 +282,7 @@ function PaymentForm({
       // 1. Validate the payment form
       const { error: submitError } = await elements.submit()
       if (submitError) {
-        toast({ title: "Error", description: submitError.message || "Verifica los datos de pago", variant: "destructive" })
+        toast({ title: "Error", description: submitError.message || "Please check your payment details", variant: "destructive" })
         return
       }
 
@@ -324,7 +324,7 @@ function PaymentForm({
       }
 
       if (!client_secret) {
-        throw new Error("No se recibió client_secret del servidor")
+        throw new Error("No client_secret received from server")
       }
 
       // 3. Confirm payment with the selected method (PaymentElement handles method selection)
@@ -354,7 +354,7 @@ function PaymentForm({
       })
 
       if (result.error) {
-        toast({ title: "Error de pago", description: result.error.message || "No se pudo procesar el pago", variant: "destructive" })
+        toast({ title: "Payment error", description: result.error.message || "Your payment could not be processed", variant: "destructive" })
         return
       }
 
@@ -396,7 +396,7 @@ function PaymentForm({
 
         clearCart()
         navigate(`/gracias/${orderId}`)
-        toast({ title: "¡Pago exitoso!", description: "Tu compra ha sido procesada correctamente." })
+        toast({ title: "Payment successful!", description: "Your order has been placed successfully." })
       } else if (pi?.status === 'requires_action') {
         // Handle OXXO voucher
         if (nextAction?.oxxo_display_details) {
@@ -431,14 +431,14 @@ function PaymentForm({
         }
         // Generic requires_action (e.g. 3D Secure handled by Stripe)
         else {
-          toast({ title: "Acción requerida", description: "Por favor completa la verificación del pago." })
+          toast({ title: "Action required", description: "Please complete the payment verification." })
         }
       } else if (pi?.status === 'processing') {
         // SPEI / bank transfer might be in processing state
         clearCart()
         navigate(`/pago-pendiente/${orderId}`)
       } else {
-        toast({ title: "Estado del pago", description: `Estado: ${pi?.status ?? "desconocido"}` })
+        toast({ title: "Payment status", description: `Status: ${pi?.status ?? "unknown"}` })
       }
     } catch (err: any) {
       console.error("Error en el proceso de pago:", err)
@@ -461,12 +461,12 @@ function PaymentForm({
     const lowered = (message || "").toLowerCase()
     if (lowered.includes("stripe_not_connected") || lowered.includes("stripe not connected")) {
       toast({
-        title: "Pagos no configurados",
-        description: "Esta tienda aún no ha configurado un método de pago. Ve al dashboard de Lovivo para conectar Stripe y empezar a recibir pagos.",
+        title: "Payments not configured",
+        description: "This store hasn't set up a payment method yet. Go to the Lovivo dashboard to connect Stripe.",
       })
       return
     }
-    toast({ title: "Error de pago", description: "No se pudo procesar el pago. Intenta de nuevo.", variant: "destructive" })
+    toast({ title: "Payment error", description: "Your payment could not be processed. Please try again.", variant: "destructive" })
   }
 
   const handleExpressCheckoutConfirm = useCallback(async (ev?: any) => {
@@ -475,7 +475,7 @@ function PaymentForm({
       setLoading(true)
       const { error: submitError } = await elements.submit()
       if (submitError) {
-        toast({ title: "Error", description: submitError.message || "Verifica los datos de pago", variant: "destructive" })
+        toast({ title: "Error", description: submitError.message || "Please check your payment details", variant: "destructive" })
         return
       }
 
@@ -511,8 +511,8 @@ function PaymentForm({
 
       if (showAddressElement && (!effectiveShippingAddress || !effectiveShippingAddress.line1)) {
         toast({
-          title: "Falta dirección de envío",
-          description: "Por favor completa tu dirección antes de pagar.",
+          title: "Shipping address required",
+          description: "Please complete your shipping address before paying.",
           variant: "destructive",
         })
         return
@@ -555,7 +555,7 @@ function PaymentForm({
       if (handleUnavailableItems(data)) return
       const client_secret = data?.client_secret
       const intentOrder = data?.order ?? null
-      if (!client_secret) throw new Error("No se recibió client_secret del servidor")
+      if (!client_secret) throw new Error("No client_secret received from server")
 
       const result = await stripe.confirmPayment({
         elements,
@@ -584,7 +584,7 @@ function PaymentForm({
       })
 
       if (result.error) {
-        toast({ title: "Error de pago", description: result.error.message || "No se pudo procesar el pago", variant: "destructive" })
+        toast({ title: "Payment error", description: result.error.message || "Your payment could not be processed", variant: "destructive" })
         return
       }
 
@@ -593,7 +593,7 @@ function PaymentForm({
         trackPurchase({
           products: paymentItems.map((item: any) => tracking.createTrackingProduct({
             id: item.product_id, title: item.product_name || item.title,
-            price: item.price / 100, category: 'product',
+            price: item.price, category: 'product',
             variant: item.variant_id ? { id: item.variant_id } : undefined
           })),
           value: totalCents / 100, currency: tracking.getCurrencyFromSettings(currency),
@@ -609,7 +609,7 @@ function PaymentForm({
         } catch {}
         clearCart()
         navigate(`/gracias/${orderId}`)
-        toast({ title: "¡Pago exitoso!", description: "Tu compra ha sido procesada correctamente." })
+        toast({ title: "Payment successful!", description: "Your order has been placed successfully." })
       } else if (pi?.status === 'processing') {
         clearCart()
         navigate(`/pago-pendiente/${orderId}`)
@@ -632,7 +632,7 @@ function PaymentForm({
       const builtRates = buildShippingRates(deliveryExpectations)
       const rates = (builtRates && builtRates.length > 0)
         ? builtRates
-        : [{ id: 'standard', displayName: 'Envío estándar', amount: 0 }]
+        : [{ id: 'standard', displayName: 'Standard shipping', amount: 0 }]
       ev.resolve({ shippingRates: rates })
     } catch (err) {
       console.error('shippingaddresschange error:', err)
@@ -658,7 +658,7 @@ function PaymentForm({
               const builtRates = buildShippingRates(deliveryExpectations)
               const rates = (builtRates && builtRates.length > 0)
                 ? builtRates
-                : [{ id: 'standard', displayName: 'Envío estándar', amount: 0 }]
+                : [{ id: 'standard', displayName: 'Standard shipping', amount: 0 }]
               const orderHasShippingAddress = Boolean(
                 shippingAddress && (shippingAddress.line1 || shippingAddress.address?.line1)
               )
@@ -690,7 +690,7 @@ function PaymentForm({
           />
           <div className="flex items-center gap-3">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">o</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">or</span>
             <Separator className="flex-1" />
           </div>
         </>
@@ -741,11 +741,11 @@ function PaymentForm({
                   city: defaultAddress.address.city || '',
                   state: defaultAddress.address.state || '',
                   postal_code: defaultAddress.address.postal_code || '',
-                  country: defaultAddress.address.country || 'MX',
-                } : { country: 'MX', line1: '', line2: '', city: '', state: '', postal_code: '' },
+                  country: defaultAddress.address.country || 'US',
+                } : { country: 'US', line1: '', line2: '', city: '', state: '', postal_code: '' },
                 phone: defaultAddress.phone || '',
               } : {
-                address: { country: 'MX', line1: '', line2: '', city: '', state: '', postal_code: '' },
+                address: { country: 'US', line1: '', line2: '', city: '', state: '', postal_code: '' },
               },
               ...(allowedCountries && allowedCountries.length > 0 ? {
                 allowedCountries,
@@ -815,15 +815,15 @@ function PaymentForm({
         {loading ? (
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>Procesando...</span>
+            <span>Processing...</span>
           </div>
-        ) : `Completar Compra - ${amountLabel}`}
+        ) : `Complete Purchase - ${amountLabel}`}
       </Button>
 
       <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-        <a href="/terminos-y-condiciones" target="_blank" className="underline hover:text-foreground">Condiciones</a>
+        <a href="/terminos-y-condiciones" target="_blank" className="underline hover:text-foreground">Terms</a>
         <span>|</span>
-        <a href="/aviso-de-privacidad" target="_blank" className="underline hover:text-foreground">Privacidad</a>
+        <a href="/aviso-de-privacidad" target="_blank" className="underline hover:text-foreground">Privacy</a>
       </div>
     </div>
   )
@@ -843,6 +843,7 @@ export default function StripePayment(props: StripePaymentProps) {
     currency: (props.currency || 'mxn').toLowerCase(),
     paymentMethodTypes: buildPaymentMethodTypes(props.paymentMethods),
     appearance: getStripeAppearance('dark'),
+    locale: 'en' as const,
   }), [props.amountCents, props.currency, props.paymentMethods])
 
   return (
