@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback, useEffect } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, LinkAuthenticationElement, AddressElement, ExpressCheckoutElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import { Separator } from "@/components/ui/separator"
+import { Truck, ShieldCheck, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { callEdge } from "@/lib/edge"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
@@ -820,10 +821,41 @@ function PaymentForm({
         ) : `Complete Purchase - ${amountLabel}`}
       </Button>
 
-      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-        <a href="/terminos-y-condiciones" target="_blank" className="underline hover:text-foreground">Terms</a>
-        <span>|</span>
-        <a href="/aviso-de-privacidad" target="_blank" className="underline hover:text-foreground">Privacy</a>
+      {/* Trust signals below CTA */}
+      <div className="space-y-3 pt-1">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-brand-steel">
+          <span className="flex items-center gap-1.5">
+            <Truck size={11} className="text-brand-amber flex-shrink-0" />
+            Free U.S. Shipping
+          </span>
+          <span className="text-white/20">·</span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={11} className="text-brand-amber flex-shrink-0" />
+            Secure Checkout
+          </span>
+          <span className="text-white/20">·</span>
+          <span className="flex items-center gap-1.5">
+            <RotateCcw size={11} className="text-brand-amber flex-shrink-0" />
+            30-Day Comfort Guarantee
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center gap-1.5">
+          {(['VISA', 'MC', 'AMEX', 'Apple Pay', 'G Pay'] as const).map((card) => (
+            <span
+              key={card}
+              className="text-[9px] font-bold border border-white/[0.15] rounded px-1.5 py-0.5 text-brand-steel bg-white/[0.03] tracking-wide"
+            >
+              {card}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+          <a href="/terminos-y-condiciones" target="_blank" className="underline hover:text-foreground">Terms</a>
+          <span>|</span>
+          <a href="/aviso-de-privacidad" target="_blank" className="underline hover:text-foreground">Privacy</a>
+        </div>
       </div>
     </div>
   )

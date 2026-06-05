@@ -16,15 +16,17 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-✅ **COMPLETED: Full checkout English translation**
+✅ **COMPLETED: Checkout trust signals**
 
-All Spanish text in the checkout flow has been translated to English:
-- `src/components/StripePayment.tsx` — 27 edits: all toasts, button labels, separators, shipping labels, error messages, MX→US default country
-- `src/pages/ui/CheckoutUI.tsx` — 3 edits: loading/error strings, shipping methods label
-- Stripe Elements locale forced to `'en'` → fixes "Más información" → "More information" in Link element
-- Express checkout price bug fixed: `item.price / 100` → `item.price` in handleExpressCheckoutConfirm
+Added conversion-optimized trust bar below the "Complete Purchase" CTA button:
+- 3 trust signals with amber icons: Truck (Free U.S. Shipping) · ShieldCheck (Secure Checkout) · RotateCcw (30-Day Comfort Guarantee)
+- Payment method badges: VISA · MC · AMEX · Apple Pay · G Pay
+- Terms | Privacy links preserved below
+- Top bar updated: removed "SSL encrypted" jargon → "Secure Checkout · Powered by Stripe"
 
 ## 4. Recent Changes
+- 2026-06-05: **StripePayment.tsx** — Added trust signals below CTA (Free U.S. Shipping · Secure Checkout · 30-Day Guarantee + card logos). Replaced Terms|Privacy alone with full trust block.
+- 2026-06-05: **CheckoutUI.tsx** — Updated top security bar: removed "SSL encrypted" jargon → "Secure Checkout · Powered by Stripe"
 - 2026-06-05: **StripePayment.tsx + CheckoutUI.tsx** — Full English translation (30 strings). Stripe locale set to `'en'`. Default country MX→US. Express checkout price bug fixed.
 - 2026-06-05: **IndexUI.tsx** — All hardcoded prices ($49, $75, 35% OFF) now dynamically read from `filteredProducts[0].price` and `compare_at_price` via `useSettings().formatMoney`. Updates automatically when product price changes in Dashboard.
 - 2026-06-04: **PixelContext.tsx** — Persist fbclid → fbc to localStorage (_fbc_fallback) AND set first-party cookie (90 days). Survives refresh/navigation.
@@ -37,9 +39,6 @@ All Spanish text in the checkout flow has been translated to English:
 - 2026-05-28: **ProductPageUI.tsx** — Social proof banner: J/M/R letters → real person photos
 - 2026-05-28: **ProductPageUI.tsx** — Sticky bar v2
 - 2026-05-28: **EcommerceTemplate.tsx** — trust bar: Free US Shipping + +1,000 Happy Riders (mobile), 30-Day Trial (desktop)
-- 2026-05-28: **index.css** — added `.no-scrollbar` utility class
-- 2026-05-28: **ProductPageUI.tsx** — Supabase image transforms + fetchPriority + carousel lazy loading
-- 2026-05-28: **IndexUI.tsx** — Supabase image transforms on all 9 image constants
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -63,9 +62,9 @@ All Spanish text in the checkout flow has been translated to English:
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices now dynamically linked to product DB via useSettings().formatMoney
 - `src/contexts/PixelContext.tsx` — ✅ fbclid now persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI getUserDataForCapi reads localStorage fallback for fbc/fbp
-- `src/components/StripePayment.tsx` — ✅ Full EN translation + MX→US default + locale:'en' + express checkout price bug fixed
+- `src/components/StripePayment.tsx` — ✅ Full EN translation + MX→US default + locale:'en' + express checkout price bug fixed + trust signals below CTA
 - `src/pages/ThankYou.tsx` — ✅ Deferred Purchase event for 3DS redirect flow
 - `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements
 - `index.html` — ✅ English meta + non-blocking fonts (Sora+Inter only)
 - `src/templates/EcommerceTemplate.tsx` — ✅ English + new trust bar
-- `src/pages/ui/CheckoutUI.tsx` — ✅ Fully translated to English
+- `src/pages/ui/CheckoutUI.tsx` — ✅ Fully translated to English + updated top security bar

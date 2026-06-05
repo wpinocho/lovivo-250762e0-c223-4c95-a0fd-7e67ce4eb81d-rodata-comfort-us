@@ -203,7 +203,7 @@ export default function CheckoutUI() {
                   <section>
                     <div className="flex items-center gap-2 text-brand-steel text-[11px] font-inter mb-4 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2">
                       <Lock size={11} className="text-brand-amber flex-shrink-0" />
-                      100% secure payment · SSL encrypted · Powered by Stripe
+                      Secure Checkout · Powered by Stripe
                     </div>
 
                     {(() => {
