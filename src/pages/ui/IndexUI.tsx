@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import type { UseIndexLogicReturn } from '@/components/headless/HeadlessIndex'
+import { useSettings } from '@/contexts/SettingsContext'
 
 // ─── Asset URLs ────────────────────────────────────────────────────────────────
 const REVIEW_IMG_1 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/product-images/cdddcb57-6bb6-4cd1-8062-d3fa8617d1cf/review-1.webp?width=480&quality=75'
@@ -45,8 +46,15 @@ interface IndexUIProps {
 }
 
 export const IndexUI = ({ logic }: IndexUIProps) => {
-  const productSlug = logic.filteredProducts[0]?.slug
+  const { formatMoney } = useSettings()
+  const product = logic.filteredProducts[0]
+  const productSlug = product?.slug
   const buyUrl = productSlug ? `/products/${productSlug}` : BUY_URL
+
+  // Dynamic pricing — live from the product in the DB
+  const price = product?.price ?? null
+  const comparePrice = (product as any)?.compare_at_price ?? null
+  const discountPct = price && comparePrice ? Math.round((1 - price / comparePrice) * 100) : null
 
   return (
     <EcommerceTemplate showCart layout="full-width" noPadding>
@@ -114,13 +122,17 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
             </ul>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 mb-8">
-              <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">$49</span>
-              <span className="text-brand-steel text-xl line-through font-inter">$75</span>
-              <span className="bg-brand-amber/15 border border-brand-amber/30 text-brand-amber text-xs font-semibold px-2.5 py-1 rounded font-sora">
-                35% OFF
-              </span>
-            </div>
+            {price !== null && (
+              <div className="flex items-baseline gap-3 mb-8">
+                <span style={{ letterSpacing: '0px' }} className="font-sora font-bold text-brand-offwhite text-4xl">{formatMoney(price)}</span>
+                {comparePrice && <span className="text-brand-steel text-xl line-through font-inter">{formatMoney(comparePrice)}</span>}
+                {discountPct && (
+                  <span className="bg-brand-amber/15 border border-brand-amber/30 text-brand-amber text-xs font-semibold px-2.5 py-1 rounded font-sora">
+                    {discountPct}% OFF
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -358,7 +370,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
 
               <Link to={buyUrl}>
                 <button className="btn-amber amber-glow font-sora">
-                  Buy now — $49
+                  Buy now{price !== null ? ` — ${formatMoney(price)}` : ''}
                   <ArrowRight size={16} />
                 </button>
               </Link>
@@ -479,7 +491,7 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           <div className="mt-10 text-center">
             <Link to={buyUrl}>
               <button className="btn-amber-lg amber-glow font-sora">
-                Buy Rodata One — $49
+                Buy Rodata One{price !== null ? ` — ${formatMoney(price)}` : ''}
                 <ArrowRight size={16} />
               </button>
             </Link>
@@ -709,10 +721,12 @@ export const IndexUI = ({ logic }: IndexUIProps) => {
           </p>
 
           {/* Price */}
-          <div className="flex items-baseline justify-center gap-3 mb-8">
-            <span className="font-sora font-bold text-brand-offwhite text-4xl">$49</span>
-            <span className="text-brand-steel text-xl line-through font-inter">$75</span>
-          </div>
+          {price !== null && (
+            <div className="flex items-baseline justify-center gap-3 mb-8">
+              <span className="font-sora font-bold text-brand-offwhite text-4xl">{formatMoney(price)}</span>
+              {comparePrice && <span className="text-brand-steel text-xl line-through font-inter">{formatMoney(comparePrice)}</span>}
+            </div>
+          )}
 
           <Link to={buyUrl}>
             <button className="btn-amber-lg amber-glow font-sora text-lg px-12">

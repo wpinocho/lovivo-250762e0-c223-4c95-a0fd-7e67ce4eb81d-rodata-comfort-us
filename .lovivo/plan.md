@@ -18,8 +18,10 @@
 ## 3. Active Plan
 All major pages fully translated to English ✅
 Meta tracking fixes deployed ✅
+IndexUI prices now dynamically linked to product DB ✅
 
 ## 4. Recent Changes
+- 2026-06-05: **IndexUI.tsx** — All hardcoded prices ($49, $75, 35% OFF) now dynamically read from `filteredProducts[0].price` and `compare_at_price` via `useSettings().formatMoney`. Updates automatically when product price changes in Dashboard.
 - 2026-06-04: **PixelContext.tsx** — Persist fbclid → fbc to localStorage (_fbc_fallback) AND set first-party cookie (90 days). Survives refresh/navigation.
 - 2026-06-04: **tracking-utils.ts** — `getUserDataForCapi()` now reads `_fbc_fallback` and `_fbp_fallback` from localStorage as fallback if React state is null.
 - 2026-06-04: **StripePayment.tsx** — Fixed `item.price / 100` bug: item.price was already in dollars, division was sending $0.49 instead of $49 to Meta.
@@ -34,7 +36,6 @@ Meta tracking fixes deployed ✅
 - 2026-05-28: **ProductPageUI.tsx** — Supabase image transforms + fetchPriority + carousel lazy loading
 - 2026-05-28: **IndexUI.tsx** — Supabase image transforms on all 9 image constants
 - 2026-05-28: **index.html** — Removed 14 unused Google Fonts, async Sora+Inter, English meta tags
-- 2026-05-26: **BrandLogoLeft.tsx + logo.svg + favicon.svg** — Updated branding
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -55,11 +56,11 @@ Meta tracking fixes deployed ✅
 - Google Pay error on checkout: domain needs to be registered in Stripe Dashboard > Settings > Payment methods > Google Pay
 
 ## 7. Key Files
+- `src/pages/ui/IndexUI.tsx` — ✅ Prices now dynamically linked to product DB via useSettings().formatMoney
 - `src/contexts/PixelContext.tsx` — ✅ fbclid now persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI getUserDataForCapi reads localStorage fallback for fbc/fbp
 - `src/components/StripePayment.tsx` — ✅ Fixed item.price/100 bug + 3DS redirect support
 - `src/pages/ThankYou.tsx` — ✅ Deferred Purchase event for 3DS redirect flow
 - `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements
 - `index.html` — ✅ English meta + non-blocking fonts (Sora+Inter only)
-- `src/pages/ui/IndexUI.tsx` — ✅ English + image optimization
 - `src/templates/EcommerceTemplate.tsx` — ✅ English + new trust bar
