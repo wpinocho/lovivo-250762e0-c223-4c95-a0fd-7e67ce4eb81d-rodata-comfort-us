@@ -16,9 +16,49 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-All major pages fully translated to English ✅
-Meta tracking fixes deployed ✅
-IndexUI prices now dynamically linked to product DB ✅
+
+### ACTIVE: Checkout full English translation
+**Files**: `src/components/StripePayment.tsx`, `src/pages/ui/CheckoutUI.tsx`
+
+#### StripePayment.tsx — all Spanish strings to fix:
+| Line | Current (ES) | Target (EN) |
+|------|-------------|-------------|
+| 88 | `'Envío'` | `'Shipping'` |
+| 199 | `\`Pedido #${orderId ?? "s/n"}\`` | `\`Order #${orderId ?? "N/A"}\`` |
+| 256 | toast title: `"Productos agotados"` | `"Out of stock"` |
+| 257 | toast desc: `"Los siguientes productos ya no están disponibles: ... Retíralos de tu carrito..."` | `"The following items are no longer available: ${unavailableNames}. Remove them from your cart to complete your purchase."` |
+| 268 | toast desc: `"Stripe no está listo"` | `"Stripe is not ready yet"` |
+| 275 | toast title: `"Punto de recogida requerido"`, desc: `"Por favor selecciona un punto de recogida antes de continuar."` | title: `"Pickup required"`, desc: `"Please select a pickup location before continuing."` |
+| 285 | toast desc: `submitError.message \|\| "Verifica los datos de pago"` | `submitError.message \|\| "Please check your payment details"` |
+| 327 | `throw new Error("No se recibió client_secret del servidor")` | `"No client_secret received from server"` |
+| 357 | toast title: `"Error de pago"`, desc: `"No se pudo procesar el pago"` | title: `"Payment error"`, desc: `result.error.message \|\| "Your payment could not be processed"` |
+| 399 | toast title: `"¡Pago exitoso!"`, desc: `"Tu compra ha sido procesada correctamente."` | title: `"Payment successful!"`, desc: `"Your order has been placed successfully."` |
+| 434 | toast title: `"Acción requerida"`, desc: `"Por favor completa la verificación del pago."` | title: `"Action required"`, desc: `"Please complete the payment verification."` |
+| 441 | toast title: `"Estado del pago"`, desc: `\`Estado: ${pi?.status ?? "desconocido"}\`` | title: `"Payment status"`, desc: `\`Status: ${pi?.status ?? "unknown"}\`` |
+| 463-466 | toast title: `"Pagos no configurados"`, desc: `"Esta tienda aún no ha configurado un método de pago..."` | title: `"Payments not configured"`, desc: `"This store hasn't set up a payment method yet. Go to the Lovivo dashboard to connect Stripe."` |
+| 469 | toast desc: `"No se pudo procesar el pago. Intenta de nuevo."` | `"Your payment could not be processed. Please try again."` |
+| 513-515 | toast title: `"Falta dirección de envío"`, desc: `"Por favor completa tu dirección antes de pagar."` | title: `"Shipping address required"`, desc: `"Please complete your shipping address before paying."` |
+| 558 | `throw new Error("No se recibió client_secret del servidor")` | `"No client_secret received from server"` |
+| 587 | toast title: `"Error de pago"`, desc: `"No se pudo procesar el pago"` | title: `"Payment error"`, desc: `result.error.message \|\| "Your payment could not be processed"` |
+| 612 | toast title: `"¡Pago exitoso!"`, desc: `"Tu compra ha sido procesada correctamente."` | title: `"Payment successful!"`, desc: `"Your order has been placed successfully."` |
+| 635 | `displayName: 'Envío estándar'` | `displayName: 'Standard shipping'` |
+| 661 | `displayName: 'Envío estándar'` | `displayName: 'Standard shipping'` |
+| 693 | `<span>o</span>` | `<span>or</span>` |
+| 818 | `<span>Procesando...</span>` | `<span>Processing...</span>` |
+| 820 | `` `Completar Compra - ${amountLabel}` `` | `` `Complete Purchase - ${amountLabel}` `` |
+| 824 | `Condiciones` (Terms link) | `Terms` |
+| 826 | `Privacidad` (Privacy link) | `Privacy` |
+
+**ALSO fix default country** in AddressElement (lines 744 & 748): Change `country: 'MX'` → `country: 'US'` so the address form pre-selects United States.
+
+**ALSO fix express checkout price bug** (line 596): `price: item.price / 100` → `price: item.price` (same bug that was fixed in handlePayment but NOT in handleExpressCheckoutConfirm — would send $0.49 to Meta instead of $49 for Apple Pay / Google Pay flows).
+
+#### CheckoutUI.tsx — all Spanish strings to fix:
+| Line | Current (ES) | Target (EN) |
+|------|-------------|-------------|
+| 48 | `"Error al cargar la orden"` | `"Error loading order"` |
+| 54 | `"Cargando orden..."` | `"Loading order..."` |
+| 82 | `"Métodos de envío"` | `"Shipping methods"` |
 
 ## 4. Recent Changes
 - 2026-06-05: **IndexUI.tsx** — All hardcoded prices ($49, $75, 35% OFF) now dynamically read from `filteredProducts[0].price` and `compare_at_price` via `useSettings().formatMoney`. Updates automatically when product price changes in Dashboard.
@@ -48,6 +88,7 @@ IndexUI prices now dynamically linked to product DB ✅
 
 ## 6. Known Issues
 - **META DIAGNÓSTICO 🔴1**: Likely an expired CAPI Access Token — fix in Meta Business Manager → System Users → generate a new non-expiring token and update in Lovivo Dashboard Settings.
+- **🐛 Express checkout price bug**: `handleExpressCheckoutConfirm` in StripePayment.tsx line 596 still has `item.price / 100` — same bug that was fixed in `handlePayment`. Will be fixed in next checkout translation pass.
 - Country name "Estados Unidos" on thank you page comes from backend data, not UI — no fix needed in frontend
 - Store config shows `currency: usd (Peso Mexicano (MXN))` — label is misleading. Verify actual currency in Dashboard.
 - Product slug is still in Spanish — may want to add English slug redirect
@@ -59,8 +100,9 @@ IndexUI prices now dynamically linked to product DB ✅
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices now dynamically linked to product DB via useSettings().formatMoney
 - `src/contexts/PixelContext.tsx` — ✅ fbclid now persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI getUserDataForCapi reads localStorage fallback for fbc/fbp
-- `src/components/StripePayment.tsx` — ✅ Fixed item.price/100 bug + 3DS redirect support
+- `src/components/StripePayment.tsx` — ✅ Fixed item.price/100 bug + 3DS redirect support | ⏳ Needs full EN translation
 - `src/pages/ThankYou.tsx` — ✅ Deferred Purchase event for 3DS redirect flow
 - `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements
 - `index.html` — ✅ English meta + non-blocking fonts (Sora+Inter only)
 - `src/templates/EcommerceTemplate.tsx` — ✅ English + new trust bar
+- `src/pages/ui/CheckoutUI.tsx` — ⏳ 3 Spanish strings remaining
