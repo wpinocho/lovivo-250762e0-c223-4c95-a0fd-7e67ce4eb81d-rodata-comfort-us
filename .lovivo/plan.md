@@ -16,11 +16,13 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### ✅ COMPLETED: Checkout + PDP Conversion Fixes (4 items)
+### ✅ COMPLETED: Checkout + PDP Conversion Fixes
 
-All 4 fixes implemented on 2026-06-09. No pending items in this batch.
+All fixes implemented. No pending items.
 
 ## 4. Recent Changes
+- 2026-06-09: **CheckoutUI.tsx + ProductPageUI.tsx** — Delivery window changed to 6–8 business days (was 7–9)
+- 2026-06-09: **StripePayment.tsx** — Removed duplicate "30-Day Comfort Guarantee" line above buy button (already in trust bar below). Kept only ★4.9 · 127 verified riders pre-pay.
 - 2026-06-09: **CheckoutUI.tsx** — Added `getEstimatedDelivery()` fn + "Free shipping · Arrives [date]" line in desktop order summary + mobile summary. Added Truck icon to imports.
 - 2026-06-09: **CheckoutUI.tsx** — Mobile order summary now open by default (`useState(true)`)
 - 2026-06-09: **StripePayment.tsx** — Added pre-pay trust block ABOVE "Complete Purchase" button: 4.9★ · 127 verified riders + 30-Day Comfort Guarantee
@@ -34,8 +36,6 @@ All 4 fixes implemented on 2026-06-09. No pending items in this batch.
 - 2026-06-04: **tracking-utils.ts** — `getUserDataForCapi()` now reads `_fbc_fallback` and `_fbp_fallback` from localStorage as fallback if React state is null.
 - 2026-06-04: **StripePayment.tsx** — Fixed `item.price / 100` bug in handlePayment: item.price was already in dollars, division was sending $0.49 instead of $49 to Meta.
 - 2026-06-04: **ThankYou.tsx** — Added deferred Purchase tracking for Stripe 3DS redirect flow (`redirect_status=succeeded` in URL). Uses fire-once guard (`purchase_tracked_<orderId>` in localStorage).
-- 2026-06-01: **ThankYou.tsx** — Full English translation (20 strings)
-- 2026-05-28: **ProductPageUI.tsx** — badge -35% half in/half out (desktop restructure + mobile -translate-y-1/2)
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -59,9 +59,9 @@ All 4 fixes implemented on 2026-06-09. No pending items in this batch.
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices now dynamically linked to product DB via useSettings().formatMoney
 - `src/contexts/PixelContext.tsx` — ✅ fbclid now persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI getUserDataForCapi reads localStorage fallback for fbc/fbp
-- `src/components/StripePayment.tsx` — ✅ Full EN translation + MX→US default + locale:'en' + express checkout price bug fixed + trust signals below CTA + pre-pay trust reinforcement above button
+- `src/components/StripePayment.tsx` — ✅ Full EN translation + MX→US default + locale:'en' + express checkout price bug fixed + trust signals below CTA + pre-pay ★ rating above button (no duplicate guarantee)
 - `src/pages/ThankYou.tsx` — ✅ Deferred Purchase event for 3DS redirect flow
-- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements + Launch Offer badge + Shipping & Returns accordion
+- `src/pages/ui/ProductPageUI.tsx` — ✅ English + US reviews + image optimization + UX improvements + Launch Offer badge + Shipping & Returns accordion (6–8 biz days)
 - `index.html` — ✅ English meta + non-blocking fonts (Sora+Inter only)
 - `src/templates/EcommerceTemplate.tsx` — ✅ English + new trust bar
-- `src/pages/ui/CheckoutUI.tsx` — ✅ Fully translated + top security bar + delivery date line + mobile summary open by default
+- `src/pages/ui/CheckoutUI.tsx` — ✅ Fully translated + top security bar + delivery date line (6–8 biz days) + mobile summary open by default
