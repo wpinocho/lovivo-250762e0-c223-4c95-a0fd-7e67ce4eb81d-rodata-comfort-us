@@ -240,6 +240,13 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                   <span className="bg-brand-amber/15 border border-brand-amber/30 text-brand-amber text-xs font-semibold px-2.5 py-1 rounded font-sora">{discountPct}% OFF</span></>
                 )}
               </div>
+              {/* Launch offer badge */}
+              <div className="inline-flex items-center gap-2 bg-brand-amber/10 border border-brand-amber/30 rounded-full px-3.5 py-1.5">
+                <span className="text-brand-amber text-xs">🏷</span>
+                <span className="text-brand-amber text-xs font-semibold font-sora">Launch Offer</span>
+                <span className="text-brand-amber/60 text-xs font-inter">—</span>
+                <span className="text-brand-amber/80 text-xs font-inter">Free U.S. Shipping included</span>
+              </div>
               <div className="border-t border-white/[0.08] pt-5 space-y-3">
                 <p className="text-brand-smoke text-sm leading-relaxed font-inter">
                   The back support trusted by riders — designed to eliminate back pain on every ride.
