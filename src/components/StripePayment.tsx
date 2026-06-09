@@ -806,6 +806,21 @@ function PaymentForm({
       {/* Billing address slot */}
       {billingSlot}
 
+      {/* Pre-pay trust reinforcement */}
+      <div className="flex flex-col gap-2 mb-3">
+        <div className="flex items-center justify-center gap-2 text-xs text-brand-steel">
+          <span className="flex gap-0.5">
+            {[1,2,3,4,5].map(s => <span key={s} style={{color:'#C98B2E'}}>★</span>)}
+          </span>
+          <span className="text-brand-smoke font-medium">4.9</span>
+          <span>· 127 verified riders</span>
+        </div>
+        <div className="flex items-center justify-center gap-1.5 text-xs text-brand-steel">
+          <RotateCcw size={11} className="text-brand-amber" />
+          <span>30-Day Comfort Guarantee — ride it, feel it, or we make it right</span>
+        </div>
+      </div>
+
       {/* Submit button */}
       <Button
         onClick={handlePayment}

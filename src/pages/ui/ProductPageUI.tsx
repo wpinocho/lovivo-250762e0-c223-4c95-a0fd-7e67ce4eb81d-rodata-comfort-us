@@ -25,6 +25,25 @@ const FEAT_IMG_1 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/i
 const FEAT_IMG_2 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775777133672-xhxki05535d.webp?width=800&quality=75'
 const FEAT_IMG_3 = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775777133672-dzkdrl1lt2.webp?width=800&quality=75'
 
+// ── Estimated delivery (ships 24–48h, transit 5–7 business days) ─────────────
+function getEstimatedDelivery(): string {
+  const addBusinessDays = (d: Date, days: number): Date => {
+    let count = 0;
+    const result = new Date(d);
+    while (count < days) {
+      result.setDate(result.getDate() + 1);
+      const dow = result.getDay();
+      if (dow !== 0 && dow !== 6) count++;
+    }
+    return result;
+  };
+  const today = new Date();
+  const earliest = addBusinessDays(today, 7);
+  const latest   = addBusinessDays(today, 9);
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${fmt(earliest)} – ${fmt(latest)}`;
+}
+
 const SIZE_GUIDE = [
   { size: 'S',  waist: '24–30 in',   recom: 'Slim waist'   },
   { size: 'M',  waist: '30–35 in',   recom: 'Average fit'  },
@@ -368,6 +387,40 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                   </div>
                 ))}
               </div>
+              {/* Shipping & Returns accordion */}
+              <div className="border-t border-white/[0.08] pt-4">
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="shipping" className="border-white/[0.08]">
+                    <AccordionTrigger className="font-sora font-semibold text-brand-smoke text-xs py-3 hover:no-underline hover:text-brand-offwhite [&>svg]:text-brand-amber [&>svg]:h-3.5 [&>svg]:w-3.5">
+                      <span className="flex items-center gap-2">
+                        <Truck size={13} className="text-brand-amber" />
+                        Shipping &amp; Returns
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-3 space-y-2">
+                      <div className="text-brand-steel text-xs font-inter space-y-2">
+                        <div className="flex items-start gap-2">
+                          <span className="text-brand-amber mt-0.5">→</span>
+                          <span><span className="text-brand-smoke font-medium">Free US shipping</span> on all orders. No minimum.</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-brand-amber mt-0.5">→</span>
+                          <span>Ships in <span className="text-brand-smoke font-medium">24–48 hrs</span>. Estimated arrival: <span className="text-brand-smoke font-medium">{getEstimatedDelivery()}</span></span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-brand-amber mt-0.5">→</span>
+                          <span><span className="text-brand-smoke font-medium">30-day comfort trial</span> — if it\'s not right, we\'ll make it right.</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-brand-amber mt-0.5">→</span>
+                          <span>Free <span className="text-brand-smoke font-medium">size exchange</span>. No hassle.</span>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+
               {/* Social proof — verified riders */}
               <div className="flex items-center gap-3 bg-brand-graphite border border-white/[0.08] rounded-xl px-4 py-3">
                 <div className="flex -space-x-2 flex-shrink-0">
