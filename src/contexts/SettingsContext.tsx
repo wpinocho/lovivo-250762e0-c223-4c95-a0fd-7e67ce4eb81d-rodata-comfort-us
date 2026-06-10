@@ -18,6 +18,9 @@ interface SettingsContextType {
   paymentMethods: PaymentMethods
   stripeAccountId: string | null
   chargeType: string | null
+  paypalEnabled: boolean
+  paypalClientId: string | null
+  paypalEnvironment: 'sandbox' | 'live' | null
   isLoading: boolean
   error: Error | null
   formatMoney: (value: number) => string
@@ -95,7 +98,23 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     retry: 1
   })
 
-  const isLoading = isLoadingSettings || isLoadingPlatform
+  const {
+    data: paypalRow,
+    isLoading: isLoadingPaypal,
+  } = useQuery({
+    queryKey: ['paypal-account', STORE_ID],
+    queryFn: async () => {
+      const { data, error } = await (supabase
+        .rpc('get_public_paypal_account', { p_store_id: STORE_ID }) as any)
+        .maybeSingle()
+      if (error) { console.warn('paypal account:', error); return null }
+      return data
+    },
+    staleTime: 60000,
+    retry: 1
+  })
+
+  const isLoading = isLoadingSettings || isLoadingPlatform || isLoadingPaypal
   const error = settingsError
 
   const currencyCode = settings?.currency_code || 'USD'
@@ -110,6 +129,9 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const paymentMethods: PaymentMethods = settings?.payment_methods || { card: true, oxxo: false, spei: false }
   const stripeAccountId = platformStore?.stripe_account_id || null
   const chargeType = platformStore?.charge_type || null
+  const paypalEnabled = !!paypalRow
+  const paypalClientId = (paypalRow as any)?.client_id ?? null
+  const paypalEnvironment = ((paypalRow as any)?.environment ?? 'live') as 'live' | 'sandbox'
 
   const formatMoneyWithCurrency = (value: number): string => {
     return formatMoney(value, currencyCode)
@@ -130,6 +152,9 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         paymentMethods,
         stripeAccountId,
         chargeType,
+        paypalEnabled,
+        paypalClientId,
+        paypalEnvironment,
         isLoading,
         error: error as Error | null,
         formatMoney: formatMoneyWithCurrency,
