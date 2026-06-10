@@ -1,5 +1,5 @@
 import React from 'react'
-import { PayPalProvider, PayPalOneTimePaymentButton } from '@paypal/react-paypal-js/sdk-v6'
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { useSettings } from '@/contexts/SettingsContext'
 import { callEdge } from '@/lib/edge'
 import { STORE_ID } from '@/lib/config'
@@ -29,11 +29,9 @@ export function PaypalExpressButton({
   const { toast } = useToast()
   const navigate = useNavigate()
 
-  if (!paypalEnabled || !paypalClientId) return null
+  if (!paypalEnabled || !paypalClientId || !checkoutToken) return null
 
   const currencyUpper = currency.toUpperCase()
-  // SDK v6: 'live' → 'production'
-  const sdkEnvironment = paypalEnvironment === 'sandbox' ? 'sandbox' : 'production'
 
   return (
     <div className="mt-3">
@@ -43,14 +41,17 @@ export function PaypalExpressButton({
         <div className="flex-1 h-px bg-white/[0.08]" />
       </div>
 
-      <PayPalProvider
+      <PayPalScriptProvider
         key={`${paypalClientId}-${currencyUpper}`}
-        clientId={paypalClientId}
-        environment={sdkEnvironment}
-        currency={currencyUpper}
+        options={{
+          clientId: paypalClientId,
+          currency: currencyUpper,
+          intent: 'capture',
+        }}
       >
-        <PayPalOneTimePaymentButton
+        <PayPalButtons
           style={{ layout: 'horizontal', height: 45, tagline: false, color: 'gold' }}
+          fundingSource="paypal"
           createOrder={async () => {
             const valid = onValidationRequired()
             if (!valid) throw new Error('Validation failed')
@@ -64,7 +65,7 @@ export function PaypalExpressButton({
             })
             return result.id
           }}
-          onApprove={async (data: { orderID: string }) => {
+          onApprove={async (data) => {
             const res = await callEdge('paypal-capture-order', {
               store_id: STORE_ID,
               order_id: data.orderID,
@@ -82,7 +83,7 @@ export function PaypalExpressButton({
           }}
           onCancel={() => { /* user closed popup — no action needed */ }}
         />
-      </PayPalProvider>
+      </PayPalScriptProvider>
     </div>
   )
 }
