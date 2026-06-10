@@ -29,6 +29,7 @@ export function PaypalExpressButton({
   const { toast } = useToast()
   const navigate = useNavigate()
 
+  console.log('[PayPal Button] paypalEnabled:', paypalEnabled, '| paypalClientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| checkoutToken:', !!checkoutToken)
   if (!paypalEnabled || !paypalClientId || !checkoutToken) return null
 
   const currencyUpper = currency.toUpperCase()

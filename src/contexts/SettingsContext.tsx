@@ -107,7 +107,8 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
       const { data, error } = await (supabase
         .rpc('get_public_paypal_account', { p_store_id: STORE_ID }) as any)
         .maybeSingle()
-      if (error) { console.warn('paypal account:', error); return null }
+      console.log('[PayPal RPC] data:', JSON.stringify(data), '| error:', JSON.stringify(error))
+      if (error) { console.warn('[PayPal RPC] Error fetching paypal account:', error); return null }
       return data
     },
     staleTime: 60000,
@@ -132,6 +133,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const paypalEnabled = !!paypalRow
   const paypalClientId = (paypalRow as any)?.client_id ?? null
   const paypalEnvironment = ((paypalRow as any)?.environment ?? 'live') as 'live' | 'sandbox'
+  console.log('[PayPal Settings] enabled:', paypalEnabled, '| clientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| env:', paypalEnvironment, '| rawRow:', JSON.stringify(paypalRow))
 
   const formatMoneyWithCurrency = (value: number): string => {
     return formatMoney(value, currencyCode)
