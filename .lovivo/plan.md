@@ -21,12 +21,13 @@
 **What was built:**
 - `@paypal/react-paypal-js` installed
 - `SettingsContext` extended with `paypal_accounts_safe` → now uses `rpc('get_public_paypal_account')`. Exposes: `paypalEnabled`, `paypalClientId`, `paypalEnvironment`
-- `src/components/PaypalExpressButton.tsx` created — returns `null` when PayPal not connected, renders PayPalScriptProvider + PayPalButtons otherwise. Shows "or pay with" divider, gold horizontal layout. On approve → `navigate('/thank-you/:id')`.
+- `src/components/PaypalExpressButton.tsx` — migrated to **SDK v6 API** (`PayPalProvider` + `PayPalOneTimePaymentButton` from `@paypal/react-paypal-js/sdk-v6`). Maps `paypalEnvironment === 'live'` → `environment="production"`.
 - `CheckoutUI.tsx` — mounts `<PaypalExpressButton>` after `</StripePayment>` inside the `isStripeReady` IIFE block, wrapped in a fragment
 
 **To activate**: Connect a PayPal account in Lovivo Dashboard → the button auto-appears.
 
 ## 4. Recent Changes
+- 2026-06-10: **PaypalExpressButton.tsx** — Migrated to SDK v6 API (PayPalProvider + PayPalOneTimePaymentButton), map 'live'→'production'
 - 2026-06-10: **PayPal integration** — SettingsContext (RPC query), PaypalExpressButton.tsx (new), CheckoutUI.tsx (mounted after StripePayment)
 - 2026-06-10: **CheckoutUI.tsx** — Shipping shows "FREE" (was "Pending") when shippingCost === 0 on mobile
 - 2026-06-09: **CheckoutUI.tsx + ProductPageUI.tsx** — Delivery window changed to 6–8 business days (was 7–9)
@@ -41,7 +42,6 @@
 - 2026-06-05: **StripePayment.tsx + CheckoutUI.tsx** — Full English translation
 - 2026-06-05: **IndexUI.tsx** — Prices dynamically read from product DB
 - 2026-06-04: **PixelContext.tsx** — Persist fbclid → fbc to localStorage
-- 2026-06-04: **tracking-utils.ts** — `getUserDataForCapi()` reads localStorage fallback
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -62,7 +62,7 @@
 
 ## 7. Key Files
 - `src/contexts/SettingsContext.tsx` — ✅ Now exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
-- `src/components/PaypalExpressButton.tsx` — ✅ NEW: PayPal button, conditional on paypalEnabled
+- `src/components/PaypalExpressButton.tsx` — ✅ SDK v6 API (PayPalProvider + PayPalOneTimePaymentButton)
 - `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton mounted after StripePayment
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie

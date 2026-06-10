@@ -1,5 +1,5 @@
 import React from 'react'
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { PayPalProvider, PayPalOneTimePaymentButton } from '@paypal/react-paypal-js/sdk-v6'
 import { useSettings } from '@/contexts/SettingsContext'
 import { callEdge } from '@/lib/edge'
 import { STORE_ID } from '@/lib/config'
@@ -32,6 +32,8 @@ export function PaypalExpressButton({
   if (!paypalEnabled || !paypalClientId) return null
 
   const currencyUpper = currency.toUpperCase()
+  // SDK v6: 'live' → 'production'
+  const sdkEnvironment = paypalEnvironment === 'sandbox' ? 'sandbox' : 'production'
 
   return (
     <div className="mt-3">
@@ -41,18 +43,13 @@ export function PaypalExpressButton({
         <div className="flex-1 h-px bg-white/[0.08]" />
       </div>
 
-      <PayPalScriptProvider
+      <PayPalProvider
         key={`${paypalClientId}-${currencyUpper}`}
-        options={{
-          clientId: paypalClientId,
-          currency: currencyUpper,
-          intent: 'capture',
-          enableFunding: 'venmo,paylater',
-          components: 'buttons',
-          ...(paypalEnvironment === 'sandbox' ? { dataSdkIntegrationSource: 'integrationbuilder_sc' } : {}),
-        }}
+        clientId={paypalClientId}
+        environment={sdkEnvironment}
+        currency={currencyUpper}
       >
-        <PayPalButtons
+        <PayPalOneTimePaymentButton
           style={{ layout: 'horizontal', height: 45, tagline: false, color: 'gold' }}
           createOrder={async () => {
             const valid = onValidationRequired()
@@ -67,7 +64,7 @@ export function PaypalExpressButton({
             })
             return result.id
           }}
-          onApprove={async (data) => {
+          onApprove={async (data: { orderID: string }) => {
             const res = await callEdge('paypal-capture-order', {
               store_id: STORE_ID,
               order_id: data.orderID,
@@ -75,17 +72,17 @@ export function PaypalExpressButton({
             })
             navigate(`/thank-you/${res.order.id}`)
           }}
-          onError={(err: any) => {
-            if (err?.message === 'Validation failed') return
+          onError={(err: unknown) => {
+            if (err instanceof Error && err.message === 'Validation failed') return
             toast({
               title: 'PayPal error',
-              description: err?.message || 'Something went wrong. Please try again.',
+              description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
               variant: 'destructive',
             })
           }}
           onCancel={() => { /* user closed popup — no action needed */ }}
         />
-      </PayPalScriptProvider>
+      </PayPalProvider>
     </div>
   )
 }
