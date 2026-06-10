@@ -821,7 +821,7 @@ function PaymentForm({
       <Button
         onClick={handlePayment}
         disabled={!stripe || loading || !amountCents || !!shippingError}
-        className="w-full h-12 text-lg font-semibold"
+        className="w-full h-14 flex flex-col items-center justify-center gap-0.5"
         size="lg"
       >
         {loading ? (
@@ -829,7 +829,12 @@ function PaymentForm({
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             <span>Processing...</span>
           </div>
-        ) : `Complete Purchase - ${amountLabel}`}
+        ) : (
+          <>
+            <span className="text-sm font-semibold leading-none tracking-wide">Complete Purchase</span>
+            <span className="text-lg font-bold leading-none">{amountLabel}</span>
+          </>
+        )}
       </Button>
 
       {/* Trust signals below CTA */}
