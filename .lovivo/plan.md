@@ -16,15 +16,13 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### ✅ PayPal button repositioned
+### ✅ PayPal button position — FIXED
 
-PayPal button now renders in two positions using CSS visibility:
-- **Mobile** (`md:hidden`): Right after `MobileOrderSummary`, ABOVE the form (above GPay/Link)
-- **Desktop** (`hidden md:block`): Inside the form section, BEFORE `StripePayment` (above GPay/Link), with "or pay with card" divider below it
-
-`PaypalExpressButton` now accepts `className` and `showDivider` props.
+- **Desktop**: PayPal above GPay/Link (no "or pay with card" text — removed)
+- **Mobile**: PayPal above GPay/Link (added `md:hidden` instance before StripePayment)
 
 ## 4. Recent Changes
+- 2026-06-10: **CheckoutUI.tsx** — Removed "or pay with card" divider text on desktop; added mobile PayPal (`md:hidden`) above StripePayment
 - 2026-06-10: **PaypalExpressButton.tsx + CheckoutUI.tsx** — PayPal repositioned: mobile=above form (after summary), desktop=above GPay/Link (before StripePayment)
 - 2026-06-10: **PaypalExpressButton.tsx** — Added `className` + `showDivider` props
 - 2026-06-10: **PaypalExpressButton.tsx** — Fixed: replaced invalid `@paypal/react-paypal-js/sdk-v6` import with standard `PayPalScriptProvider` + `PayPalButtons` from `@paypal/react-paypal-js`
@@ -39,7 +37,6 @@ PayPal button now renders in two positions using CSS visibility:
 - 2026-06-09: **ProductPageUI.tsx** — Added `getEstimatedDelivery()` fn + "Shipping & Returns" accordion
 - 2026-06-09: **ProductPageUI.tsx** — Added Launch Offer amber badge below price block
 - 2026-06-05: **StripePayment.tsx** — Added trust signals below CTA
-- 2026-06-05: **CheckoutUI.tsx** — Updated top security bar
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -61,7 +58,7 @@ PayPal button now renders in two positions using CSS visibility:
 ## 7. Key Files
 - `src/contexts/SettingsContext.tsx` — ✅ Exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
 - `src/components/PaypalExpressButton.tsx` — ✅ Fixed + accepts className/showDivider props
-- `src/pages/ui/CheckoutUI.tsx` — ✅ PayPal in two positions: mobile (after summary) + desktop (before StripePayment)
+- `src/pages/ui/CheckoutUI.tsx` — ✅ PayPal: desktop (hidden md:block above Stripe) + mobile (md:hidden before StripePayment)
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI reads localStorage fallback for fbc/fbp
