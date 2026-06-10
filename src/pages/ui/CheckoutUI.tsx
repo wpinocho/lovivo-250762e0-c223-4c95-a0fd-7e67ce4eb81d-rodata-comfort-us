@@ -258,6 +258,41 @@ export default function CheckoutUI() {
 
                       return (
                         <>
+                        {/* Desktop-only PayPal — above GPay/Link */}
+                        <PaypalExpressButton
+                          className="hidden md:block mb-2"
+                          showDivider={false}
+                          orderId={logic.orderId}
+                          checkoutToken={logic.checkoutToken}
+                          amount={logic.finalTotal}
+                          currency={logic.currencyCode.toLowerCase()}
+                          items={logic.orderItems}
+                          shippingCost={logic.shippingCost}
+                          onValidationRequired={() => {
+                            if (!logic.usePickup) {
+                              const missing: string[] = [];
+                              const emailOk = !!logic.email?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(logic.email);
+                              if (!emailOk) missing.push('valid email');
+                              if (!addressElementComplete) missing.push('complete address');
+                              if (
+                                Array.isArray(logic.deliveryExpectations) &&
+                                logic.deliveryExpectations.length > 0 &&
+                                !logic.selectedDeliveryMethod
+                              ) missing.push('shipping method');
+                              if (missing.length > 0) {
+                                toast({ title: 'Required fields', description: `Please complete: ${missing.join(', ')}`, variant: 'destructive', duration: 5000 });
+                                return false;
+                              }
+                              return true;
+                            }
+                            return logic.validateCheckoutFields();
+                          }}
+                        />
+                        <div className="hidden md:flex items-center gap-2 mb-3">
+                          <div className="flex-1 h-px bg-white/[0.08]" />
+                          <span className="text-xs text-brand-steel">or pay with card</span>
+                          <div className="flex-1 h-px bg-white/[0.08]" />
+                        </div>
                         <StripePayment
                           key={stripeKey}
                           amountCents={Math.round(logic.finalTotal * 100)}
@@ -366,38 +401,6 @@ export default function CheckoutUI() {
                             logic.saveClientData(true, email);
                           }}
                           onLinkAuthChange={setLinkAuthenticated}
-                        />
-                        <PaypalExpressButton
-                          orderId={logic.orderId}
-                          checkoutToken={logic.checkoutToken}
-                          amount={logic.finalTotal}
-                          currency={logic.currencyCode.toLowerCase()}
-                          items={logic.orderItems}
-                          shippingCost={logic.shippingCost}
-                          onValidationRequired={() => {
-                            if (!logic.usePickup) {
-                              const missing: string[] = [];
-                              const emailOk = !!logic.email?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(logic.email);
-                              if (!emailOk) missing.push('valid email');
-                              if (!addressElementComplete) missing.push('complete address');
-                              if (
-                                Array.isArray(logic.deliveryExpectations) &&
-                                logic.deliveryExpectations.length > 0 &&
-                                !logic.selectedDeliveryMethod
-                              ) missing.push('shipping method');
-                              if (missing.length > 0) {
-                                toast({
-                                  title: 'Required fields',
-                                  description: `Please complete: ${missing.join(', ')}`,
-                                  variant: 'destructive',
-                                  duration: 5000,
-                                });
-                                return false;
-                              }
-                              return true;
-                            }
-                            return logic.validateCheckoutFields();
-                          }}
                         />
                         </>
                       );

@@ -14,6 +14,8 @@ interface PaypalExpressButtonProps {
   items: any[]
   shippingCost: number
   onValidationRequired: () => boolean
+  className?: string    // outer wrapper className
+  showDivider?: boolean // show "or pay with" label above (default true)
 }
 
 export function PaypalExpressButton({
@@ -24,6 +26,8 @@ export function PaypalExpressButton({
   items,
   shippingCost,
   onValidationRequired,
+  className,
+  showDivider = true,
 }: PaypalExpressButtonProps) {
   const { paypalEnabled, paypalClientId, paypalEnvironment } = useSettings()
   const { toast } = useToast()
@@ -35,12 +39,14 @@ export function PaypalExpressButton({
   const currencyUpper = currency.toUpperCase()
 
   return (
-    <div className="mt-3">
-      <div className="flex items-center gap-2 my-3">
-        <div className="flex-1 h-px bg-white/[0.08]" />
-        <span className="text-xs text-brand-steel">or pay with</span>
-        <div className="flex-1 h-px bg-white/[0.08]" />
-      </div>
+    <div className={className}>
+      {showDivider && (
+        <div className="flex items-center gap-2 my-3">
+          <div className="flex-1 h-px bg-white/[0.08]" />
+          <span className="text-xs text-brand-steel">or pay with</span>
+          <div className="flex-1 h-px bg-white/[0.08]" />
+        </div>
+      )}
 
       <PayPalScriptProvider
         key={`${paypalClientId}-${currencyUpper}`}

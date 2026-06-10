@@ -16,31 +16,19 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### 🔍 DEBUG: PayPal button not showing
+### ✅ PayPal button repositioned
 
-**Problem**: `PaypalExpressButton` is imported and placed correctly in CheckoutUI.tsx (lines 370-401), but the button doesn't appear. The component has an early return: `if (!paypalEnabled || !paypalClientId || !checkoutToken) return null`
+PayPal button now renders in two positions using CSS visibility:
+- **Mobile** (`md:hidden`): Right after `MobileOrderSummary`, ABOVE the form (above GPay/Link)
+- **Desktop** (`hidden md:block`): Inside the form section, BEFORE `StripePayment` (above GPay/Link), with "or pay with card" divider below it
 
-**Most likely cause**: The RPC `get_public_paypal_account(p_store_id)` is returning null/error, making `paypalEnabled = false`.
-
-**Debug step (do this first in Craft Mode)**:
-In `src/components/PaypalExpressButton.tsx`, add a console.log BEFORE the early return:
-```
-console.log('[PayPal Debug]', { paypalEnabled, paypalClientId, paypalEnvironment, checkoutToken: !!checkoutToken })
-```
-Then open /pagar with items in cart and check the console.
-
-**After debugging**:
-- If `paypalEnabled = false` → the RPC is returning null. The `get_public_paypal_account` RPC might not exist or the account isn't saved correctly. Try changing the guard: if the RPC returns 406/error, maybe we should fall back to checking `payment_methods` from store_settings instead.
-- If `paypalClientId = null` → the RPC returns a row but `client_id` field name might be different (e.g., `paypal_client_id` vs `client_id`)
-- If `checkoutToken` is falsy → the checkout hasn't initialized yet; may need to guard the rendering
-
-**Alternative fix if RPC keeps failing**:
-In `SettingsContext.tsx`, the paypal query silently returns null on any error. Add more verbose logging to see the actual error message. The error might be "404 function not found" or "406 not acceptable" which would tell us the RPC doesn't exist in this Supabase instance.
+`PaypalExpressButton` now accepts `className` and `showDivider` props.
 
 ## 4. Recent Changes
+- 2026-06-10: **PaypalExpressButton.tsx + CheckoutUI.tsx** — PayPal repositioned: mobile=above form (after summary), desktop=above GPay/Link (before StripePayment)
+- 2026-06-10: **PaypalExpressButton.tsx** — Added `className` + `showDivider` props
 - 2026-06-10: **PaypalExpressButton.tsx** — Fixed: replaced invalid `@paypal/react-paypal-js/sdk-v6` import with standard `PayPalScriptProvider` + `PayPalButtons` from `@paypal/react-paypal-js`
 - 2026-06-10: **CheckoutUI.tsx** — Added missing `import { PaypalExpressButton }` (was causing ReferenceError + blank page)
-- 2026-06-10: **PaypalExpressButton.tsx** — Migrated to SDK v6 API (PayPalProvider + PayPalOneTimePaymentButton), map 'live'→'production'
 - 2026-06-10: **PayPal integration** — SettingsContext (RPC query), PaypalExpressButton.tsx (new), CheckoutUI.tsx (mounted after StripePayment)
 - 2026-06-10: **CheckoutUI.tsx** — Shipping shows "FREE" (was "Pending") when shippingCost === 0 on mobile
 - 2026-06-09: **CheckoutUI.tsx + ProductPageUI.tsx** — Delivery window changed to 6–8 business days (was 7–9)
@@ -52,7 +40,6 @@ In `SettingsContext.tsx`, the paypal query silently returns null on any error. A
 - 2026-06-09: **ProductPageUI.tsx** — Added Launch Offer amber badge below price block
 - 2026-06-05: **StripePayment.tsx** — Added trust signals below CTA
 - 2026-06-05: **CheckoutUI.tsx** — Updated top security bar
-- 2026-06-05: **StripePayment.tsx + CheckoutUI.tsx** — Full English translation
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -70,12 +57,11 @@ In `SettingsContext.tsx`, the paypal query silently returns null on any error. A
 - Product slug still in Spanish — may want English slug redirect
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid
 - Google Pay error: domain needs registration in Stripe Dashboard > Settings > Payment methods
-- **PayPal button not showing** — `paypalEnabled` likely false because `get_public_paypal_account` RPC returns null. Need to debug with console.log — see Active Plan section.
 
 ## 7. Key Files
-- `src/contexts/SettingsContext.tsx` — ✅ Now exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
-- `src/components/PaypalExpressButton.tsx` — ✅ Fixed: standard PayPalScriptProvider + PayPalButtons. NEEDS DEBUG LOG
-- `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton imported + mounted after StripePayment (lines 370-401)
+- `src/contexts/SettingsContext.tsx` — ✅ Exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
+- `src/components/PaypalExpressButton.tsx` — ✅ Fixed + accepts className/showDivider props
+- `src/pages/ui/CheckoutUI.tsx` — ✅ PayPal in two positions: mobile (after summary) + desktop (before StripePayment)
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI reads localStorage fallback for fbc/fbp
@@ -87,4 +73,3 @@ In `SettingsContext.tsx`, the paypal query silently returns null on any error. A
 - Replace feature images (FEAT_IMG_1-3) with English text versions
 - Add English slug redirect for product page
 - Register domain in Stripe Dashboard for Google Pay
-- Connect PayPal account in Lovivo Dashboard to activate button (user says it IS connected — verify via debug)
