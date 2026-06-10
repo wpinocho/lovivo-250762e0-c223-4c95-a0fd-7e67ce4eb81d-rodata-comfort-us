@@ -16,15 +16,26 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### ✅ DONE: PayPal Integration in Checkout
+### 🔍 DEBUG: PayPal button not showing
 
-**What was built:**
-- `@paypal/react-paypal-js` installed
-- `SettingsContext` extended with `paypal_accounts_safe` → now uses `rpc('get_public_paypal_account')`. Exposes: `paypalEnabled`, `paypalClientId`, `paypalEnvironment`
-- `src/components/PaypalExpressButton.tsx` — uses **standard API** (`PayPalScriptProvider` + `PayPalButtons` from `@paypal/react-paypal-js`). Old `/sdk-v6` subpath was invalid and caused ReferenceError.
-- `CheckoutUI.tsx` — import added + `<PaypalExpressButton>` mounted after `</StripePayment>` inside the `isStripeReady` IIFE block
+**Problem**: `PaypalExpressButton` is imported and placed correctly in CheckoutUI.tsx (lines 370-401), but the button doesn't appear. The component has an early return: `if (!paypalEnabled || !paypalClientId || !checkoutToken) return null`
 
-**To activate**: Connect a PayPal account in Lovivo Dashboard → the button auto-appears.
+**Most likely cause**: The RPC `get_public_paypal_account(p_store_id)` is returning null/error, making `paypalEnabled = false`.
+
+**Debug step (do this first in Craft Mode)**:
+In `src/components/PaypalExpressButton.tsx`, add a console.log BEFORE the early return:
+```
+console.log('[PayPal Debug]', { paypalEnabled, paypalClientId, paypalEnvironment, checkoutToken: !!checkoutToken })
+```
+Then open /pagar with items in cart and check the console.
+
+**After debugging**:
+- If `paypalEnabled = false` → the RPC is returning null. The `get_public_paypal_account` RPC might not exist or the account isn't saved correctly. Try changing the guard: if the RPC returns 406/error, maybe we should fall back to checking `payment_methods` from store_settings instead.
+- If `paypalClientId = null` → the RPC returns a row but `client_id` field name might be different (e.g., `paypal_client_id` vs `client_id`)
+- If `checkoutToken` is falsy → the checkout hasn't initialized yet; may need to guard the rendering
+
+**Alternative fix if RPC keeps failing**:
+In `SettingsContext.tsx`, the paypal query silently returns null on any error. Add more verbose logging to see the actual error message. The error might be "404 function not found" or "406 not acceptable" which would tell us the RPC doesn't exist in this Supabase instance.
 
 ## 4. Recent Changes
 - 2026-06-10: **PaypalExpressButton.tsx** — Fixed: replaced invalid `@paypal/react-paypal-js/sdk-v6` import with standard `PayPalScriptProvider` + `PayPalButtons` from `@paypal/react-paypal-js`
@@ -59,12 +70,12 @@
 - Product slug still in Spanish — may want English slug redirect
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid
 - Google Pay error: domain needs registration in Stripe Dashboard > Settings > Payment methods
-- PayPal RPC returns 406 — no PayPal account connected yet in Lovivo Dashboard
+- **PayPal button not showing** — `paypalEnabled` likely false because `get_public_paypal_account` RPC returns null. Need to debug with console.log — see Active Plan section.
 
 ## 7. Key Files
 - `src/contexts/SettingsContext.tsx` — ✅ Now exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
-- `src/components/PaypalExpressButton.tsx` — ✅ Fixed: standard PayPalScriptProvider + PayPalButtons
-- `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton imported + mounted after StripePayment
+- `src/components/PaypalExpressButton.tsx` — ✅ Fixed: standard PayPalScriptProvider + PayPalButtons. NEEDS DEBUG LOG
+- `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton imported + mounted after StripePayment (lines 370-401)
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI reads localStorage fallback for fbc/fbp
@@ -76,4 +87,4 @@
 - Replace feature images (FEAT_IMG_1-3) with English text versions
 - Add English slug redirect for product page
 - Register domain in Stripe Dashboard for Google Pay
-- Connect PayPal account in Lovivo Dashboard to activate button
+- Connect PayPal account in Lovivo Dashboard to activate button (user says it IS connected — verify via debug)
