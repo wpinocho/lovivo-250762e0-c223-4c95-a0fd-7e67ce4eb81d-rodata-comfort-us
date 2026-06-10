@@ -258,9 +258,9 @@ export default function CheckoutUI() {
 
                       return (
                         <>
-                        {/* Desktop-only PayPal — above GPay/Link */}
+                        {/* PayPal Express — single instance above GPay/Link (no form validation needed) */}
                         <PaypalExpressButton
-                          className="hidden md:block mb-2"
+                          className="mb-2"
                           showDivider={false}
                           orderId={logic.orderId}
                           checkoutToken={logic.checkoutToken}
@@ -268,55 +268,6 @@ export default function CheckoutUI() {
                           currency={logic.currencyCode.toLowerCase()}
                           items={logic.orderItems}
                           shippingCost={logic.shippingCost}
-                          onValidationRequired={() => {
-                            if (!logic.usePickup) {
-                              const missing: string[] = [];
-                              const emailOk = !!logic.email?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(logic.email);
-                              if (!emailOk) missing.push('valid email');
-                              if (!addressElementComplete) missing.push('complete address');
-                              if (
-                                Array.isArray(logic.deliveryExpectations) &&
-                                logic.deliveryExpectations.length > 0 &&
-                                !logic.selectedDeliveryMethod
-                              ) missing.push('shipping method');
-                              if (missing.length > 0) {
-                                toast({ title: 'Required fields', description: `Please complete: ${missing.join(', ')}`, variant: 'destructive', duration: 5000 });
-                                return false;
-                              }
-                              return true;
-                            }
-                            return logic.validateCheckoutFields();
-                          }}
-                        />
-                        {/* Mobile-only PayPal — above GPay/Link */}
-                        <PaypalExpressButton
-                          className="md:hidden mb-2"
-                          showDivider={false}
-                          orderId={logic.orderId}
-                          checkoutToken={logic.checkoutToken}
-                          amount={logic.finalTotal}
-                          currency={logic.currencyCode.toLowerCase()}
-                          items={logic.orderItems}
-                          shippingCost={logic.shippingCost}
-                          onValidationRequired={() => {
-                            if (!logic.usePickup) {
-                              const missing: string[] = [];
-                              const emailOk = !!logic.email?.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(logic.email);
-                              if (!emailOk) missing.push('valid email');
-                              if (!addressElementComplete) missing.push('complete address');
-                              if (
-                                Array.isArray(logic.deliveryExpectations) &&
-                                logic.deliveryExpectations.length > 0 &&
-                                !logic.selectedDeliveryMethod
-                              ) missing.push('shipping method');
-                              if (missing.length > 0) {
-                                toast({ title: 'Required fields', description: `Please complete: ${missing.join(', ')}`, variant: 'destructive', duration: 5000 });
-                                return false;
-                              }
-                              return true;
-                            }
-                            return logic.validateCheckoutFields();
-                          }}
                         />
                         <StripePayment
                           key={stripeKey}
