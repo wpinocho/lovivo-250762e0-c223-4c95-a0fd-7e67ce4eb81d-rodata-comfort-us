@@ -635,11 +635,9 @@ function MobileOrderSummary({ logic }: { logic: any }) {
             <div className="flex justify-between">
               <span className="text-brand-steel">Shipping</span>
               <span className="text-brand-smoke">
-                {logic.selectedPickupLocation
-                  ? "FREE"
-                  : logic.shippingCost > 0
+                {logic.shippingCost > 0
                   ? formatMoney(logic.shippingCost, logic.currencyCode)
-                  : "Pending"}
+                  : "FREE"}
               </span>
             </div>
             {logic.discountAmount > 0 && (
