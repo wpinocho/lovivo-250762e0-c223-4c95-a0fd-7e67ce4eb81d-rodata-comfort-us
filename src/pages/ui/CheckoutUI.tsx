@@ -12,6 +12,7 @@ import { CartAppliedRules } from "@/components/ui/CartAppliedRules";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import StripePayment from "@/components/StripePayment";
+import { PaypalExpressButton } from "@/components/PaypalExpressButton";
 import { HeadlessCheckout } from "@/components/headless/HeadlessCheckout";
 import { BrandLogoLeft } from "@/components/BrandLogoLeft";
 import { useURLCheckoutParams } from "@/hooks/useURLCheckoutParams";

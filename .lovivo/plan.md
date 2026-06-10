@@ -22,11 +22,12 @@
 - `@paypal/react-paypal-js` installed
 - `SettingsContext` extended with `paypal_accounts_safe` → now uses `rpc('get_public_paypal_account')`. Exposes: `paypalEnabled`, `paypalClientId`, `paypalEnvironment`
 - `src/components/PaypalExpressButton.tsx` — migrated to **SDK v6 API** (`PayPalProvider` + `PayPalOneTimePaymentButton` from `@paypal/react-paypal-js/sdk-v6`). Maps `paypalEnvironment === 'live'` → `environment="production"`.
-- `CheckoutUI.tsx` — mounts `<PaypalExpressButton>` after `</StripePayment>` inside the `isStripeReady` IIFE block, wrapped in a fragment
+- `CheckoutUI.tsx` — import added + `<PaypalExpressButton>` mounted after `</StripePayment>` inside the `isStripeReady` IIFE block
 
 **To activate**: Connect a PayPal account in Lovivo Dashboard → the button auto-appears.
 
 ## 4. Recent Changes
+- 2026-06-10: **CheckoutUI.tsx** — Added missing `import { PaypalExpressButton }` (was causing ReferenceError + blank page)
 - 2026-06-10: **PaypalExpressButton.tsx** — Migrated to SDK v6 API (PayPalProvider + PayPalOneTimePaymentButton), map 'live'→'production'
 - 2026-06-10: **PayPal integration** — SettingsContext (RPC query), PaypalExpressButton.tsx (new), CheckoutUI.tsx (mounted after StripePayment)
 - 2026-06-10: **CheckoutUI.tsx** — Shipping shows "FREE" (was "Pending") when shippingCost === 0 on mobile
@@ -41,7 +42,6 @@
 - 2026-06-05: **CheckoutUI.tsx** — Updated top security bar
 - 2026-06-05: **StripePayment.tsx + CheckoutUI.tsx** — Full English translation
 - 2026-06-05: **IndexUI.tsx** — Prices dynamically read from product DB
-- 2026-06-04: **PixelContext.tsx** — Persist fbclid → fbc to localStorage
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -59,11 +59,12 @@
 - Product slug still in Spanish — may want English slug redirect
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid
 - Google Pay error: domain needs registration in Stripe Dashboard > Settings > Payment methods
+- PayPal RPC returns 406 — may need to verify RPC function exists in Lovivo backend
 
 ## 7. Key Files
 - `src/contexts/SettingsContext.tsx` — ✅ Now exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
 - `src/components/PaypalExpressButton.tsx` — ✅ SDK v6 API (PayPalProvider + PayPalOneTimePaymentButton)
-- `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton mounted after StripePayment
+- `src/pages/ui/CheckoutUI.tsx` — ✅ PaypalExpressButton imported + mounted after StripePayment
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie
 - `src/lib/tracking-utils.ts` — ✅ CAPI reads localStorage fallback for fbc/fbp
@@ -75,3 +76,4 @@
 - Replace feature images (FEAT_IMG_1-3) with English text versions
 - Add English slug redirect for product page
 - Register domain in Stripe Dashboard for Google Pay
+- Investigate PayPal RPC 406 error (may affect PayPal button appearing)
