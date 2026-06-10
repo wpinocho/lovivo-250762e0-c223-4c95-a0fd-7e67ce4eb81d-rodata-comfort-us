@@ -81,10 +81,28 @@ export function PaypalExpressButton({
               if (!res?.ok || res?.status !== 'COMPLETED') {
                 throw new Error(res?.error || 'Payment not completed')
               }
-              if (res.order) {
-                localStorage.setItem('completed_order', JSON.stringify(res.order))
+
+              // Build a fallback order object from local props in case res.order is null
+              const internalOrderId = res.order?.id || res.order_id
+              const fallbackOrder = {
+                id: internalOrderId || data.orderID,
+                order_number: (internalOrderId || data.orderID).slice(0, 8).toUpperCase(),
+                total_amount: amount,
+                currency_code: currency.toUpperCase(),
+                status: 'paid',
+                order_items: items.map((it: any) => ({
+                  product_name: it.title || it.product_name || 'Product',
+                  quantity: it.quantity,
+                  price: it.unit_price || it.price || 0,
+                  product_images: it.images || it.product_images || [],
+                  variant_name: it.variant_title || it.variant_name || null,
+                })),
+                created_at: new Date().toISOString(),
               }
-              const ordId = res.order?.id || res.order_id || data.orderID
+
+              // Always write to localStorage — use server order if available, fallback otherwise
+              localStorage.setItem('completed_order', JSON.stringify(res.order ?? fallbackOrder))
+              const ordId = internalOrderId || data.orderID
               navigate(`/thank-you/${ordId}`)
             } catch (err: unknown) {
               toast({

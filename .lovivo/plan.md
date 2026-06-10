@@ -16,44 +16,15 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### 🔧 Fix ThankYou "Order Not Found" after PayPal payment
+### ✅ ThankYou "Order Not Found" — FIXED
 
-**Root cause**: `paypal-capture-order` edge function returns `ok: true` and `order_id` but `res.order` is null/undefined. The `PaypalExpressButton` only does `localStorage.setItem('completed_order', ...)` when `res.order` is truthy — so nothing gets saved. ThankYou page reads only from localStorage → shows "Order Not Found".
+**Root cause**: `paypal-capture-order` edge function returns `res.order = null`. The old code only called `localStorage.setItem` when `res.order` was truthy → nothing saved → ThankYou showed "Order Not Found".
 
-**Fix — `src/components/PaypalExpressButton.tsx`**:
-Build a fallback order object from the props we already have (`items`, `amount`, `currency`) so localStorage always gets written:
-
-```js
-// After capture succeeds:
-const orderFromServer = res.order
-const internalOrderId = res.order?.id || res.order_id
-
-// Build fallback from props in case res.order is null
-const fallbackOrder = {
-  id: internalOrderId || data.orderID,
-  order_number: (internalOrderId || data.orderID).slice(0, 8).toUpperCase(),
-  total_amount: amount,
-  currency_code: currency.toUpperCase(),
-  status: 'paid',
-  order_items: items.map(it => ({
-    product_name: it.title || it.product_name || 'Product',
-    quantity: it.quantity,
-    price: it.unit_price || it.price || 0,
-    product_images: it.images || it.product_images || [],
-    variant_name: it.variant_title || it.variant_name || null,
-  })),
-  created_at: new Date().toISOString(),
-}
-
-localStorage.setItem('completed_order', JSON.stringify(orderFromServer || fallbackOrder))
-const ordId = internalOrderId || data.orderID
-navigate(`/thank-you/${ordId}`)
-```
-
-**No changes needed to ThankYou.tsx** — it already renders correctly once localStorage has data.
+**Fix applied (2026-06-10)**: Built a `fallbackOrder` object from local props (`items`, `amount`, `currency`) and used `res.order ?? fallbackOrder` — so `localStorage` is **always** written regardless of server response.
 
 ## 4. Recent Changes
-- 2026-06-10: **ThankYou page** — "Order Not Found" bug identified: res.order is null from paypal-capture-order, localStorage never written → pending fix
+- 2026-06-10: **PaypalExpressButton.tsx** — Fixed ThankYou "Order Not Found": added `fallbackOrder` built from props; localStorage now always written via `res.order ?? fallbackOrder`
+- 2026-06-10: **ThankYou page** — "Order Not Found" bug identified: res.order is null from paypal-capture-order, localStorage never written
 - 2026-06-10: **PaypalExpressButton.tsx** — Removed validation gate; fixed `paypal_order_id` param; improved `onApprove` error handling + `res.order?.id || res.order_id` fallback
 - 2026-06-10: **CheckoutUI.tsx** — Replaced dual mobile/desktop PayPal instances with single instance (no responsive class needed)
 - 2026-06-10: **CheckoutUI.tsx** — Removed "or pay with card" divider text on desktop; added mobile PayPal (`md:hidden`) above StripePayment
@@ -67,7 +38,6 @@ navigate(`/thank-you/${ordId}`)
 - 2026-06-09: **StripePayment.tsx** — Removed duplicate "30-Day Comfort Guarantee" line above buy button
 - 2026-06-09: **CheckoutUI.tsx** — Added `getEstimatedDelivery()` fn + "Free shipping · Arrives [date]" line
 - 2026-06-09: **CheckoutUI.tsx** — Mobile order summary now open by default
-- 2026-06-09: **StripePayment.tsx** — Added pre-pay trust block ABOVE "Complete Purchase" button
 
 ## 5. Image Inventory
 - Hero feature image (landing): `https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
@@ -88,7 +58,7 @@ navigate(`/thank-you/${ordId}`)
 
 ## 7. Key Files
 - `src/contexts/SettingsContext.tsx` — ✅ Exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
-- `src/components/PaypalExpressButton.tsx` — 🔧 Needs fallback order object in onApprove
+- `src/components/PaypalExpressButton.tsx` — ✅ fallbackOrder fix applied
 - `src/pages/ui/CheckoutUI.tsx` — ✅ Single PayPal instance above StripePayment
 - `src/pages/ui/IndexUI.tsx` — ✅ Prices dynamically linked to product DB
 - `src/contexts/PixelContext.tsx` — ✅ fbclid persisted to localStorage + first-party cookie
