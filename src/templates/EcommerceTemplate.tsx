@@ -28,7 +28,7 @@ interface EcommerceTemplateProps {
   navLinks?: NavLink[]
 }
 
-const BUY_URL = '/products/soporte-lumbar-rodata-one'
+const BUY_URL = '/products/rodata-one'
 
 const DEFAULT_NAV_LINKS: NavLink[] = [
   { label: 'How it works', href: '/#how-it-works' },

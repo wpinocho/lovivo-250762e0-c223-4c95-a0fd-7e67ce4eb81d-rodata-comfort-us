@@ -39,7 +39,7 @@ const PROBLEMA_REAL_IMG = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/r
 const PRODUCT_WORN = '/product-worn.jpg'
 const PRODUCT_FLAT = 'https://ptgmltivisbtvmoxwnhd.supabase.co/storage/v1/render/image/public/message-images/0f3c776b-9309-4486-bd63-fd732b7d8db1/1775767354281-gqxi2j4hklp.webp?width=800&quality=75'
 const PRODUCT_FEATURES = '/product-worn.jpg'
-const BUY_URL = '/products/soporte-lumbar-rodata-one'
+const BUY_URL = '/products/rodata-one'
 
 interface IndexUIProps {
   logic: UseIndexLogicReturn
