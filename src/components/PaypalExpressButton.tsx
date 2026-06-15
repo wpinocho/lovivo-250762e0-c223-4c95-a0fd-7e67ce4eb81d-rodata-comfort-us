@@ -5,6 +5,7 @@ import { callEdge } from '@/lib/edge'
 import { STORE_ID } from '@/lib/config'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
+import { getAttributionPayload } from '@/lib/tracking-utils'
 
 interface PaypalExpressButtonProps {
   orderId: string
@@ -60,6 +61,7 @@ export function PaypalExpressButton({
           createOrder={async () => {
             // PayPal Express: no form validation needed — PayPal collects
             // the buyer's shipping address inside the PayPal popup.
+            const attribution = getAttributionPayload();
             const result = await callEdge('paypal-create-order', {
               store_id: STORE_ID,
               checkout_token: checkoutToken,
@@ -67,16 +69,19 @@ export function PaypalExpressButton({
               currency: currencyUpper,
               items,
               shipping: shippingCost,
+              attribution,
             })
             if (!result?.id) throw new Error('PayPal order ID missing')
             return result.id
           }}
           onApprove={async (data) => {
             try {
+              const attribution = getAttributionPayload();
               const res = await callEdge('paypal-capture-order', {
                 store_id: STORE_ID,
                 paypal_order_id: data.orderID,
                 checkout_token: checkoutToken,
+                attribution,
               })
               if (!res?.ok || res?.status !== 'COMPLETED') {
                 throw new Error(res?.error || 'Payment not completed')

@@ -17,7 +17,8 @@ export const createCheckoutFromCart = async (
   shippingAddress?: any,
   billingAddress?: any,
   notes?: string,
-  currencyCode: string = 'USD'
+  currencyCode: string = 'USD',
+  attribution?: Record<string, string | null>
 ): Promise<CheckoutResponse> => {
   // Get authenticated user if exists
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,7 +40,8 @@ export const createCheckoutFromCart = async (
     ...(shippingAddress && { shipping_address: shippingAddress }),
     ...(billingAddress && { billing_address: billingAddress }),
     ...(notes && { notes }),
-    currency_code: currencyCode
+    currency_code: currencyCode,
+    ...(attribution && { attribution })
   }
 
   try {

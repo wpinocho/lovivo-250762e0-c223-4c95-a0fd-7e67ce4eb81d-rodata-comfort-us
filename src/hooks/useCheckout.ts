@@ -3,6 +3,7 @@ import { useCart } from '@/contexts/CartContext'
 import type { CartItem } from '@/contexts/CartContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { createCheckoutFromCart, createSampleOrder, updateCheckout, type CheckoutUpdatePayload } from '@/lib/checkout'
+import { getAttributionPayload } from '@/lib/tracking-utils'
 import { cartToApiItems } from '@/lib/cart-utils'
 import { useToast } from '@/hooks/use-toast'
 import { logger } from '@/lib/logger'
@@ -57,7 +58,8 @@ export const useCheckout = () => {
         options.shippingAddress,
         options.billingAddress,
         options.notes,
-        options.currencyCode || currencyCode
+        options.currencyCode || currencyCode,
+        getAttributionPayload()
       )
 
       // Guardar estado de checkout con la orden completa
@@ -130,7 +132,8 @@ export const useCheckout = () => {
         options.shippingAddress,
         options.billingAddress,
         options.notes,
-        options.currencyCode || currencyCode
+        options.currencyCode || currencyCode,
+        getAttributionPayload()
       )
 
       // Guardar en localStorage para que /pagar encuentre orderId y checkoutToken

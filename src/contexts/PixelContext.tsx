@@ -59,6 +59,29 @@ export function PixelProvider({ children }: { children: React.ReactNode }) {
       } catch {}
 
       setFbc(fbcValue);
+
+      // Persist raw fbclid so getAttributionPayload() can include it in checkout
+      localStorage.setItem('_fbclid', fbclid);
+    }
+
+    // --- First-touch attribution persistence ---
+    // UTMs: only save on first visit (never overwrite — preserves ad attribution)
+    const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id'] as const;
+    UTM_KEYS.forEach((k) => {
+      const v = urlParams.get(k);
+      if (v && !localStorage.getItem(`_${k}`)) {
+        localStorage.setItem(`_${k}`, v);
+      }
+    });
+
+    // landing_site: the full URL of the first ad-click landing page
+    if (!localStorage.getItem('_landing_site')) {
+      localStorage.setItem('_landing_site', window.location.href);
+    }
+
+    // referrer: where the user came from (organic, social, etc.)
+    if (!localStorage.getItem('_referrer') && document.referrer) {
+      localStorage.setItem('_referrer', document.referrer);
     }
   }, []);
 

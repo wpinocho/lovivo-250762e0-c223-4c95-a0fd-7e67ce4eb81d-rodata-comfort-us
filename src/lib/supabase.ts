@@ -160,6 +160,7 @@ export interface CheckoutPayload {
   billing_address?: any
   notes?: string
   currency_code?: string
+  attribution?: Record<string, string | null>
 }
 
 export interface CheckoutResponse {

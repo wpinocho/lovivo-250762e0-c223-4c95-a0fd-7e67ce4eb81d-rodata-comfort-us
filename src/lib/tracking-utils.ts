@@ -430,3 +430,52 @@ export const trackCustomEvent = (eventName: string, parameters?: Record<string, 
 
 // Export the main tracking instance
 export default tracking;
+
+/**
+ * Reads all attribution data from localStorage and current URL params.
+ * Call this when creating a checkout or PayPal order to include attribution
+ * in the backend payload (checkout-create, paypal-create-order, paypal-capture-order).
+ *
+ * First-touch values (fbclid, UTMs, landing_site, referrer) are written by
+ * PixelContext on the first ad-click page load and never overwritten.
+ * Last-touch values (_lt_utm_*) are always overwritten on every landing.
+ */
+export function getAttributionPayload(): Record<string, string | null> {
+  const ls = typeof localStorage !== 'undefined' ? localStorage : null;
+  const params =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search)
+      : null;
+
+  const fbc = ls?.getItem('_fbc_fallback') || null;
+  const fbp = ls?.getItem('_fbp_fallback') || null;
+  const fbclid = ls?.getItem('_fbclid') || params?.get('fbclid') || null;
+  const landing_site = ls?.getItem('_landing_site') || null;
+  const referrer = ls?.getItem('_referrer') || null;
+
+  const utm_source =
+    ls?.getItem('_utm_source') || params?.get('utm_source') || null;
+  const utm_medium =
+    ls?.getItem('_utm_medium') || params?.get('utm_medium') || null;
+  const utm_campaign =
+    ls?.getItem('_utm_campaign') || params?.get('utm_campaign') || null;
+  const utm_content =
+    ls?.getItem('_utm_content') || params?.get('utm_content') || null;
+  const utm_term =
+    ls?.getItem('_utm_term') || params?.get('utm_term') || null;
+  const utm_id = ls?.getItem('_utm_id') || params?.get('utm_id') || null;
+
+  return {
+    fbp,
+    fbc,
+    fbclid,
+    landing_site,
+    referrer,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    utm_content,
+    utm_term,
+    utm_id,
+  };
+}
