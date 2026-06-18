@@ -16,65 +16,25 @@
 - **Layout**: Full-width PDP, dark checkout, dark cart sidebar
 
 ## 3. Active Plan
-### 🔴 Meta Duplicate Conversions Fix — PENDING
+### ✅ Meta Duplicate Conversions Fix — IMPLEMENTED (2026-06-18)
 
-**Root cause confirmed:** `generateEventId()` in `tracking-utils.ts` calls `crypto.randomUUID()` on every invocation. When `trackPurchase` fires more than once for the same order (Stripe 3DS return_url, double-click, Express Checkout + normal flow), Meta receives events with different `event_id`s and counts all of them as separate purchases.
+**Root cause confirmed & fixed:** `generateEventId()` called `crypto.randomUUID()` on every invocation. Two-part fix applied:
 
-**Fix (two parts — "belt + suspenders"):**
+**Part 1 — Deterministic event_id in `src/lib/tracking-utils.ts` ✅**
+- `generateEventId(eventName, stableId?)` — returns `${eventName}_${stableId}` when stableId provided, random UUID otherwise
+- `trackHybrid()` — accepts optional `stableId?` param, passes to `generateEventId`
+- All call sites updated: ViewContent → product_id, AddToCart → product_id, InitiateCheckout → order_id || product_id, Purchase → order_id, Search → search_string.trim().toLowerCase()
+- PageView intentionally NOT touched (each page view should count)
 
-### Part 1 — Deterministic event_id in `src/lib/tracking-utils.ts`
-
-Replace `generateEventId()` (lines 94-97):
-```ts
-private generateEventId(eventName: string = 'evt', stableId?: string): string {
-  const ev = eventName.toLowerCase();
-  if (stableId && String(stableId).length > 0) {
-    return `${ev}_${stableId}`;
-  }
-  return `${ev}_${crypto.randomUUID()}`;
-}
-```
-
-Update `trackHybrid()` (lines 140-145) — add `stableId?` param:
-```ts
-private trackHybrid(
-  eventName: string,
-  browserParams: Record<string, any>,
-  customData: Record<string, any>,
-  stableId?: string
-): void {
-  const eventId = this.generateEventId(eventName, stableId);
-  ...
-```
-
-Update each call site:
-- `trackViewContent` (line 204): `this.trackHybrid('ViewContent', browserParams, customData, products?.[0]?.id)`
-- `trackAddToCart` (line 235): `this.trackHybrid('AddToCart', browserParams, customData, products?.[0]?.id)`
-- `trackInitiateCheckout` (line 270): `const icStableId = params.order_id || products?.[0]?.id; this.trackHybrid('InitiateCheckout', browserParams, customData, icStableId)`
-- `trackPurchase` (line 302): `this.trackHybrid('Purchase', browserParams, customData, order_id)`
-- `trackSearch` (line 320): `const eventId = this.generateEventId('Search', search_string?.trim().toLowerCase())`
-
-PageView — DO NOT TOUCH (stays random UUID, each page view should count).
-
-### Part 2 — sessionStorage dedup guard
-
-In `src/components/StripePayment.tsx`, wrap BOTH `trackPurchase` calls (line ~367 and ~594):
-```ts
-const ptKey = `purchase_tracked_${orderId}`;
-const alreadyTracked = (() => { try { return sessionStorage.getItem(ptKey) === '1'; } catch { return false; } })();
-if (!alreadyTracked) {
-  try { sessionStorage.setItem(ptKey, '1'); } catch {}
-  trackPurchase({ /* same params as before */ });
-}
-```
-
-In `src/components/ProductExpressCheckout.tsx`, wrap `trackPurchase` call (line ~366) with the same pattern using `orderId` (which is declared at line 269).
-
-**Risk:** LOW. The try/catch ensures graceful fallback if sessionStorage is unavailable. Payment logic untouched. UI untouched.
+**Part 2 — sessionStorage dedup guard ✅**
+- `StripePayment.tsx` — both `trackPurchase` calls wrapped (normal card payment + Express Checkout)
+- `ProductExpressCheckout.tsx` — `trackPurchase` call wrapped
+- Pattern: `const ptKey = \`purchase_tracked_${orderId}\`` — try/catch ensures safe fallback
 
 ---
 
 ## 4. Recent Changes
+- 2026-06-18: **Meta duplicate conversions fix IMPLEMENTED** — deterministic event_id + sessionStorage guard on all 3 trackPurchase call sites
 - 2026-06-18: **Footer contact** — WhatsApp replaced with `support@getrodata.com` email link
 - 2026-06-15: **Attribution fix IMPLEMENTED** — all 5 files patched, fbclid/fbc/fbp/UTMs now flow to checkout-create and PayPal edge calls
 - 2026-06-15: **Attribution bug diagnosed** — checkout.ts and PaypalExpressButton send ZERO attribution; getAttributionPayload() doesn't exist; raw fbclid/UTMs not in localStorage
@@ -98,8 +58,7 @@ In `src/components/ProductExpressCheckout.tsx`, wrap `trackPurchase` call (line 
 - Avatars: `/avatar-j.webp`, `/avatar-m.webp`, `/avatar-r.webp` (public/ repo)
 
 ## 6. Known Issues
-- **META DIAGNÓSTICO 🔴1**: Duplicate conversions — fix ready in Active Plan above
-- **META DIAGNÓSTICO 🔴2**: Likely an expired CAPI Access Token — fix in Meta Business Manager
+- **META DIAGNÓSTICO 🔴2**: Likely an expired CAPI Access Token — fix in Meta Business Manager (manual action needed)
 - Country name "Estados Unidos" on thank you page comes from backend data, not UI
 - Store config shows `currency: usd (Peso Mexicano (MXN))` — label misleading
 - Product slug still in Spanish — may want English slug redirect
@@ -107,7 +66,7 @@ In `src/components/ProductExpressCheckout.tsx`, wrap `trackPurchase` call (line 
 - Google Pay error: domain needs registration in Stripe Dashboard > Settings > Payment methods
 
 ## 7. Key Files
-- `src/lib/tracking-utils.ts` ✅ — `getAttributionPayload()` exported; PENDING: deterministic event_id fix
+- `src/lib/tracking-utils.ts` ✅ — deterministic event_id fix DONE; getAttributionPayload() exported
 - `src/contexts/PixelContext.tsx` ✅ — first-touch fbclid/UTMs/landing_site/referrer persisted
 - `src/lib/checkout.ts` ✅ — attribution param in createCheckoutFromCart
 - `src/hooks/useCheckout.ts` ✅ — attribution passed to createCheckoutFromCart (both checkout paths)
@@ -116,14 +75,13 @@ In `src/components/ProductExpressCheckout.tsx`, wrap `trackPurchase` call (line 
 - `src/contexts/SettingsContext.tsx` — Exposes paypalEnabled/paypalClientId/paypalEnvironment via RPC
 - `src/pages/ui/CheckoutUI.tsx` — Single PayPal instance above StripePayment
 - `src/pages/ui/IndexUI.tsx` — Prices dynamically linked to product DB
-- `src/components/StripePayment.tsx` — Full EN + trust signals + pre-pay rating; PENDING: sessionStorage dedup guard
+- `src/components/StripePayment.tsx` ✅ — Full EN + trust signals + pre-pay rating; sessionStorage dedup guard on both trackPurchase call sites
 - `src/pages/ThankYou.tsx` — Reads from localStorage (no change needed)
 - `src/pages/ui/ProductPageUI.tsx` — English + US reviews + Launch Offer + Shipping accordion
-- `src/components/ProductExpressCheckout.tsx` — PENDING: sessionStorage dedup guard
+- `src/components/ProductExpressCheckout.tsx` ✅ — sessionStorage dedup guard on trackPurchase
 
 ## 8. Pending / Future Sessions
-- **🔴 HIGH**: Implement duplicate conversion fix (deterministic event_id + sessionStorage guard) — see Active Plan
+- Fix expired CAPI Access Token in Meta Business Manager (manual — no code change)
 - Replace feature images (FEAT_IMG_1-3) with English text versions
 - Add English slug redirect for product page
 - Register domain in Stripe Dashboard for Google Pay
-- Fix expired CAPI Access Token in Meta Business Manager
