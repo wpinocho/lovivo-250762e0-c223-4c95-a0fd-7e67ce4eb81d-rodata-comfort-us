@@ -34,6 +34,7 @@ const DEFAULT_NAV_LINKS: NavLink[] = [
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'Reviews', href: '/#reviews' },
   { label: 'FAQ', href: '/#faq' },
+  { label: 'Track Order', href: '/orders/track' },
 ]
 
 export const EcommerceTemplate = ({
@@ -189,6 +190,7 @@ export const EcommerceTemplate = ({
                 { label: 'How it works', href: '/#how-it-works' },
                 { label: 'Reviews', href: '/#reviews' },
                 { label: 'FAQ', href: '/#faq' },
+                { label: 'Track Order', href: '/orders/track' },
                 { label: 'Privacy Policy', href: '/privacy-policy' },
                 { label: 'Terms & Conditions', href: '/terms-and-conditions' },
               ].map((link) => (

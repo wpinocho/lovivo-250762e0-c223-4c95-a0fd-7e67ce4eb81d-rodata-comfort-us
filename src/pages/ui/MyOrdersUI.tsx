@@ -13,10 +13,9 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AuthDialog } from '@/components/AuthDialog'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Package, Calendar, RefreshCw, ShoppingBag, AlertCircle, LogIn, ChevronDown, MapPin, Tag } from 'lucide-react'
+import { Package, Calendar, RefreshCw, ShoppingBag, AlertCircle, LogIn, ChevronDown, MapPin, Tag, Truck } from 'lucide-react'
 import { formatMoney } from '@/lib/money'
 import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
@@ -26,14 +25,14 @@ interface MyOrdersUIProps {
 }
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  processing: { label: 'En proceso', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  completed: { label: 'Completado', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  shipped: { label: 'Enviado', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-  cancelled: { label: 'Cancelado', className: 'bg-red-100 text-red-800 border-red-200' },
-  refunded: { label: 'Reembolsado', className: 'bg-purple-100 text-purple-800 border-purple-200' },
-  paid: { label: 'Pagado', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  pending: { label: 'Pago pendiente', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  payment_failed: { label: 'Pago fallido', className: 'bg-red-100 text-red-800 border-red-200' },
+  processing: { label: 'Processing', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  completed: { label: 'Completed', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  shipped: { label: 'Shipped', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  cancelled: { label: 'Canceled', className: 'bg-red-100 text-red-800 border-red-200' },
+  refunded: { label: 'Refunded', className: 'bg-purple-100 text-purple-800 border-purple-200' },
+  paid: { label: 'Paid', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  pending: { label: 'Payment pending', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  payment_failed: { label: 'Payment failed', className: 'bg-red-100 text-red-800 border-red-200' },
 }
 
 function getStatusBadge(status: string) {
@@ -70,6 +69,7 @@ function OrderSkeleton() {
 }
 
 function OrderCard({ order }: { order: any }) {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const items = order.order_items || []
   const currency = order.currency_code || 'USD'
@@ -115,12 +115,12 @@ function OrderCard({ order }: { order: any }) {
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {format(new Date(order.created_at), "d MMM yyyy", { locale: es })}
+                    {format(new Date(order.created_at), "MMM d, yyyy")}
                   </span>
                   <span className="font-medium text-foreground">
                     {formatMoney(order.total_amount || 0, currency)}
                   </span>
-                  <span>{items.length} {items.length === 1 ? 'producto' : 'productos'}</span>
+                  <span>{items.length} {items.length === 1 ? 'item' : 'items'}</span>
                 </div>
               </div>
 
@@ -152,12 +152,12 @@ function OrderCard({ order }: { order: any }) {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight truncate">{product?.title || 'Producto'}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Cant: {item.quantity}</p>
+                      <p className="text-sm font-medium leading-tight truncate">{product?.title || 'Product'}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Qty: {item.quantity}</p>
                       {hasDiscount && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <Tag className="h-3 w-3 text-emerald-600" />
-                          <span className="text-xs text-emerald-600 font-medium">Descuento aplicado</span>
+                          <span className="text-xs text-emerald-600 font-medium">Discount applied</span>
                         </div>
                       )}
                     </div>
@@ -182,19 +182,19 @@ function OrderCard({ order }: { order: any }) {
               </div>
               {order.discount_amount > 0 && (
                 <div className="flex justify-between text-emerald-600">
-                  <span>Descuento</span>
+                  <span>Discount</span>
                   <span>-{formatMoney(order.discount_amount, currency)}</span>
                 </div>
               )}
               {order.shipping_amount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Envío</span>
+                  <span className="text-muted-foreground">Shipping</span>
                   <span>{formatMoney(order.shipping_amount, currency)}</span>
                 </div>
               )}
               {order.tax_amount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Impuestos</span>
+                  <span className="text-muted-foreground">Taxes</span>
                   <span>{formatMoney(order.tax_amount, currency)}</span>
                 </div>
               )}
@@ -210,10 +210,35 @@ function OrderCard({ order }: { order: any }) {
                 <div className="flex items-start gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Dirección de envío</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">Shipping address</p>
                     <p className="text-sm">{address}</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Track order */}
+            {(order.checkout_token || order.tracking_number || order.estimated_delivery_at) && (
+              <div className="border-t pt-3 space-y-2">
+                {order.checkout_token && (
+                  <Button size="sm" onClick={() => navigate('/orders/track/' + order.checkout_token)} className="gap-2">
+                    <Truck className="h-3.5 w-3.5" />
+                    Track order
+                  </Button>
+                )}
+                {order.tracking_number && (
+                  <p className="text-xs text-muted-foreground">
+                    Tracking: <span className="font-medium text-foreground font-mono">{order.tracking_number}</span>
+                    {order.tracking_url && (
+                      <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-brand-amber hover:underline">View →</a>
+                    )}
+                  </p>
+                )}
+                {order.estimated_delivery_at && (
+                  <p className="text-xs text-muted-foreground">
+                    Estimated delivery: <span className="font-medium text-foreground">{format(new Date(order.estimated_delivery_at), 'MMM d, yyyy')}</span>
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -231,8 +256,8 @@ export default function MyOrdersUI({ user, authLoading }: MyOrdersUIProps) {
     <EcommerceTemplate layout="centered">
       <div className="py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">Mis Pedidos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Historial de compras</p>
+          <h1 className="text-2xl font-bold tracking-tight">My Orders</h1>
+          <p className="text-sm text-muted-foreground mt-1">Order history</p>
         </div>
 
         {authLoading ? (
@@ -245,14 +270,14 @@ export default function MyOrdersUI({ user, authLoading }: MyOrdersUIProps) {
                   <LogIn className="h-10 w-10 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Inicia sesión para ver tus pedidos</h3>
+                  <h3 className="font-semibold text-lg">Sign in to view your orders</h3>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Necesitas una cuenta para ver tu historial de compras.
+                    You need an account to view your order history.
                   </p>
                 </div>
                 <Button size="lg" onClick={() => setShowAuthDialog(true)}>
                   <LogIn className="mr-2 h-4 w-4" />
-                  Iniciar Sesión
+                  Sign In
                 </Button>
               </div>
             </CardContent>
@@ -268,10 +293,10 @@ export default function MyOrdersUI({ user, authLoading }: MyOrdersUIProps) {
                     <CardContent className="py-8">
                       <div className="text-center space-y-3">
                         <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
-                        <p className="text-sm text-muted-foreground">No pudimos cargar tus pedidos.</p>
+                        <p className="text-sm text-muted-foreground">We couldn't load your orders.</p>
                         <Button onClick={refetch} variant="outline" size="sm">
                           <RefreshCw className="mr-2 h-3 w-3" />
-                          Reintentar
+                          Retry
                         </Button>
                       </div>
                     </CardContent>
@@ -288,14 +313,14 @@ export default function MyOrdersUI({ user, authLoading }: MyOrdersUIProps) {
                           <Package className="h-10 w-10 text-muted-foreground" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-lg">Aún no tienes pedidos</h3>
+                          <h3 className="font-semibold text-lg">You have no orders yet</h3>
                           <p className="text-muted-foreground text-sm mt-1">
-                            Cuando realices una compra aparecerá aquí.
+                            Your purchases will appear here.
                           </p>
                         </div>
                         <Button size="lg" onClick={() => navigate('/')}>
                           <ShoppingBag className="mr-2 h-4 w-4" />
-                          Ir a la tienda
+                          Go to store
                         </Button>
                       </div>
                     </CardContent>
