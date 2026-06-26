@@ -67,11 +67,14 @@ const ThankYou = () => {
     const paymentIntentStatus = searchParams.get('redirect_status')
     if (paymentIntentStatus !== 'succeeded') return
 
+    // Unified guard: same sessionStorage key used by StripePayment & PaypalExpressButton
+    // so a Purchase is never fired twice for the same order across redirect flows.
     const trackingKey = `purchase_tracked_${orderId}`
-    if (localStorage.getItem(trackingKey)) return // already fired
+    const alreadyTracked = (() => { try { return sessionStorage.getItem(trackingKey) === '1' } catch { return false } })()
+    if (alreadyTracked) return // already fired
 
     // Mark as tracked immediately to prevent double-firing on re-renders
-    localStorage.setItem(trackingKey, '1')
+    try { sessionStorage.setItem(trackingKey, '1') } catch {}
 
     // Try to read order details from completed_order (may have been set before redirect)
     try {

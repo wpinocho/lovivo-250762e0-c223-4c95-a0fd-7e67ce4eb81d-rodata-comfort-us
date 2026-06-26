@@ -5,7 +5,7 @@ import { callEdge } from '@/lib/edge'
 import { STORE_ID } from '@/lib/config'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
-import { getAttributionPayload } from '@/lib/tracking-utils'
+import { getAttributionPayload, trackPurchase, tracking } from '@/lib/tracking-utils'
 
 interface PaypalExpressButtonProps {
   orderId: string
@@ -108,6 +108,30 @@ export function PaypalExpressButton({
               // Always write to localStorage — use server order if available, fallback otherwise
               localStorage.setItem('completed_order', JSON.stringify(res.order ?? fallbackOrder))
               const ordId = internalOrderId || data.orderID
+
+              // Fire Purchase (browser Pixel + CAPI + PostHog) with a unified
+              // sessionStorage guard so ThankYou won't re-fire it for this order.
+              const ptKey = `purchase_tracked_${ordId}`
+              const alreadyTracked = (() => { try { return sessionStorage.getItem(ptKey) === '1' } catch { return false } })()
+              if (!alreadyTracked) {
+                try { sessionStorage.setItem(ptKey, '1') } catch {}
+                trackPurchase({
+                  products: items
+                    .filter((it: any) => (it.quantity ?? 0) > 0)
+                    .map((it: any) => tracking.createTrackingProduct({
+                      id: it.product_id || it.id,
+                      title: it.title || it.product_name,
+                      price: it.unit_price || it.price || 0,
+                      category: 'product',
+                      variant: it.variant_id ? { id: it.variant_id } : undefined,
+                    })),
+                  value: amount,
+                  currency,
+                  order_id: ordId,
+                  custom_parameters: { payment_method: 'paypal', checkout_token: checkoutToken },
+                })
+              }
+
               navigate(`/thank-you/${ordId}`)
             } catch (err: unknown) {
               toast({

@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useRef, lazy, Suspense } from "react";
 import { trackPageView } from "@/lib/tracking-utils";
 import { useURLCartLoader } from "@/hooks/useURLCartLoader";
 import { CartProvider } from "@/contexts/CartContext";
@@ -34,12 +34,20 @@ const queryClient = new QueryClient();
 // Component to track page views on route changes AND scroll to top
 function PageViewTracker() {
   const location = useLocation();
-  
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    // The INITIAL pageview is fired once by the providers (PostHog `loaded`
+    // callback + Pixel init) where load timing is guaranteed. Skipping it here
+    // avoids a double PageView on first load. PageViewTracker owns SPA navigations.
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     trackPageView();
   }, [location.pathname]);
-  
+
   return null;
 }
 

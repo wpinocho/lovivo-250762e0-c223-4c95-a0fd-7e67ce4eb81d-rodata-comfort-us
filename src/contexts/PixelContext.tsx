@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { facebookPixel } from '@/lib/facebook-pixel';
 import { tracking } from '@/lib/tracking-utils';
@@ -85,16 +85,21 @@ export function PixelProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initialize pixel and update tracking utility when pixel data is available
+  // Initialize pixel + fire the SINGLE initial PageView exactly once.
+  // (Previously this ran on every fbp/fbc change → duplicate Meta PageViews.)
+  const pixelInitedRef = useRef(false);
   useEffect(() => {
-    if (metaPixelId && !isLoading) {
+    if (metaPixelId && !isLoading && !pixelInitedRef.current) {
       facebookPixel.init(metaPixelId);
       facebookPixel.pageView();
+      pixelInitedRef.current = true;
     }
+  }, [metaPixelId, isLoading]);
 
-    // Update tracking utility with pixel data
+  // Keep tracking utility in sync with pixel data on every change (no pageView here).
+  useEffect(() => {
     tracking.setPixelData(metaPixelId, fbp, fbc);
-  }, [metaPixelId, isLoading, fbp, fbc]);
+  }, [metaPixelId, fbp, fbc]);
 
   return (
     <PixelContext.Provider value={{ pixelId: metaPixelId, fbp, fbc, loading: isLoading }}>

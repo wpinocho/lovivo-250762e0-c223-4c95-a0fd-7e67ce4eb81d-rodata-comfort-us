@@ -63,7 +63,7 @@ class TrackingUtility {
   }
 
   private formatCurrency(currency?: string): string {
-    if (!currency) return 'mxn';
+    if (!currency) return 'usd';
     return currency.toLowerCase().replace(/[^a-z]/g, '');
   }
 
@@ -177,7 +177,10 @@ class TrackingUtility {
       facebookPixel.pageView();
       
       if (this.isPostHogLoaded()) {
-        posthog.capture('$pageview');
+        posthog.capture('$pageview', {
+          $current_url: typeof window !== 'undefined' ? window.location.href : undefined,
+          $pathname: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        });
       }
       
       this.log('PageView', {});
@@ -415,7 +418,7 @@ class TrackingUtility {
    * Helper method to get currency from settings
    */
   getCurrencyFromSettings(currencyCode?: string): string {
-    return this.formatCurrency(currencyCode || 'MXN');
+    return this.formatCurrency(currencyCode || 'USD');
   }
 }
 
