@@ -47,9 +47,34 @@ interface OrderTrackUIProps {
 
 const DEFAULT_STEPS = ['Order Placed', 'Preparing', 'Shipped', 'Delivered']
 
+/* Backend may return step labels in Spanish — normalize to English */
+const STEP_TRANSLATIONS: Record<string, string> = {
+  'confirmado': 'Confirmed',
+  'pedido realizado': 'Order Placed',
+  'pedido confirmado': 'Confirmed',
+  'orden confirmada': 'Confirmed',
+  'en preparación': 'Preparing',
+  'en preparacion': 'Preparing',
+  'preparando': 'Preparing',
+  'preparándose': 'Preparing',
+  'procesando': 'Processing',
+  'en proceso': 'Processing',
+  'enviado': 'Shipped',
+  'en camino': 'In Transit',
+  'en tránsito': 'In Transit',
+  'en transito': 'In Transit',
+  'entregado': 'Delivered',
+  'cancelado': 'Cancelled',
+}
+
+function translateStep(label: string): string {
+  const key = label.trim().toLowerCase()
+  return STEP_TRANSLATIONS[key] ?? label
+}
+
 function resolveSteps(data: TrackingData | null): string[] {
   if (!data?.steps?.length) return DEFAULT_STEPS
-  return data.steps.map((s) => (typeof s === 'string' ? s : s.label))
+  return data.steps.map((s) => translateStep(typeof s === 'string' ? s : s.label))
 }
 
 /* ---------------- Timeline ---------------- */
@@ -68,7 +93,7 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
               <div className="flex items-center w-full">
                 <div className="flex-1 h-0.5">
                   {i > 0 && (
-                    <div className={cn('h-0.5 w-full', i <= currentStep ? 'bg-brand-amber' : 'bg-white/15')} />
+                    <div className={cn('h-0.5 w-full', i <= currentStep ? 'bg-brand-amber' : 'bg-border')} />
                   )}
                 </div>
                 <div
@@ -76,7 +101,7 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
                     'shrink-0 h-9 w-9 rounded-full flex items-center justify-center border-2 transition-colors',
                     done && 'bg-brand-amber border-brand-amber',
                     active && 'border-brand-amber bg-brand-amber/15',
-                    !done && !active && 'border-white/20 bg-transparent',
+                    !done && !active && 'border-border bg-transparent',
                   )}
                 >
                   {done ? (
@@ -84,12 +109,12 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
                   ) : active ? (
                     <span className="h-2.5 w-2.5 rounded-full bg-brand-amber animate-pulse" />
                   ) : (
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/30" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
                   )}
                 </div>
                 <div className="flex-1 h-0.5">
                   {!isLast && (
-                    <div className={cn('h-0.5 w-full', i < currentStep ? 'bg-brand-amber' : 'bg-white/15')} />
+                    <div className={cn('h-0.5 w-full', i < currentStep ? 'bg-brand-amber' : 'bg-border')} />
                   )}
                 </div>
               </div>
@@ -97,8 +122,8 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
                 className={cn(
                   'mt-3 text-xs text-center font-medium px-1',
                   done && 'text-brand-amber',
-                  active && 'text-brand-offwhite font-semibold',
-                  !done && !active && 'text-brand-steel',
+                  active && 'text-foreground font-semibold',
+                  !done && !active && 'text-muted-foreground',
                 )}
               >
                 {label}
@@ -122,7 +147,7 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
                     'shrink-0 h-9 w-9 rounded-full flex items-center justify-center border-2 transition-colors',
                     done && 'bg-brand-amber border-brand-amber',
                     active && 'border-brand-amber bg-brand-amber/15',
-                    !done && !active && 'border-white/20 bg-transparent',
+                    !done && !active && 'border-border bg-transparent',
                   )}
                 >
                   {done ? (
@@ -130,19 +155,19 @@ function OrderTimeline({ steps, currentStep }: { steps: string[]; currentStep: n
                   ) : active ? (
                     <span className="h-2.5 w-2.5 rounded-full bg-brand-amber animate-pulse" />
                   ) : (
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/30" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
                   )}
                 </div>
                 {!isLast && (
-                  <div className={cn('w-0.5 flex-1 min-h-[1.5rem]', i < currentStep ? 'bg-brand-amber' : 'bg-white/15')} />
+                  <div className={cn('w-0.5 flex-1 min-h-[1.5rem]', i < currentStep ? 'bg-brand-amber' : 'bg-border')} />
                 )}
               </div>
               <span
                 className={cn(
                   'text-sm font-medium pt-1.5 pb-4',
                   done && 'text-brand-amber',
-                  active && 'text-brand-offwhite font-semibold',
-                  !done && !active && 'text-brand-steel',
+                  active && 'text-foreground font-semibold',
+                  !done && !active && 'text-muted-foreground',
                 )}
               >
                 {label}
@@ -208,7 +233,7 @@ function LookupForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-brand-offwhite">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Search className="h-5 w-5 text-brand-amber" />
           Track your order
         </CardTitle>
@@ -319,7 +344,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
                 <Package className="h-10 w-10 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-brand-offwhite">Order not found</h3>
+                <h3 className="font-semibold text-lg text-foreground">Order not found</h3>
                 <p className="text-sm text-brand-steel mt-1">
                   We couldn't find an order matching those details. Double-check and try again.
                 </p>
@@ -342,7 +367,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
         {!loading && data && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-brand-offwhite font-sora">Order Status</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground font-sora">Order Status</h1>
               <p className="text-sm text-brand-steel mt-1">Here's the latest on your delivery.</p>
             </div>
 
@@ -364,7 +389,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
                 <Calendar className="h-5 w-5 text-brand-amber shrink-0" />
                 <div>
                   <p className="text-xs text-brand-steel">Estimated delivery</p>
-                  <p className="text-sm font-semibold text-brand-offwhite">
+                  <p className="text-sm font-semibold text-foreground">
                     {format(new Date(data.estimated_delivery_at), 'MMM d, yyyy')}
                   </p>
                 </div>
@@ -374,7 +399,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
             {displayMode === 'detailed' && (carrier || data.tracking_number) && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base text-brand-offwhite">
+                  <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Truck className="h-5 w-5 text-brand-amber" />
                     Shipping details
                   </CardTitle>
@@ -383,14 +408,14 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
                   {carrier && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-brand-steel">Carrier</span>
-                      <span className="font-medium text-brand-offwhite">{carrier}</span>
+                      <span className="font-medium text-foreground">{carrier}</span>
                     </div>
                   )}
                   {data.tracking_number && (
                     <div className="flex items-center justify-between gap-2 text-sm">
                       <span className="text-brand-steel">Tracking number</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-medium text-brand-offwhite">{data.tracking_number}</span>
+                        <span className="font-mono font-medium text-foreground">{data.tracking_number}</span>
                         <button
                           onClick={() => copyTracking(data.tracking_number!)}
                           className="text-brand-steel hover:text-brand-amber transition-colors"
@@ -418,7 +443,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
                 <Collapsible open={eventsOpen} onOpenChange={setEventsOpen}>
                   <CollapsibleTrigger asChild>
                     <button className="w-full flex items-center justify-between p-4 text-left">
-                      <span className="flex items-center gap-2 font-medium text-brand-offwhite">
+                      <span className="flex items-center gap-2 font-medium text-foreground">
                         <MapPin className="h-5 w-5 text-brand-amber" />
                         Tracking history
                       </span>
@@ -436,7 +461,7 @@ export default function OrderTrackUI({ token }: OrderTrackUIProps) {
                             <p className="text-xs text-brand-steel">
                               {format(new Date(ev.occurred_at), 'MMM d, h:mm a')}
                             </p>
-                            <p className="text-sm font-medium text-brand-offwhite">{ev.status_detail}</p>
+                            <p className="text-sm font-medium text-foreground">{ev.status_detail}</p>
                             {ev.location && <p className="text-xs text-brand-steel">{ev.location}</p>}
                           </div>
                         </div>
