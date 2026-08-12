@@ -33,8 +33,8 @@ function getEstimatedDelivery(): string {
     return result;
   };
   const today = new Date();
-  const earliest = addBusinessDays(today, 6);
-  const latest   = addBusinessDays(today, 8);
+  const earliest = addBusinessDays(today, 5);
+  const latest   = addBusinessDays(today, 7);
   const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   return `${fmt(earliest)} – ${fmt(latest)}`;
 }

@@ -14,7 +14,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         person_profiles: 'identified_only',
         capture_pageview: false,
         capture_pageleave: true,
-        autocapture: false,
+        // Autocapture ON: we need click / rage-click visibility to diagnose
+        // checkout drop-offs (previously every session reported click_count: 0).
+        autocapture: true,
+        rageclick: true,
         // @ts-ignore — valid PostHog config, types lag behind SDK
         enable_exception_autocapture: true,
         

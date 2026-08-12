@@ -14,6 +14,7 @@ import { useCart } from "@/contexts/CartContext"
 import { useCheckoutState } from "@/hooks/useCheckoutState"
 import { useSettings } from "@/contexts/SettingsContext"
 import { trackPurchase, tracking } from "@/lib/tracking-utils"
+import { trackCheckoutEvent, stripeErrorProps } from "@/lib/checkout-tracking"
 import type { PaymentMethods } from "@/lib/supabase"
 
 /** Build Stripe payment_method_types array from store_settings.payment_methods */
@@ -279,10 +280,21 @@ function PaymentForm({
 
     try {
       setLoading(true)
+      trackCheckoutEvent('checkout_pay_clicked', {
+        method: 'payment_element',
+        amount: (amountCents || 0) / 100,
+        currency: (currency || '').toUpperCase(),
+        order_id: orderId,
+      })
 
       // 1. Validate the payment form
       const { error: submitError } = await elements.submit()
       if (submitError) {
+        trackCheckoutEvent('checkout_payment_failed', {
+          ...stripeErrorProps(submitError, 'elements_submit'),
+          method: 'payment_element',
+          order_id: orderId,
+        })
         toast({ title: "Error", description: submitError.message || "Please check your payment details", variant: "destructive" })
         return
       }
@@ -355,6 +367,11 @@ function PaymentForm({
       })
 
       if (result.error) {
+        trackCheckoutEvent('checkout_payment_failed', {
+          ...stripeErrorProps(result.error, 'confirm_payment'),
+          method: 'payment_element',
+          order_id: orderId,
+        })
         toast({ title: "Payment error", description: result.error.message || "Your payment could not be processed", variant: "destructive" })
         return
       }
@@ -370,6 +387,11 @@ function PaymentForm({
         const alreadyTracked = (() => { try { return sessionStorage.getItem(ptKey) === '1' } catch { return false } })()
         if (!alreadyTracked) {
           try { sessionStorage.setItem(ptKey, '1') } catch {}
+          trackCheckoutEvent('checkout_payment_succeeded', {
+            method: 'payment_element',
+            value: totalCents / 100,
+            order_id: orderId,
+          })
           trackPurchase({
             products: paymentItems.map((item: any) => tracking.createTrackingProduct({
               id: item.product_id, title: item.product_name || item.title,
@@ -458,6 +480,10 @@ function PaymentForm({
 
   const handlePaymentError = (err: any) => {
     const message = err?.message || ""
+    trackCheckoutEvent('checkout_payment_failed', {
+      ...stripeErrorProps(err, 'exception'),
+      order_id: orderId,
+    })
     const jsonStart = message.indexOf("{")
     const jsonEnd = message.lastIndexOf("}")
     if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -481,8 +507,19 @@ function PaymentForm({
     if (!stripe || !elements) return
     try {
       setLoading(true)
+      trackCheckoutEvent('checkout_pay_clicked', {
+        method: ev?.expressPaymentType || 'wallet',
+        amount: (amountCents || 0) / 100,
+        currency: (currency || '').toUpperCase(),
+        order_id: orderId,
+      })
       const { error: submitError } = await elements.submit()
       if (submitError) {
+        trackCheckoutEvent('checkout_payment_failed', {
+          ...stripeErrorProps(submitError, 'elements_submit'),
+          method: ev?.expressPaymentType || 'wallet',
+          order_id: orderId,
+        })
         toast({ title: "Error", description: submitError.message || "Please check your payment details", variant: "destructive" })
         return
       }
@@ -592,6 +629,11 @@ function PaymentForm({
       })
 
       if (result.error) {
+        trackCheckoutEvent('checkout_payment_failed', {
+          ...stripeErrorProps(result.error, 'confirm_payment'),
+          method: ev?.expressPaymentType || 'wallet',
+          order_id: orderId,
+        })
         toast({ title: "Payment error", description: result.error.message || "Your payment could not be processed", variant: "destructive" })
         return
       }
@@ -666,6 +708,13 @@ function PaymentForm({
         <>
           <ExpressCheckoutElement
             onConfirm={handleExpressCheckoutConfirm}
+            onReady={(ev: any) => {
+              trackCheckoutEvent('checkout_wallet_shown', {
+                methods: ev?.availablePaymentMethods
+                  ? Object.keys(ev.availablePaymentMethods).filter((k) => (ev.availablePaymentMethods as any)[k])
+                  : [],
+              })
+            }}
             onShippingAddressChange={showAddressElement ? handleExpressShippingAddressChange : undefined}
             onShippingRateChange={showAddressElement ? handleExpressShippingRateChange : undefined}
             options={(() => {
