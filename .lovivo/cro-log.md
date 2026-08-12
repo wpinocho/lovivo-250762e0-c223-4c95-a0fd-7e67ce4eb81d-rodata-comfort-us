@@ -32,6 +32,20 @@
 - **Result**: (fill in after 5-7 days) before% → after%, verdict: ✅ kept / ❌ reverted / ➡️ inconclusive
 -->
 
+### 2026-08-12 — Checkout CRO pack v1 (social proof, risk reversal, decline recovery, mobile sticky bar)
+- **Hypothesis**: The payment step leaks for 4 reasons: (1) three contradictory customer counts across the funnel (+1,000 / +800 / 127) make the social proof read as fake; (2) the only reassurance above the pay button is a 12px "4.9 · 127 verified riders" line while the 30-day guarantee sits below the fold as an 11px grey footnote; (3) card declines are surfaced ONLY as transient toasts — on mobile (87% of traffic) the user sees nothing happen and leaves instead of retrying; (4) the CTA sits far below the Stripe accordion on mobile.
+- **Change**:
+  - **Consistency**: checkout "127 verified riders" → "127 verified **reviews**"; PDP stats bar "+800 Happy riders" → "**+1,000 Riders served**". Canonical story = 1,000+ riders · 127 verified reviews · 4.9★.
+  - **Social proof in checkout**: new `CheckoutSocialProof` (3 stacked avatars + Meta-blue verified check + Jason R. quote + rating line) placed immediately above the pay button, replacing the bare rating line.
+  - **Risk reversal**: 30-Day Comfort Guarantee promoted from footnote to a bordered amber badge ABOVE the CTA (refund + free size exchange); removed the now-duplicate chip from the trust row below.
+  - **Decline recovery**: persistent inline error banner above the CTA with human copy mapped from Stripe `decline_code`/`code` (`src/lib/payment-errors.ts`), plus an email escape hatch. Set on `elements.submit()` error, `confirmPayment` error and exceptions; cleared on each new attempt.
+  - **Sticky mobile pay bar** (`md:hidden`, IntersectionObserver on the real CTA): Total + Complete Purchase; fires `checkout_pay_clicked` with `method: 'sticky_bar'` so usage is measurable. Added `pb-24 md:pb-0` to the checkout container.
+  - **Coupon leak**: desktop always-open "Discount code" input collapsed behind "Have a coupon?" — `MobileCouponSection` extracted into a shared `CouponSection` used by both summaries.
+  - **Sizing doubt**: one-line `Free size exchange if it doesn't fit` under the variant name in both order summaries (no accordion, per owner's rule).
+- **Files**: `src/components/CheckoutSocialProof.tsx` (new), `src/lib/payment-errors.ts` (new), `src/components/StripePayment.tsx`, `src/pages/ui/CheckoutUI.tsx`, `src/pages/ui/ProductPageUI.tsx`
+- **Metric to watch**: `checkout_pay_clicked` → `checkout_payment_succeeded` (payment-step CR, baseline ~38% IC→PUR); retry rate after `checkout_payment_failed` (2nd `pay_clicked` in the same session); `$rageclick` on `/pagar`; share of `pay_clicked` with `method: 'sticky_bar'`.
+- **Result**: (read ~2026-08-26 — 14 days after vs 14 days before)
+
 ### 2026-08-12 — Shorter delivery window + checkout instrumentation
 - **Hypothesis**: (1) Checkout reveals "Arrives Aug 20–24" (6–8 business days) for the first time at payment; users bounce from /pagar back to the PDP in 5–16s. A shorter, more credible window reduces sticker shock at the payment step. (2) We are blind to clicks and card declines (every session had click_count: 0, zero decline visibility), so no further diagnosis is possible without instrumentation.
 - **Change**:

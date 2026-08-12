@@ -454,7 +454,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
       <section style={{ backgroundColor: '#1D2125' }} className="border-y border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-3 gap-4 text-center divide-x divide-white/[0.06]">
-            {[{value:'+800', label:'Happy riders'},{value:'4.9 ★', label:'Average rating'},{value:'100%', label:'US shipping'}].map(({value, label}) => (
+            {[{value:'+1,000', label:'Riders served'},{value:'4.9 ★', label:'Average rating'},{value:'100%', label:'US shipping'}].map(({value, label}) => (
               <div key={label} className="py-1">
                 <p className="font-sora font-bold text-brand-amber text-xl sm:text-2xl">{value}</p>
                 <p className="text-brand-steel text-xs font-inter mt-0.5">{label}</p>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tag, X, ShoppingBag, Loader2, RefreshCw, ChevronDown, ChevronUp, Lock, Truck } from "lucide-react";
+import { Tag, X, ShoppingBag, Loader2, RefreshCw, ChevronDown, ChevronUp, Lock, Truck, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CartAppliedRules } from "@/components/ui/CartAppliedRules";
 import { useNavigate } from "react-router-dom";
@@ -130,7 +130,7 @@ export default function CheckoutUI() {
         ) : null;
 
         return (
-          <div className="min-h-screen bg-[#111315]">
+          <div className="min-h-screen bg-[#111315] pb-24 md:pb-0">
             {/* Header */}
             <header className="border-b border-white/[0.08] bg-[#111315]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -459,6 +459,12 @@ export default function CheckoutUI() {
                           <div className="flex-1">
                             <h4 className="font-medium text-brand-offwhite">{item.product.name}</h4>
                             {item.variant && <p className="text-sm text-brand-steel">{item.variant.name}</p>}
+                            {item.variant && (
+                              <p className="flex items-center gap-1 text-[11px] text-brand-steel mt-0.5">
+                                <Ruler size={10} className="text-brand-amber shrink-0" />
+                                Free size exchange if it doesn&rsquo;t fit
+                              </p>
+                            )}
                             {item.selling_plan_id && (
                               <div className="flex items-center gap-1 mt-0.5">
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-brand-amber/10 text-brand-amber border-brand-amber/20">
@@ -501,46 +507,8 @@ export default function CheckoutUI() {
                       ))
                     )}
 
-                    {/* Código de descuento */}
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-brand-smoke">Discount code</div>
-                      {!logic.discount ? (
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter your coupon"
-                            value={logic.couponCode}
-                            onChange={e => logic.setCouponCode(e.target.value.toUpperCase())}
-                            className={`text-sm ${INP}`}
-                            ref={logic.couponInputRef}
-                            onKeyDown={(e) => { if (e.key === 'Enter') logic.validateCoupon(); }}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={logic.validateCoupon}
-                            disabled={logic.isValidatingCoupon || !logic.couponCode.trim()}
-                            className="border-white/[0.15] bg-transparent text-brand-smoke hover:bg-white/[0.06] hover:text-brand-offwhite disabled:opacity-40"
-                          >
-                            <Tag className="h-4 w-4 mr-1" />
-                            {logic.isValidatingCoupon ? '...' : 'Apply'}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between text-sm bg-brand-amber/10 border border-brand-amber/20 p-3 rounded-lg">
-                          <span className="text-brand-smoke font-medium">
-                            Coupon applied: {logic.couponCode}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={logic.removeCoupon}
-                            className="text-brand-steel hover:text-brand-smoke p-1 h-auto"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    {/* Código de descuento — collapsed so it doesn't send people coupon-hunting */}
+                    <CouponSection logic={logic} inputRef={logic.couponInputRef} />
 
                     {/* Totales */}
                     <div className="space-y-2 pt-4 border-t border-white/[0.08]">
@@ -634,6 +602,12 @@ function MobileOrderSummary({ logic }: { logic: any }) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate text-brand-offwhite">{item.product.name}</p>
                 {item.variant && <p className="text-xs text-brand-steel">{item.variant.name}</p>}
+                {item.variant && (
+                  <p className="flex items-center gap-1 text-[11px] text-brand-steel mt-0.5">
+                    <Ruler size={10} className="text-brand-amber shrink-0" />
+                    Free size exchange if it doesn&rsquo;t fit
+                  </p>
+                )}
               </div>
               <span className="text-sm font-medium text-brand-offwhite">
                 {formatMoney(item.total || item.price * item.quantity, logic.currencyCode)}
@@ -671,7 +645,7 @@ function MobileOrderSummary({ logic }: { logic: any }) {
           </div>
 
           {/* Cupón mobile */}
-          <MobileCouponSection logic={logic} />
+          <CouponSection logic={logic} />
         </div>
       )}
     </div>
@@ -790,8 +764,8 @@ function BillingCheckboxSection({ logic }: { logic: any }) {
   );
 }
 
-/* ─── Mobile Coupon Section (collapsible) ─── */
-function MobileCouponSection({ logic }: { logic: any }) {
+/* ─── Coupon Section (collapsible — shared by mobile + desktop summaries) ─── */
+function CouponSection({ logic, inputRef }: { logic: any; inputRef?: any }) {
   const [open, setOpen] = useState(false);
   const INP_M = "bg-[#0d0f11] border-white/[0.15] text-brand-offwhite placeholder:text-brand-steel focus-visible:ring-brand-amber/20"
 
@@ -815,6 +789,7 @@ function MobileCouponSection({ logic }: { logic: any }) {
                 value={logic.couponCode}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => logic.setCouponCode(e.target.value.toUpperCase())}
                 className={`text-sm h-9 ${INP_M}`}
+                ref={inputRef}
                 onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') logic.validateCoupon(); }}
               />
               <Button

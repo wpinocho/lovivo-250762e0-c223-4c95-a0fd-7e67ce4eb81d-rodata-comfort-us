@@ -1,8 +1,10 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react"
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, LinkAuthenticationElement, AddressElement, ExpressCheckoutElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import { Separator } from "@/components/ui/separator"
-import { Truck, ShieldCheck, RotateCcw } from "lucide-react"
+import { Truck, ShieldCheck, RotateCcw, AlertCircle } from "lucide-react"
+import CheckoutSocialProof from "@/components/CheckoutSocialProof"
+import { getPayErrorCopy, type PayErrorCopy } from "@/lib/payment-errors"
 import { Button } from "@/components/ui/button"
 import { callEdge } from "@/lib/edge"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
@@ -129,6 +131,10 @@ function PaymentForm({
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [linkAuthenticated, setLinkAuthenticated] = useState(false)
+  const [payError, setPayError] = useState<PayErrorCopy | null>(null)
+  const [ctaVisible, setCtaVisible] = useState(true)
+  const ctaRef = useRef<HTMLButtonElement | null>(null)
+  const payMethodSource = useRef<'payment_element' | 'sticky_bar'>('payment_element')
   const navigate = useNavigate()
   const { clearCart } = useCart()
   const { updateOrderCache, getFreshOrder, getOrderSnapshot } = useCheckoutState()
@@ -145,6 +151,18 @@ function PaymentForm({
       console.warn('elements.update(amount) failed:', err)
     }
   }, [elements, amountCents])
+
+  // Sticky mobile pay bar: only show it while the real CTA is off-screen.
+  useEffect(() => {
+    const el = ctaRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      ([entry]) => setCtaVisible(entry.isIntersecting),
+      { rootMargin: '0px 0px -80px 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const amountLabel = useMemo(() => {
     const amt = (amountCents || 0) / 100
@@ -280,8 +298,9 @@ function PaymentForm({
 
     try {
       setLoading(true)
+      setPayError(null)
       trackCheckoutEvent('checkout_pay_clicked', {
-        method: 'payment_element',
+        method: payMethodSource.current,
         amount: (amountCents || 0) / 100,
         currency: (currency || '').toUpperCase(),
         order_id: orderId,
@@ -295,6 +314,7 @@ function PaymentForm({
           method: 'payment_element',
           order_id: orderId,
         })
+        setPayError(getPayErrorCopy(submitError))
         toast({ title: "Error", description: submitError.message || "Please check your payment details", variant: "destructive" })
         return
       }
@@ -372,6 +392,7 @@ function PaymentForm({
           method: 'payment_element',
           order_id: orderId,
         })
+        setPayError(getPayErrorCopy(result.error))
         toast({ title: "Payment error", description: result.error.message || "Your payment could not be processed", variant: "destructive" })
         return
       }
@@ -492,6 +513,7 @@ function PaymentForm({
         if (handleUnavailableItems(parsed)) return
       } catch {}
     }
+    setPayError(getPayErrorCopy(err))
     const lowered = (message || "").toLowerCase()
     if (lowered.includes("stripe_not_connected") || lowered.includes("stripe not connected")) {
       toast({
@@ -868,20 +890,45 @@ function PaymentForm({
       {/* Billing address slot */}
       {billingSlot}
 
-      {/* Pre-pay trust reinforcement */}
-      <div className="flex flex-col gap-1.5 mb-3">
-        <div className="flex items-center justify-center gap-2 text-xs text-brand-steel">
-          <span className="flex gap-0.5">
-            {[1,2,3,4,5].map(s => <span key={s} style={{color:'#C98B2E'}}>★</span>)}
-          </span>
-          <span className="text-brand-smoke font-medium">4.9</span>
-          <span>· 127 verified riders</span>
+      {/* Pre-pay trust reinforcement — social proof at the moment of max doubt */}
+      <div className="flex flex-col gap-2.5 mb-3">
+        <CheckoutSocialProof />
+
+        {/* Risk reversal — promoted from a grey footnote to a real badge */}
+        <div className="flex items-start gap-2.5 rounded-xl border border-brand-amber/25 bg-brand-amber/[0.06] px-3 py-2.5">
+          <RotateCcw size={14} className="mt-0.5 shrink-0 text-brand-amber" />
+          <p className="font-inter text-xs leading-relaxed text-brand-smoke">
+            <span className="font-semibold text-brand-offwhite">30-Day Comfort Guarantee</span>
+            {" — "}ride with it for 30 days. If your back doesn&rsquo;t feel better, we refund you. Free size exchange.
+          </p>
         </div>
+
+        {/* Persistent payment error — toasts get missed on mobile */}
+        {payError && (
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/10 p-3"
+          >
+            <AlertCircle size={16} className="mt-0.5 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="font-inter text-sm font-semibold text-destructive">{payError.title}</p>
+              <p className="mt-1 font-inter text-xs leading-relaxed text-brand-smoke">{payError.help}</p>
+              <p className="mt-1.5 font-inter text-[11px] text-brand-steel">
+                Still stuck? Email{" "}
+                <a href="mailto:support@getrodata.com" className="underline hover:text-brand-amber">
+                  support@getrodata.com
+                </a>{" "}
+                and we&rsquo;ll place the order for you.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Submit button */}
       <Button
-        onClick={handlePayment}
+        ref={ctaRef}
+        onClick={() => { payMethodSource.current = 'payment_element'; handlePayment() }}
         disabled={!stripe || loading || !amountCents || !!shippingError}
         className="w-full h-14 flex flex-col items-center justify-center gap-0.5"
         size="lg"
@@ -911,11 +958,6 @@ function PaymentForm({
             <ShieldCheck size={11} className="text-brand-amber flex-shrink-0" />
             Secure Checkout
           </span>
-          <span className="text-white/20">·</span>
-          <span className="flex items-center gap-1.5">
-            <RotateCcw size={11} className="text-brand-amber flex-shrink-0" />
-            30-Day Comfort Guarantee
-          </span>
         </div>
 
         <div className="flex items-center justify-center gap-1.5">
@@ -935,6 +977,25 @@ function PaymentForm({
           <a href="/aviso-de-privacidad" target="_blank" className="underline hover:text-foreground">Privacy</a>
         </div>
       </div>
+
+      {/* Sticky mobile pay bar — 87% of traffic is mobile and the CTA sits far down */}
+      {!ctaVisible && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.1] bg-[#1D2125]/95 px-4 py-3 backdrop-blur md:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0">
+              <p className="font-inter text-[10px] uppercase tracking-wide text-brand-steel">Total</p>
+              <p className="font-sora text-base font-bold leading-tight text-brand-offwhite">{amountLabel}</p>
+            </div>
+            <Button
+              onClick={() => { payMethodSource.current = 'sticky_bar'; handlePayment() }}
+              disabled={!stripe || loading || !amountCents || !!shippingError}
+              className="h-12 flex-1"
+            >
+              {loading ? "Processing..." : "Complete Purchase"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
