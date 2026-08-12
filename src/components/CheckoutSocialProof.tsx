@@ -11,7 +11,7 @@ function VerifiedCheck() {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-3.5 w-3.5 shrink-0"
+      className="ml-1 inline-block h-3 w-3 shrink-0 align-[-1px]"
     >
       <path
         fill="#1D9BF0"
@@ -26,64 +26,45 @@ function VerifiedCheck() {
 }
 
 /**
- * Compact social-proof block for the checkout. Rendered right under the order
- * summary (framing, seen by 100% of visitors) — NOT above the pay button, where
- * it competed with the guarantee badge.
+ * Compact social-proof strip for the checkout.
  *
- * Three stacked rows so nothing runs on and no segment can orphan-wrap:
- *   1. the quote
- *   2. avatars + name + verified check
- *   3. canonical proof numbers: 4.9★ · 127 verified reviews · 1,000+ riders served
+ * Deliberately TWO text rows next to a stacked avatar group (single-strip
+ * density) so it frames the order summary instead of competing with it.
+ * Carries the three canonical numbers and nothing else:
+ *   1,000+ riders served · 127 verified reviews · 4.9★
  */
 export default function CheckoutSocialProof() {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-brand-graphite px-4 py-3.5">
-      {/* Row 1 — the quote */}
-      <p className="font-inter text-[13px] leading-snug text-brand-offwhite/90">
-        &ldquo;Rode 6 hours straight and my lower back was fine. Should&rsquo;ve
-        bought it sooner.&rdquo;
-      </p>
-
-      {/* Row 2 — attribution */}
-      <div className="mt-2.5 flex items-center gap-2">
-        <div className="flex -space-x-2 shrink-0">
-          {AVATARS.map((a) => (
-            <img
-              key={a.src}
-              src={a.src}
-              alt={a.alt}
-              loading="lazy"
-              width={24}
-              height={24}
-              className="h-6 w-6 rounded-full border-2 border-brand-graphite object-cover"
-            />
-          ))}
-        </div>
-        <span className="font-inter text-xs font-semibold text-brand-offwhite">
-          Jason R.
-        </span>
-        <VerifiedCheck />
-        <span className="font-inter text-[11px] text-brand-steel">
-          · Verified buyer
-        </span>
+    <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-brand-graphite px-3.5 py-2.5">
+      <div className="flex -space-x-2 shrink-0">
+        {AVATARS.map((a) => (
+          <img
+            key={a.src}
+            src={a.src}
+            alt={a.alt}
+            loading="lazy"
+            width={26}
+            height={26}
+            className="h-[26px] w-[26px] rounded-full border-2 border-brand-graphite object-cover"
+          />
+        ))}
       </div>
 
-      {/* Row 3 — canonical proof numbers */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-inter text-[11px] text-brand-smoke">
-        <span className="whitespace-nowrap">
-          <span className="mr-1 tracking-tight text-brand-amber">★★★★★</span>
+      <div className="min-w-0">
+        <p className="font-inter text-[12.5px] leading-snug text-brand-smoke">
+          <span className="font-semibold text-brand-offwhite">Jason R.</span>
+          <VerifiedCheck />
+          <span> and </span>
+          <span className="font-semibold text-brand-offwhite">1,000+ riders</span>
+          <span> already ride with it</span>
+        </p>
+        <p className="mt-0.5 font-inter text-[11.5px] leading-snug text-brand-smoke">
+          <span className="mr-1 text-brand-amber">★</span>
           <span className="font-semibold text-brand-offwhite">4.9</span>
-        </span>
-        <span className="text-brand-steel">·</span>
-        <span className="whitespace-nowrap">
-          <span className="font-semibold text-brand-offwhite">127</span> verified
-          reviews
-        </span>
-        <span className="text-brand-steel">·</span>
-        <span className="whitespace-nowrap">
-          <span className="font-semibold text-brand-offwhite">1,000+</span> riders
-          served
-        </span>
+          <span> from </span>
+          <span className="font-semibold text-brand-offwhite">127</span>
+          <span> verified reviews</span>
+        </p>
       </div>
     </div>
   )

@@ -140,13 +140,13 @@ export default function CheckoutUI() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {/* Mobile Order Summary */}
-              <MobileOrderSummary logic={logic} />
-
-              {/* Social proof — framing, right under the summary (mobile) */}
-              <div className="md:hidden -mt-2 mb-6">
+              {/* Social proof — compact strip framing the summary (mobile) */}
+              <div className="md:hidden mb-3">
                 <CheckoutSocialProof />
               </div>
+
+              {/* Mobile Order Summary */}
+              <MobileOrderSummary logic={logic} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
@@ -577,7 +577,10 @@ export default function CheckoutUI() {
 
 /* ─── Mobile Order Summary (collapsible) ─── */
 function MobileOrderSummary({ logic }: { logic: any }) {
-  const [open, setOpen] = useState(true);
+  // Collapsed by default: Baymard/mobile-checkout convention is a one-line
+  // "Order summary · $total" that expands on tap. The essentials (total, free
+  // shipping, arrival window) stay visible in the header so nothing is hidden.
+  const [open, setOpen] = useState(false);
 
   if (logic.summaryItems.length === 0) return null;
 
@@ -586,14 +589,23 @@ function MobileOrderSummary({ logic }: { logic: any }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-brand-offwhite"
+        aria-expanded={open}
+        className="w-full px-4 py-3 text-left"
       >
-        <span className="flex items-center gap-2">
-          <ShoppingBag className="h-4 w-4 text-brand-amber" />
-          Order summary ({logic.totalQuantity})
-          {open ? <ChevronUp className="h-4 w-4 text-brand-steel" /> : <ChevronDown className="h-4 w-4 text-brand-steel" />}
+        <span className="flex items-center justify-between text-sm font-medium text-brand-offwhite">
+          <span className="flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-brand-amber" />
+            Order summary ({logic.totalQuantity})
+            {open ? <ChevronUp className="h-4 w-4 text-brand-steel" /> : <ChevronDown className="h-4 w-4 text-brand-steel" />}
+          </span>
+          <span className="font-sora font-bold text-brand-amber">{formatMoney(logic.finalTotal, logic.currencyCode)}</span>
         </span>
-        <span className="font-sora font-bold text-brand-amber">{formatMoney(logic.finalTotal, logic.currencyCode)}</span>
+        {!open && (
+          <span className="mt-1.5 flex items-center gap-2 text-[11px] text-brand-steel">
+            <Truck size={11} className="text-brand-amber flex-shrink-0" />
+            <span>Free shipping · <span className="text-brand-smoke">Arrives {getEstimatedDelivery()}</span></span>
+          </span>
+        )}
       </button>
 
       {open && (
