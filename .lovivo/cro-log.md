@@ -32,6 +32,18 @@
 - **Result**: (fill in after 5-7 days) before% → after%, verdict: ✅ kept / ❌ reverted / ➡️ inconclusive
 -->
 
+### 2026-08-12 — Checkout CRO pack v1.1 (split the pre-CTA stack, social-proof UI rebuild, gated sticky bar)
+- **Hypothesis**: v1 stacked two cards (testimonial + guarantee) directly above the pay button — a wall that pushes the CTA down and gets neither block read. Separating them makes the testimonial work as *framing* (seen by 100% of visitors under the order summary) and the guarantee work as *risk reversal* at the decision moment. Additionally, the sticky pay bar rendering from the top of the page produces wasted taps ("Required fields" toast) before the user has entered anything → likely rage-click source.
+- **Change**:
+  - `CheckoutSocialProof` moved OUT of the pre-CTA stack; now rendered under the mobile order summary and under the desktop summary card.
+  - `CheckoutSocialProof` rebuilt in 3 rows (quote / avatars + name + verified check / proof numbers). Fixes: inline blue check breaking the sentence, orphaned "1,000+ riders" + dangling `·` on 375px (`whitespace-nowrap` segments), too-dim `text-brand-steel` on the strongest proof line (→ `brand-smoke`), avatar ring `border-brand-carbon` mismatching the `brand-graphite` card.
+  - Guarantee badge: copy tightened (dropped redundant "ride with it for 30 days") + absorbed the ratings line (★★★★★ 4.9 · 127 verified reviews) so the decision moment keeps proof without a second card.
+  - Sticky mobile pay bar gated behind an IntersectionObserver sentinel above `<PaymentElement>` (`reachedPayment` latch, never resets) → `reachedPayment && !ctaVisible`.
+  - Failed validation now scrolls to the first `[aria-invalid]` field (fallback: the CTA) in addition to the toast.
+- **Files**: `src/components/CheckoutSocialProof.tsx`, `src/components/StripePayment.tsx`, `src/pages/ui/CheckoutUI.tsx`
+- **Metric to watch**: `checkout_pay_clicked` → `checkout_payment_succeeded`; share of `method: 'sticky_bar'` clicks that convert; `$rageclick` on `/pagar`
+- **Result**: (fill ~2026-08-26)
+
 ### 2026-08-12 — Checkout CRO pack v1 (social proof, risk reversal, decline recovery, mobile sticky bar)
 - **Hypothesis**: The payment step leaks for 4 reasons: (1) three contradictory customer counts across the funnel (+1,000 / +800 / 127) make the social proof read as fake; (2) the only reassurance above the pay button is a 12px "4.9 · 127 verified riders" line while the 30-day guarantee sits below the fold as an 11px grey footnote; (3) card declines are surfaced ONLY as transient toasts — on mobile (87% of traffic) the user sees nothing happen and leaves instead of retrying; (4) the CTA sits far below the Stripe accordion on mobile.
 - **Change**:

@@ -3,7 +3,6 @@ import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, LinkAuthenticationElement, AddressElement, ExpressCheckoutElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import { Separator } from "@/components/ui/separator"
 import { Truck, ShieldCheck, RotateCcw, AlertCircle } from "lucide-react"
-import CheckoutSocialProof from "@/components/CheckoutSocialProof"
 import { getPayErrorCopy, type PayErrorCopy } from "@/lib/payment-errors"
 import { Button } from "@/components/ui/button"
 import { callEdge } from "@/lib/edge"
@@ -133,7 +132,9 @@ function PaymentForm({
   const [linkAuthenticated, setLinkAuthenticated] = useState(false)
   const [payError, setPayError] = useState<PayErrorCopy | null>(null)
   const [ctaVisible, setCtaVisible] = useState(true)
+  const [reachedPayment, setReachedPayment] = useState(false)
   const ctaRef = useRef<HTMLButtonElement | null>(null)
+  const payAnchorRef = useRef<HTMLDivElement | null>(null)
   const payMethodSource = useRef<'payment_element' | 'sticky_bar'>('payment_element')
   const navigate = useNavigate()
   const { clearCart } = useCart()
@@ -162,6 +163,34 @@ function PaymentForm({
     )
     observer.observe(el)
     return () => observer.disconnect()
+  }, [])
+
+  // Latch: the sticky bar must not appear before the shopper has actually
+  // reached the payment section — tapping it earlier only fires a "required
+  // fields" toast (wasted tap / rage-click source).
+  useEffect(() => {
+    if (reachedPayment) return
+    const el = payAnchorRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setReachedPayment(true)
+        observer.disconnect()
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [reachedPayment])
+
+  // When validation fails, a toast alone is easy to miss on mobile — take the
+  // shopper to the field that is actually blocking them.
+  const scrollToFirstInvalid = useCallback(() => {
+    if (typeof document === 'undefined') return
+    const target =
+      (document.querySelector('[aria-invalid="true"]') as HTMLElement | null) ||
+      (document.querySelector('[data-invalid="true"]') as HTMLElement | null) ||
+      ctaRef.current
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
 
   const amountLabel = useMemo(() => {
@@ -289,7 +318,10 @@ function PaymentForm({
       return
     }
 
-    if (onValidationRequired && !onValidationRequired()) return
+    if (onValidationRequired && !onValidationRequired()) {
+      scrollToFirstInvalid()
+      return
+    }
 
     if (deliveryExpectations?.[0]?.type === "pickup" && (!pickupLocations || pickupLocations.length === 0)) {
       toast({ title: "Pickup required", description: "Please select a pickup location before continuing.", variant: "destructive" })
@@ -857,6 +889,9 @@ function PaymentForm({
         </>
       )}
 
+      {/* Sentinel: gates the sticky mobile pay bar */}
+      <div ref={payAnchorRef} aria-hidden="true" />
+
       {/* Unified Payment Element - shows card, OXXO, SPEI, wallets automatically */}
       <PaymentElement
         options={{
@@ -890,17 +925,27 @@ function PaymentForm({
       {/* Billing address slot */}
       {billingSlot}
 
-      {/* Pre-pay trust reinforcement — social proof at the moment of max doubt */}
+      {/* Pre-pay trust reinforcement — one single card at the moment of decision */}
       <div className="flex flex-col gap-2.5 mb-3">
-        <CheckoutSocialProof />
-
         {/* Risk reversal — promoted from a grey footnote to a real badge */}
         <div className="flex items-start gap-2.5 rounded-xl border border-brand-amber/25 bg-brand-amber/[0.06] px-3 py-2.5">
           <RotateCcw size={14} className="mt-0.5 shrink-0 text-brand-amber" />
-          <p className="font-inter text-xs leading-relaxed text-brand-smoke">
-            <span className="font-semibold text-brand-offwhite">30-Day Comfort Guarantee</span>
-            {" — "}ride with it for 30 days. If your back doesn&rsquo;t feel better, we refund you. Free size exchange.
-          </p>
+          <div className="min-w-0">
+            <p className="font-inter text-xs leading-relaxed text-brand-smoke">
+              <span className="font-semibold text-brand-offwhite">30-Day Comfort Guarantee</span>
+              {" — "}if your back doesn&rsquo;t feel better, we refund you. Free size exchange.
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 font-inter text-[11px] text-brand-smoke">
+              <span className="whitespace-nowrap">
+                <span className="mr-1 tracking-tight text-brand-amber">★★★★★</span>
+                <span className="font-semibold text-brand-offwhite">4.9</span>
+              </span>
+              <span className="text-brand-steel">·</span>
+              <span className="whitespace-nowrap">
+                <span className="font-semibold text-brand-offwhite">127</span> verified reviews
+              </span>
+            </p>
+          </div>
         </div>
 
         {/* Persistent payment error — toasts get missed on mobile */}
@@ -979,7 +1024,7 @@ function PaymentForm({
       </div>
 
       {/* Sticky mobile pay bar — 87% of traffic is mobile and the CTA sits far down */}
-      {!ctaVisible && (
+      {reachedPayment && !ctaVisible && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.1] bg-[#1D2125]/95 px-4 py-3 backdrop-blur md:hidden">
           <div className="flex items-center gap-3">
             <div className="min-w-0">
