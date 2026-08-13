@@ -11,7 +11,22 @@ export type CheckoutEventName =
   | 'checkout_wallet_shown'
   | 'checkout_pay_clicked'
   | 'checkout_payment_failed'
-  | 'checkout_payment_succeeded';
+  | 'checkout_payment_succeeded'
+  /**
+   * Wallet sheet (Google Pay / Apple Pay) was dismissed without paying.
+   * This is the ONLY signal we get when Google Pay kills the sheet itself
+   * (e.g. CALLBACK_TIMED_OUT) — our onConfirm handler never reports back.
+   */
+  | 'checkout_wallet_cancelled'
+  /**
+   * How long the server round-trip inside the wallet confirm callback took.
+   * Google Pay aborts the sheet with CALLBACK_TIMED_OUT if the merchant
+   * callback does not resolve fast enough, so `intent_ms` is the number that
+   * tells us whether we are near that ceiling on real mobile networks.
+   */
+  | 'checkout_wallet_timing'
+  /** The Express Checkout Element itself failed to mount. */
+  | 'checkout_wallet_load_error';
 
 function getContext(): Record<string, any> {
   if (typeof window === 'undefined') return {};

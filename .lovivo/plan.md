@@ -29,41 +29,50 @@
 - **Avatar rings inside a `bg-brand-graphite` card must use `border-brand-graphite`** (not carbon) or a halo shows.
 - **UI kit**: shadcn. Wrap pages in `EcommerceTemplate`.
 
-## 3. Active Plan — ✅ Checkout CRO pack v1.2 SHIPPED (2026-08-12) — now measuring
+## 3. Active Plan — 🔴 Google Pay mobile failure investigation (opened 2026-08-13)
 
-Nothing in flight. Next action is **measurement on ~2026-08-26**: compare 14 days after vs before on
-`checkout_pay_clicked` → `checkout_payment_succeeded`, retry rate after `checkout_payment_failed`,
-share of `method: 'sticky_bar'` clicks, and `$rageclick` on `/pagar`.
-⚠️ **`.lovivo/cro-log.md` still needs a v1.2 entry** (was not written this session — budget). Add it next session
-alongside the v1.1 "Result" line.
+### What happened
+Owner ran a test purchase with Google Pay. **Mobile → `CALLBACK_TIMED_OUT`. Desktop → worked** (declined only
+because his own card is MXN-only: `decline_code: currency_not_supported`, which is a test-card artifact, NOT a bug).
 
-### What v1.2 changed (all shipped)
-- `CheckoutSocialProof` rebuilt COMPACT: single strip, avatars left + 2 text rows
-  (`Jason R. ✓ and 1,000+ riders already ride with it` / `★ 4.9 from 127 verified reviews`).
-  Testimonial quote REMOVED from checkout (still on PDP) — density beat the quote.
-- Mobile order of elements flipped: social-proof strip now sits **ABOVE** `MobileOrderSummary`
-  (`md:hidden mb-3`) — proof frames the price. Desktop unchanged (still under the summary card).
-- `MobileOrderSummary` now **collapsed by default** (`useState(false)`), header restructured to two
-  lines: `Order summary (n) · $total` + persistent `Free shipping · Arrives {date}` shown only when
-  collapsed. Coupon field is now behind that tap (bonus: less coupon-hunting leakage).
-- Sticky mobile pay bar **KEPT AS-IS** — research confirms it's standard, not an anti-pattern.
+### Hard evidence from PostHog (2026-08-13)
+- `purchase` by device, last 30d: **Mobile 23 (last = 2026-08-09 19:53), Desktop 7 (last = today, owner test), Tablet 1.**
+  → **Mobile purchases have been flat at ZERO for 4 days** while mobile is ~87% of traffic. This is the money leak.
+- The failing mobile session (`getrodata.com/pagar`, Android Chrome, 22:39–22:42) fired `checkout_wallet_shown`
+  with `methods: ["googlePay","link"]` and then **nothing** — no `checkout_pay_clicked`, no `checkout_payment_failed`.
+  Google Pay killed its own sheet before our `onConfirm` ever reported back → we were **blind by design**.
+- Only 1 `checkout_payment_failed` in 30d and it is the owner's desktop `currency_not_supported`.
 
-### Research backing v1.2 (2026-08-12, do not re-litigate)
-- **Sticky bottom pay bar on mobile = best practice.** Baymard: 11.6% of users mistake a review step
-  for a confirmation step; a persistent primary "Place Order" button is the element that disambiguates.
-  A/B evidence cites 5–12% lift on mobile checkout completion. Caveat that WE ALREADY HANDLE: it must
-  not appear before the user reaches the payment section (our `reachedPayment` sentinel gate).
-- **Mobile order summary collapsed by default = best practice.** Always-visible eats the viewport,
-  fully hidden creates uncertainty; the convention is a one-line "Show order summary ▼ $XX" that
-  expands on tap, with total (and here, shipping + arrival) always readable.
-- Sources: baymard.com/learn/checkout-flow-ux-optimization, baymard.com/blog/accordion-checkout-usability,
-  cartylabs.com Shopify checkout UX 2026, btng.studio mobile checkout optimization.
+### ROOT-CAUSE HYPOTHESIS (strong, not yet proven)
+`handleExpressCheckoutConfirm` in `src/components/StripePayment.tsx` runs, INSIDE the Google Pay authorization
+callback: `elements.submit()` → `callEdge("payments-create-intent")` → `stripe.confirmPayment()`.
+Google Pay aborts the sheet with `CALLBACK_TIMED_OUT` when the merchant callback does not resolve in time.
+A Supabase edge-function round-trip on a cold start + 4G easily exceeds that ceiling — which is exactly why it
+**passes on desktop and fails on mobile with identical code**.
+⚠️ Dangerous side effect: our JS keeps running after the sheet dies, so a charge can be created while the
+customer sees an error. Cross-check Stripe for orphan PaymentIntents around the failed attempts.
 
-### Deferred (still valid, not built)
-- PayPal + payment-area skeleton to kill the `enabled:false` flicker.
-- Consider re-adding a one-line quote to the strip IF the compact version underperforms.
+### SHIPPED THIS SESSION (measurement first, fix next)
+- `src/lib/checkout-tracking.ts`: 3 new typed events — `checkout_wallet_cancelled`, `checkout_wallet_timing`,
+  `checkout_wallet_load_error`.
+- `src/components/StripePayment.tsx`:
+  - `checkout_wallet_timing` now fires right after `payments-create-intent` with `intent_ms` + `slow` (>4000ms)
+    → this is the number that proves or kills the timeout hypothesis, sliceable by `device_type`.
+  - `onCancel` on `ExpressCheckoutElement` → `checkout_wallet_cancelled` (the only signal we get when Google Pay
+    dismisses its own sheet).
+  - `onLoadError` → `checkout_wallet_load_error`.
+
+### NEXT STEP (do this first next session)
+1. Query: `SELECT properties.device_type, avg(properties.intent_ms), max(properties.intent_ms), count()
+   FROM events WHERE event='checkout_wallet_timing' GROUP BY 1`.
+   - If mobile `intent_ms` > ~3000 → hypothesis confirmed.
+2. **The fix if confirmed**: pre-create the PaymentIntent BEFORE the wallet sheet opens (on `reachedPayment` /
+   `onReady`) and cache the `client_secret`, so `onConfirm` only calls `stripe.confirmPayment()` and returns in
+   milliseconds. This is the standard remedy for Google Pay callback timeouts.
+3. Also compare `checkout_wallet_shown` → `checkout_pay_clicked` on mobile; a big gap = sheets dying silently.
 
 ## 4. Recent Changes
+- 2026-08-13: **GOOGLE PAY MOBILE DIAGNOSIS + INSTRUMENTATION** — PostHog shows zero mobile purchases since 2026-08-09 while mobile is 87% of traffic; the failing mobile wallet session emitted no failure event at all. Added `checkout_wallet_timing` (`intent_ms`), `checkout_wallet_cancelled` and `checkout_wallet_load_error` so the Google Pay `CALLBACK_TIMED_OUT` becomes measurable. Root cause suspected: the `payments-create-intent` round-trip runs inside the Google Pay callback and blows its timeout on mobile networks.
 - 2026-08-12: **CHECKOUT CRO PACK v1.2 SHIPPED** — `CheckoutSocialProof` rebuilt as a compact single strip (avatars + 2 rows, quote dropped); strip moved ABOVE the mobile order summary; `MobileOrderSummary` collapsed by default with a persistent `Free shipping · Arrives {date}` sub-line; sticky pay bar kept after research confirmed it's the correct pattern.
 - 2026-08-12: **CHECKOUT CRO PACK v1.1 SHIPPED** — testimonial moved out of the pre-CTA wall to under the order summary (mobile + desktop); `CheckoutSocialProof` rebuilt in 3 rows; ratings merged into the guarantee badge; sticky mobile pay bar gated behind a payment-section sentinel; validation failure now scrolls to the offending field.
 - 2026-08-12: **CHECKOUT CRO PACK v1 SHIPPED** — new `CheckoutSocialProof.tsx` + `payment-errors.ts`; social-proof strip + guarantee badge + persistent decline banner above the pay button; sticky mobile pay bar with `sticky_bar` tracking; desktop coupon collapsed via shared `CouponSection`; size-exchange microcopy in both summaries; customer counts unified to 1,000+ / 127 / 4.9.
@@ -85,26 +94,27 @@ alongside the v1.1 "Result" line.
 - Avatars: `/avatar-j.webp`, `/avatar-m.webp`, `/avatar-r.webp` (public/) — used by the PDP strip AND `CheckoutSocialProof.tsx`.
 
 ## 6. Known Issues
-- **(2026-08-12) `lov-search-files` is unreliable in this repo** — returns 0 matches for strings that exist, and returns match line numbers that don't correspond to the query. Prefer `lov-view` with inferred paths.
+- **(2026-08-13) ZERO mobile purchases since 2026-08-09 19:53 UTC** while mobile = 87% of traffic. Highest-priority open item.
+- **(2026-08-13) Google Pay `CALLBACK_TIMED_OUT` on mobile** — see Active Plan. Desktop unaffected.
+- **(2026-08-13) `ProductExpressCheckout.tsx` (PDP wallet) is still hardcoded to Mexico**: `country: 'MX'`, currency fallback `'mxn'`, Spanish labels (`'Envío'`) in the wallet sheet. It ALSO does create-order + create-intent inside the wallet callback → same timeout exposure as checkout. NOT changed yet because `country` must match the Stripe account country — verify the connected account's country before touching it.
+- **(2026-08-12) `lov-search-files` is unreliable in this repo** — returns 0 matches for strings that exist. Prefer `lov-view` with inferred paths.
 - **(2026-08-12) `lov-view` with two line ranges only returns the FIRST range** — request ranges one at a time.
 - **(2026-08-12) Fulfillment must actually support 5–7 business days** — checkout promises it.
-- **(2026-08-12) No purchase event since 2026-08-09 19:53 UTC** — cross-check against real Dashboard orders.
 - **(2026-08-12) PayPal settings race** — console logs `[PayPal Settings] enabled: false | clientId: null` BEFORE `[PayPal RPC] ... status: active` resolves. Button may flicker on slow mobile.
 - **PostHog dashboard filter pinned to OLD domain** (2026-06-26): fix in PostHog UI (not code).
 - **Backend tracking steps come in Spanish** — translated client-side in OrderTrackUI.
 - Country name "Estados Unidos" on thank you page comes from backend data, not UI.
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid.
-- ~~Social proof block too tall / dense~~ **RESOLVED 2026-08-12** (v1.2 compact strip).
-- ~~Sticky mobile pay bar appears at the very top of `/pagar`~~ **RESOLVED 2026-08-12** (v1.1 sentinel gate).
-- ~~Payment errors only shown as transient toasts~~ **RESOLVED 2026-08-12** (persistent inline banner).
+- `checkout_payment_succeeded` is declared in `CheckoutEventName` but has NEVER fired in 30d — the manual card path likely never emits it. Wire it up to get a clean success/failure ratio.
 
 ## 7. Pending / Future Sessions
-- **P0** Write the v1.2 entry + v1.1 "Result" line in `.lovivo/cro-log.md`.
-- **P0** ~2026-08-26: read the checkout pack results (see Active Plan for the metric list).
-- **P0** Dashboard/Meta: audit impressions + frequency per ad; pause the ~12 Aug 3–11 zero-purchase creatives; refresh creative for the fatigued winners.
+- **P0** Read `checkout_wallet_timing.intent_ms` by device (needs ~24–48h of traffic) and, if confirmed, pre-create the PaymentIntent before the wallet sheet opens.
+- **P0** Check Stripe for orphan PaymentIntents / charges created after a `CALLBACK_TIMED_OUT` — a customer may have been charged without a confirmation screen.
+- **P0** Write the v1.2 entry + v1.1 "Result" line in `.lovivo/cro-log.md` (still not done).
+- **P0** ~2026-08-26: read the checkout CRO pack results.
 - **P1** Abandoned-cart email automation (Dashboard AI) — cheapest recovery win.
 - **P1** PayPal button skeleton to kill the `enabled:false` flicker.
+- **P2** Localize `ProductExpressCheckout.tsx` to US (country/currency/labels) once the Stripe account country is confirmed.
 - **P2** Replace feature images (FEAT_IMG_1-3) with English text versions.
-- **P2** Add English slug redirect for product page.
 - **Blocked** No A/B tests on checkout until weekly conversions grow (~8/week vs ~500 needed).
 - **Owner said no** (do not re-propose): arrival date on PDP, FAQ/sizing **accordion** in checkout, abandonment survey.

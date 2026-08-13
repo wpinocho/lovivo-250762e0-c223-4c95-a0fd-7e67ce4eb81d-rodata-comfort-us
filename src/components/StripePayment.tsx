@@ -650,7 +650,18 @@ function PaymentForm({
         },
       }
 
+      // Google Pay aborts its own sheet (CALLBACK_TIMED_OUT) when the merchant
+      // callback takes too long. This server round-trip happens INSIDE that
+      // callback, so we measure it to know how close to the ceiling we are.
+      const tIntentStart = performance.now()
       const data = await callEdge("payments-create-intent", payload)
+      const intentMs = Math.round(performance.now() - tIntentStart)
+      trackCheckoutEvent('checkout_wallet_timing', {
+        method: ev?.expressPaymentType || 'wallet',
+        intent_ms: intentMs,
+        slow: intentMs > 4000,
+        order_id: orderId,
+      })
       if (handleUnavailableItems(data)) return
       const client_secret = data?.client_secret
       const intentOrder = data?.order ?? null
@@ -768,6 +779,15 @@ function PaymentForm({
                   ? Object.keys(ev.availablePaymentMethods).filter((k) => (ev.availablePaymentMethods as any)[k])
                   : [],
               })
+            }}
+            onCancel={(ev: any) => {
+              trackCheckoutEvent('checkout_wallet_cancelled', {
+                method: ev?.expressPaymentType || 'wallet',
+                order_id: orderId,
+              })
+            }}
+            onLoadError={(ev: any) => {
+              trackCheckoutEvent('checkout_wallet_load_error', stripeErrorProps(ev?.error, 'wallet_load'))
             }}
             onShippingAddressChange={showAddressElement ? handleExpressShippingAddressChange : undefined}
             onShippingRateChange={showAddressElement ? handleExpressShippingRateChange : undefined}
