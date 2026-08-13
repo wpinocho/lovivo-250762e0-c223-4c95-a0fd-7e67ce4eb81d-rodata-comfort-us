@@ -494,7 +494,7 @@ function PaymentForm({
             currency: (currency || 'mxn').toUpperCase(),
           }))
           clearCart()
-          navigate(`/pago-pendiente/${orderId}`)
+          navigate(`/pending-payment/${orderId}`)
         }
         // Handle SPEI / bank transfer
         else if (nextAction?.display_bank_transfer_instructions) {
@@ -510,7 +510,7 @@ function PaymentForm({
             currency: (currency || 'mxn').toUpperCase(),
           }))
           clearCart()
-          navigate(`/pago-pendiente/${orderId}`)
+          navigate(`/pending-payment/${orderId}`)
         }
         // Generic requires_action (e.g. 3D Secure handled by Stripe)
         else {

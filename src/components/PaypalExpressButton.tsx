@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { useSettings } from '@/contexts/SettingsContext'
 import { callEdge } from '@/lib/edge'
@@ -6,6 +6,7 @@ import { STORE_ID } from '@/lib/config'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import { getAttributionPayload, trackPurchase, tracking } from '@/lib/tracking-utils'
+import { trackCheckoutEvent, stripeErrorProps } from '@/lib/checkout-tracking'
 
 interface PaypalExpressButtonProps {
   orderId: string
@@ -33,7 +34,17 @@ export function PaypalExpressButton({
   const navigate = useNavigate()
 
   console.log('[PayPal Button] paypalEnabled:', paypalEnabled, '| paypalClientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| checkoutToken:', !!checkoutToken)
-  if (!paypalEnabled || !paypalClientId || !checkoutToken) return null
+
+  const paypalReady = Boolean(paypalEnabled && paypalClientId && checkoutToken)
+
+  // Until now PayPal was a complete blind spot: every failure was a toast that
+  // vanished. We need to know how often the button is even offered vs used.
+  useEffect(() => {
+    if (!paypalReady) return
+    trackCheckoutEvent('checkout_paypal_shown', { order_id: orderId })
+  }, [paypalReady, orderId])
+
+  if (!paypalReady) return null
 
   const currencyUpper = currency.toUpperCase()
 
@@ -62,17 +73,31 @@ export function PaypalExpressButton({
             // PayPal Express: no form validation needed — PayPal collects
             // the buyer's shipping address inside the PayPal popup.
             const attribution = getAttributionPayload();
-            const result = await callEdge('paypal-create-order', {
-              store_id: STORE_ID,
-              checkout_token: checkoutToken,
+            trackCheckoutEvent('checkout_paypal_started', {
+              order_id: orderId,
               amount,
               currency: currencyUpper,
-              items,
-              shipping: shippingCost,
-              attribution,
             })
-            if (!result?.id) throw new Error('PayPal order ID missing')
-            return result.id
+            try {
+              const result = await callEdge('paypal-create-order', {
+                store_id: STORE_ID,
+                checkout_token: checkoutToken,
+                amount,
+                currency: currencyUpper,
+                items,
+                shipping: shippingCost,
+                attribution,
+              })
+              if (!result?.id) throw new Error('PayPal order ID missing')
+              return result.id
+            } catch (err) {
+              trackCheckoutEvent('checkout_payment_failed', {
+                ...stripeErrorProps(err, 'paypal_create_order'),
+                method: 'paypal',
+                order_id: orderId,
+              })
+              throw err
+            }
           }}
           onApprove={async (data) => {
             try {
@@ -130,10 +155,20 @@ export function PaypalExpressButton({
                   order_id: ordId,
                   custom_parameters: { payment_method: 'paypal', checkout_token: checkoutToken },
                 })
+                trackCheckoutEvent('checkout_payment_succeeded', {
+                  method: 'paypal',
+                  value: amount,
+                  order_id: ordId,
+                })
               }
 
               navigate(`/thank-you/${ordId}`)
             } catch (err: unknown) {
+              trackCheckoutEvent('checkout_payment_failed', {
+                ...stripeErrorProps(err, 'paypal_capture'),
+                method: 'paypal',
+                order_id: orderId,
+              })
               toast({
                 title: 'PayPal error',
                 description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
@@ -142,13 +177,20 @@ export function PaypalExpressButton({
             }
           }}
           onError={(err: unknown) => {
+            trackCheckoutEvent('checkout_payment_failed', {
+              ...stripeErrorProps(err, 'paypal_sdk'),
+              method: 'paypal',
+              order_id: orderId,
+            })
             toast({
               title: 'PayPal error',
               description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
               variant: 'destructive',
             })
           }}
-          onCancel={() => { /* user closed popup — no action needed */ }}
+          onCancel={() => {
+            trackCheckoutEvent('checkout_paypal_cancelled', { order_id: orderId })
+          }}
         />
       </PayPalScriptProvider>
     </div>

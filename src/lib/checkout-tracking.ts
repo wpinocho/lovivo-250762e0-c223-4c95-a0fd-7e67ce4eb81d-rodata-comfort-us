@@ -26,7 +26,13 @@ export type CheckoutEventName =
    */
   | 'checkout_wallet_timing'
   /** The Express Checkout Element itself failed to mount. */
-  | 'checkout_wallet_load_error';
+  | 'checkout_wallet_load_error'
+  /** PayPal button rendered and is available to the shopper. */
+  | 'checkout_paypal_shown'
+  /** Shopper opened the PayPal popup (createOrder ran). */
+  | 'checkout_paypal_started'
+  /** Shopper closed the PayPal popup without paying. */
+  | 'checkout_paypal_cancelled';
 
 function getContext(): Record<string, any> {
   if (typeof window === 'undefined') return {};
