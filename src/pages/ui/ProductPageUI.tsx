@@ -352,7 +352,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 />
                 {isPack && (
                   <p className="text-brand-smoke text-[11px] font-inter leading-relaxed">
-                    Both belts ship in the size selected above. Different size for the second rider? Free exchange, just reply to your order email.
+                    Both belts ship in the size selected above. Different size for the second rider? Just reply to your order email.
                   </p>
                 )}
               </div>

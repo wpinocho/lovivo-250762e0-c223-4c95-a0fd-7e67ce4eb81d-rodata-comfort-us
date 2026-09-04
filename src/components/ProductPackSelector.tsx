@@ -32,6 +32,13 @@ export const ProductPackSelector = ({
   const packUnitPrice = unitPrice * (1 - packDiscountPct / 100)
   const packTotal = packUnitPrice * 2
   const packSavings = unitPrice * 2 - packTotal
+  /**
+   * What the buyer actually pays for the SECOND belt once the first is
+   * charged at full price. Reads far stronger than the blended per-unit
+   * price, and it is the same money either way.
+   */
+  const secondBeltPrice = packTotal - unitPrice
+  const secondBeltOffPct = Math.round((1 - secondBeltPrice / unitPrice) * 100)
   const selected = quantity >= 2 ? 2 : 1
 
   const options = [
@@ -40,6 +47,7 @@ export const ProductPackSelector = ({
       label: 'One belt',
       sub: 'Just for you',
       total: unitPrice,
+      compareAt: null as number | null,
       badge: null as string | null,
       note: null as string | null,
     },
@@ -48,8 +56,9 @@ export const ProductPackSelector = ({
       label: 'Two belts',
       sub: 'One for whoever rides with you',
       total: packTotal,
-      badge: `Save ${formatMoney(packSavings)}`,
-      note: `${formatMoney(packUnitPrice)} each · second belt half price`,
+      compareAt: unitPrice * 2,
+      badge: `2nd belt ${secondBeltOffPct}% off`,
+      note: `First ${formatMoney(unitPrice)} · second only ${formatMoney(secondBeltPrice)}`,
     },
   ]
 
@@ -84,18 +93,25 @@ export const ProductPackSelector = ({
               <span className="flex items-center gap-2 flex-wrap">
                 <span className="font-sora font-semibold text-brand-offwhite text-sm">{opt.label}</span>
                 {opt.badge && (
-                  <span className="rounded-md bg-brand-amber/15 border border-brand-amber/30 px-1.5 py-0.5 text-[10px] font-sora font-bold text-brand-amber uppercase tracking-wide">
+                  <span className="rounded-md bg-brand-amber px-1.5 py-0.5 text-[10px] font-sora font-bold text-brand-carbon uppercase tracking-wide">
                     {opt.badge}
                   </span>
                 )}
               </span>
-              <span className="block text-brand-steel text-[11px] font-inter mt-0.5 truncate">
+              <span className="block text-brand-smoke text-[11px] font-inter mt-0.5 truncate">
                 {opt.note ?? opt.sub}
               </span>
             </span>
 
-            <span className="font-sora font-bold text-brand-offwhite text-sm flex-shrink-0">
-              {formatMoney(opt.total)}
+            <span className="flex flex-col items-end flex-shrink-0 leading-tight">
+              {opt.compareAt && (
+                <span className="font-inter text-[11px] text-brand-steel line-through">
+                  {formatMoney(opt.compareAt)}
+                </span>
+              )}
+              <span className="font-sora font-bold text-brand-offwhite text-sm">
+                {formatMoney(opt.total)}
+              </span>
             </span>
           </button>
         )
