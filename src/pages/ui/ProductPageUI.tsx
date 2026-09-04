@@ -1,6 +1,7 @@
 // ProductPageUI v3 — rodata.mx premium PDP (rebuild trigger)
 import React, { useEffect, useRef, useState } from "react"
 import ProductExpressCheckout from "@/components/ProductExpressCheckout"
+import { ProductPackSelector } from "@/components/ProductPackSelector"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { EcommerceTemplate } from "@/templates/EcommerceTemplate"
@@ -169,6 +170,19 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const discountPct = logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice
     ? Math.round((1 - logic.currentPrice / logic.currentCompareAt) * 100) : null
 
+  /**
+   * 2-pack AOV lever. MUST mirror the `volume` price rule
+   * "Rider + Partner 2-Pack" (flat 25% off every unit from qty 2),
+   * otherwise the PDP advertises a total the cart won't honour.
+   */
+  const PACK_DISCOUNT_PCT = 25
+  const isPack = logic.quantity >= 2
+  const effectiveUnitPrice = isPack
+    ? logic.currentPrice * (1 - PACK_DISCOUNT_PCT / 100)
+    : logic.currentPrice
+  const cartTotal = effectiveUnitPrice * logic.quantity
+  const cartCompareAt = logic.currentCompareAt ? logic.currentCompareAt * logic.quantity : null
+
   useEffect(() => { setSelectedImage(null) }, [logic.matchingVariant])
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
@@ -326,14 +340,21 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 </div>
               )}
 
-              {/* Quantity */}
-              <div className="flex items-center gap-4">
-                <span className="text-brand-smoke text-sm font-inter">Quantity:</span>
-                <div className="flex items-center rounded-xl overflow-hidden border border-white/[0.12]">
-                  <button onClick={() => logic.handleQuantityChange(Math.max(1, logic.quantity - 1))} disabled={logic.quantity <= 1} className="px-3.5 py-2.5 text-brand-smoke hover:text-brand-offwhite hover:bg-brand-graphite transition-colors disabled:opacity-40"><Minus size={14}/></button>
-                  <span className="px-4 py-2.5 text-brand-offwhite font-sora font-bold text-sm border-x border-white/[0.12] min-w-[44px] text-center">{logic.quantity}</span>
-                  <button onClick={() => logic.handleQuantityChange(logic.quantity + 1)} className="px-3.5 py-2.5 text-brand-smoke hover:text-brand-offwhite hover:bg-brand-graphite transition-colors"><Plus size={14}/></button>
-                </div>
+              {/* Pack selector — 1 vs 2. Single unit stays pre-selected so the
+                  default buying path is untouched; the 2-pack is opt-in. */}
+              <div className="space-y-2">
+                <ProductPackSelector
+                  unitPrice={logic.currentPrice}
+                  quantity={logic.quantity}
+                  onSelect={logic.handleQuantityChange}
+                  formatMoney={logic.formatMoney}
+                  packDiscountPct={PACK_DISCOUNT_PCT}
+                />
+                {isPack && (
+                  <p className="text-brand-smoke text-[11px] font-inter leading-relaxed">
+                    Both belts ship in the size selected above. Different size for the second rider? Free exchange, just reply to your order email.
+                  </p>
+                )}
               </div>
 
               {/* Urgency / Stock signal */}
@@ -354,7 +375,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                       variant={logic.matchingVariant}
                       sellingPlan={logic.selectedPlan ?? null}
                       quantity={logic.quantity}
-                      unitPrice={logic.currentPrice}
+                      unitPrice={effectiveUnitPrice}
                       onAvailabilityChange={setExpressAvailable}
                     />
                     {expressAvailable && (
@@ -365,7 +386,7 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                       </div>
                     )}
                     <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora w-full text-base">
-                      <ShoppingCart size={18}/>Buy now · {logic.formatMoney(logic.currentPrice)}
+                      <ShoppingCart size={18}/>Buy now · {logic.formatMoney(cartTotal)}
                     </button>
                     <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora w-full">Add to cart</button>
                     <p className="text-brand-steel text-[11px] font-inter text-center">
@@ -632,8 +653,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
           <h2 className="font-sora font-bold text-brand-offwhite text-3xl sm:text-4xl leading-tight mb-4">How many more rides will you end with back pain?</h2>
           <p className="text-brand-smoke font-inter text-sm mb-8">Free US shipping · 30-day trial · Easy size exchange</p>
           <div className="flex items-baseline justify-center gap-3 mb-7">
-            <span className="font-sora font-bold text-brand-offwhite text-4xl">{logic.formatMoney(logic.currentPrice)}</span>
-            {logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice && <span className="text-brand-steel text-xl line-through font-inter">{logic.formatMoney(logic.currentCompareAt)}</span>}
+            <span className="font-sora font-bold text-brand-offwhite text-4xl">{logic.formatMoney(cartTotal)}</span>
+            {cartCompareAt && cartCompareAt > cartTotal && <span className="text-brand-steel text-xl line-through font-inter">{logic.formatMoney(cartCompareAt)}</span>}
           </div>
           <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora text-base px-12">Buy now<ChevronRight size={18}/></button>
         </div>
@@ -647,8 +668,9 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
               <div className="flex items-center gap-4 min-w-0">
                 <h3 className="font-sora font-semibold text-brand-offwhite text-sm truncate">{logic.product.title}</h3>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-sora font-bold text-brand-offwhite">{logic.formatMoney(logic.currentPrice)}</span>
-                  {logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice && <span className="text-brand-steel text-sm line-through font-inter">{logic.formatMoney(logic.currentCompareAt)}</span>}
+                  <span className="font-sora font-bold text-brand-offwhite">{logic.formatMoney(cartTotal)}</span>
+                  {cartCompareAt && cartCompareAt > cartTotal && <span className="text-brand-steel text-sm line-through font-inter">{logic.formatMoney(cartCompareAt)}</span>}
+                  {isPack && <span className="text-brand-amber text-xs font-sora font-semibold">2 belts</span>}
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
@@ -658,7 +680,10 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
             </div>
             <div className="md:hidden flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-sora font-bold text-brand-offwhite text-sm">{logic.formatMoney(logic.currentPrice)}</p>
+                <p className="font-sora font-bold text-brand-offwhite text-sm">
+                  {logic.formatMoney(cartTotal)}
+                  {isPack && <span className="text-brand-amber text-[11px] font-semibold ml-1.5">2 belts</span>}
+                </p>
                 <p className="text-brand-steel text-xs font-inter truncate">{logic.product.title}</p>
               </div>
               <button onClick={handlePrimary} className="btn-amber amber-glow font-sora flex-shrink-0"><ShoppingCart size={14}/>Buy now</button>

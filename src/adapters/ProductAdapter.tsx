@@ -102,11 +102,12 @@ export const useProductCardLogic = (product: Product) => {
     const variantToAdd = hasVariants ? matchingVariant : undefined
     if (hasVariants && !variantToAdd) {
       toast({
-        title: "Selecciona opciones",
-        description: "Elige una variante disponible.",
+        title: "Select a size",
+        description: "Pick an available size before adding to cart.",
       })
       return
     }
+
     addItem(product, variantToAdd)
     
     // Track AddToCart event with proper formatting

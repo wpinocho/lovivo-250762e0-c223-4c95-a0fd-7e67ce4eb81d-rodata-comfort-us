@@ -242,8 +242,8 @@ export const useProductLogic = () => {
     
     if (hasVariants && !variantToAdd) {
       toast({
-        title: "Selecciona opciones",
-        description: "Elige una variante disponible.",
+        title: "Select a size",
+        description: "Pick an available size before continuing.",
       })
       return
     }
@@ -252,8 +252,8 @@ export const useProductLogic = () => {
       const added = addItem(product, variantToAdd, selectedPlan || undefined)
       if (!added) {
         toast({
-          title: "Solo un plan de suscripción por carrito",
-          description: "Elimina la suscripción actual para agregar una diferente.",
+          title: "One subscription plan per cart",
+          description: "Remove the current subscription to add a different one.",
           variant: "destructive"
         })
         return
@@ -287,8 +287,8 @@ export const useProductLogic = () => {
     
     if (hasVars && !variantToAdd) {
       toast({
-        title: "Selecciona opciones",
-        description: "Elige una variante disponible.",
+        title: "Select a size",
+        description: "Pick an available size before continuing.",
       })
       return
     }

@@ -1,7 +1,8 @@
 # Rodata.mx US Store — Plan
 
 ## 1. Brand & Context
-- **Product**: Rodata One — premium motorcycle lumbar support belt ($59 USD)
+- **Product**: Rodata One — premium motorcycle lumbar support belt ($59 USD, compare-at $75/$79)
+- **Landed cost**: **$10 USD/unit** (owner-confirmed 2026-09-04) → ~83% gross margin. Huge room for AOV levers.
 - **Market**: US riders (cloned from rodata.mx Mexico store)
 - **Target**: Frequent urban riders, long-distance riders who want comfort
 - **Voice**: Premium, no-BS, rider-to-rider. Dark brand aesthetic.
@@ -17,105 +18,95 @@
   - NO sizing / returns / shipping FAQ **accordion** inside checkout. One-line microcopy is OK, an accordion is NOT.
   - No on-site surveys for now.
   - Tracking / instrumentation work is always welcome.
-  - Owner has a good eye for visual density — avoid stacking multiple cards in a row. **Prefers compact single-strip social proof over tall testimonial cards** (2026-08-12).
+  - Owner has a good eye for visual density — avoid stacking multiple cards in a row. Prefers compact single-strip social proof over tall testimonial cards.
   - Owner asks for RESEARCH before UX pattern changes — cite sources, don't assert.
-  - **Owner wants clear separation between "diagnosed" and "fixed"** (2026-08-13) — never imply a fix shipped when only measurement shipped.
+  - Owner wants clear separation between "diagnosed" and "fixed" — never imply a fix shipped when only measurement shipped.
+  - **(2026-09-04) AOV levers must NOT dominate the PDP.** Owner explicitly fears losing single-unit conversions. Any upsell must keep 1 unit as the default and stay visually quiet.
 
 ## 2. Design System
 - **Colors**: brand-amber (#C98B2E), brand-carbon (#111315), brand-graphite (#1D2125), brand-offwhite (#F5F7F8), brand-smoke, brand-steel (#5E6670)
 - **Fonts**: Sora (headings), Inter (body) — Google Fonts (async)
 - **THEME IS LIGHT by default** (`:root` = light bg #f7f8fa, white cards, dark text). ⚠️ `text-brand-offwhite` / `border-white/20` are near-WHITE and INVISIBLE on light cards — use adaptive tokens on any page that renders light.
 - **NOTE**: PDP (`ProductPageUI.tsx`) and Checkout (`CheckoutUI.tsx` + `StripePayment.tsx`) are hardcoded DARK — dark tokens are correct there.
-- **`text-brand-steel` at ≤11px on dark is TOO DIM for selling copy** — use `text-brand-smoke` for anything meant to be read (ratings, guarantees). Reserve steel for labels.
-- **Avatar rings inside a `bg-brand-graphite` card must use `border-brand-graphite`** (not carbon) or a halo shows.
+- **`text-brand-steel` at ≤11px on dark is TOO DIM for selling copy** — use `text-brand-smoke` for anything meant to be read.
+- **Avatar rings inside a `bg-brand-graphite` card must use `border-brand-graphite`**.
 - **UI kit**: shadcn. Wrap pages in `EcommerceTemplate`.
 
-## 3. Active Plan — 🟠 Payment reliability: measure all 3 methods (updated 2026-08-13)
+## 3. Active Plan — 🟢 AOV: 2-pack shipped (2026-09-04) · 🟠 Google Pay timeout still open
 
-### ⚠️ CORRECTION to the 2026-08-13 first diagnosis (I overstated it)
-Earlier I claimed "mobile purchases flat at ZERO for 4 days = the money leak". **That was wrong.**
-Real daily data (`purchase` + checkout funnel, last 14d):
-| date | checkout views | purchases |
-|---|---|---|
-| 08-13 | 5 | 2 (owner tests) |
-| 08-12 | 7 | **0** ← only genuinely suspicious day |
-| 08-11 | 1 | 0 |
-| 08-10 | 1 | 0 |
-| 08-09 | 6 | 2 |
-→ Aug 10–11 had **almost no checkout traffic at all** (1 view/day). The "4-day drought" was mostly a
-TRAFFIC collapse, not a broken checkout. Only **Aug 12 (7 checkout views → 0 purchases)** looks like a
-real conversion problem. Do not repeat the "checkout is broken" narrative without this nuance.
+### A. 2-PACK / BOGO — SHIPPED 2026-09-04
+**Offer**: 2 belts = **$88.50** ($44.25 each, save $29.50). Framed on the PDP as "second belt half price".
+**Mechanism**: `volume` price rule (NOT the `bogo` rule type — see Known Issues), flat 25% off every unit at qty ≥ 2.
+- Rule ID `d30f69a4-b188-4f14-b4e6-8202d81e5d51`, title "Rider + Partner 2-Pack (2nd belt half price)", scoped to product `6a3f41ac-37f6-4886-85f0-01cf0c6238ed`, priority 10.
+- Math is identical to "2nd unit 50% off" but expressed flat, which is what the storefront engine handles most reliably.
 
-### Google Pay CALLBACK_TIMED_OUT — status: NOT FIXED, only instrumented
-- Owner hit `CALLBACK_TIMED_OUT` on mobile Google Pay, then **retried later the same day and it WORKED**.
-  → Intermittent, consistent with a latency/timeout race, not a hard break.
-- **Root-cause hypothesis unchanged**: `handleExpressCheckoutConfirm` runs `elements.submit()` →
-  `callEdge("payments-create-intent")` → `stripe.confirmPayment()` *inside* the Google Pay callback.
-  Google Pay aborts its sheet if that callback is slow. Cold edge start + 4G = over the ceiling.
-- **No code fix has been applied to this.** The remedy (pre-create the PaymentIntent before the wallet
-  sheet opens, cache `client_secret`, make `onConfirm` a millisecond operation) is still PENDING.
+**Economics**: single order = $59 rev / $49 profit. 2-pack = $88.50 rev / $68.50 profit (+$19.50, +40% per upgraded order). Even at half price the 2nd unit clears $19.50 because landed cost is only $10. Going deeper than 50% has sharply diminishing returns — **do not exceed 50% off the second unit.**
 
-### Instrumentation status per payment method (2026-08-13)
-| method | pay click | failure | success | notes |
-|---|---|---|---|---|
-| Stripe card (PaymentElement) | ✅ | ✅ `elements_submit` + `confirm_payment` | ✅ | fully measurable |
-| Wallet (Google/Apple Pay) | ✅ | ✅ + `checkout_wallet_timing/cancelled/load_error` | ⚠️ no `succeeded` event | timing added 08-13 |
-| PayPal | ✅ `checkout_paypal_started` | ✅ `paypal_create_order` / `paypal_capture` / `paypal_sdk` | ✅ | **added 08-13, was 100% blind** |
+**Why 2 options and not 3**: a lumbar belt is a durable, non-consumable, personal-fit item. A 3-pack has no believable use case and would make the PDP read like a discount store. Research (Monk Commerce, Voucherify, Uniqodo) says straight BOGO underperforms on considered/premium goods, while a quantity-break selector with the single unit pre-selected is the safe AOV lever.
 
-⚠️ `checkout_wallet_timing` has **NOT fired yet** in PostHog — the owner's successful 23:09 mobile test ran on
-the pre-deploy build. Needs fresh mobile wallet traffic before the data is readable.
+**UI**: `src/components/ProductPackSelector.tsx` — compact 2-row radio group that **replaced the old quantity stepper** (a dead UI element nobody used). "One belt / $59" is pre-selected, so the default path is byte-for-byte what it was before. Row 2 shows "Two belts · Save $29.50 · $44.25 each · second belt half price".
 
-### NEXT STEP (do this first next session)
-1. `SELECT properties.device_type, avg(properties.intent_ms), max(properties.intent_ms), count()
-   FROM events WHERE event='checkout_wallet_timing' GROUP BY 1`
-   - mobile `intent_ms` > ~3000 → hypothesis confirmed → ship the pre-created PaymentIntent fix.
-2. Check `checkout_payment_failed` grouped by `method` + `error_code` — now covers all three methods.
-3. Compare `checkout_paypal_shown` → `checkout_paypal_started` → `checkout_payment_succeeded`.
+**Wiring in `ProductPageUI.tsx`**: `PACK_DISCOUNT_PCT = 25` mirrors the DB rule. `effectiveUnitPrice` / `cartTotal` / `cartCompareAt` now drive the main CTA, the bottom CTA and both sticky bars, plus `ProductExpressCheckout unitPrice` (it charges `unitPrice * quantity`, so passing the raw price would have OVERCHARGED wallet buyers $118 for 2).
+
+### B. Google Pay CALLBACK_TIMED_OUT — status: NOT FIXED, only instrumented
+- Intermittent; owner retried and it worked. Hypothesis: `handleExpressCheckoutConfirm` does `elements.submit()` → `callEdge("payments-create-intent")` → `stripe.confirmPayment()` *inside* the wallet callback; Google Pay aborts if that's slow.
+- Remedy still PENDING: pre-create the PaymentIntent before the wallet sheet opens, cache `client_secret`.
+- `checkout_wallet_timing` (`intent_ms`) had not fired yet as of 08-13.
+
+### C. Correction to the 2026-08-13 diagnosis (keep this nuance)
+Aug 10–11 had ~1 checkout view/day — the "4-day zero-purchase drought" was mostly a TRAFFIC collapse, not a broken checkout. Only **Aug 12 (7 checkout views → 0 purchases)** is genuinely suspicious.
 
 ## 4. Recent Changes
-- 2026-08-13: **PAYPAL INSTRUMENTED + ROUTING BUG FIXED + DIAGNOSIS CORRECTED** — PayPal had zero tracking (every failure was a disappearing toast): added `checkout_paypal_shown/started/cancelled` plus `checkout_payment_failed` on createOrder, capture and SDK errors, and `checkout_payment_succeeded`. Fixed a real bug in `StripePayment.tsx`: `processing`/OXXO payments navigated to `/pago-pendiente/:id` which is NOT a route (real route is `/pending-payment/:id`) → customers hit a 404 after paying. Corrected the previous "zero mobile purchases for 4 days" claim: Aug 10–11 had ~no checkout traffic; only Aug 12 (7 views → 0 purchases) is suspicious.
-- 2026-08-13: **GOOGLE PAY MOBILE DIAGNOSIS + INSTRUMENTATION** — added `checkout_wallet_timing` (`intent_ms`), `checkout_wallet_cancelled`, `checkout_wallet_load_error` so the Google Pay `CALLBACK_TIMED_OUT` becomes measurable. No fix applied yet.
-- 2026-08-12: **CHECKOUT CRO PACK v1.2 SHIPPED** — `CheckoutSocialProof` rebuilt as a compact single strip; strip moved ABOVE the mobile order summary; `MobileOrderSummary` collapsed by default with a persistent `Free shipping · Arrives {date}` sub-line; sticky pay bar kept.
-- 2026-08-12: **CHECKOUT CRO PACK v1.1 SHIPPED** — testimonial moved under the order summary; ratings merged into the guarantee badge; sticky mobile pay bar gated behind a payment-section sentinel; validation failure scrolls to the offending field.
-- 2026-08-12: **CHECKOUT CRO PACK v1 SHIPPED** — `CheckoutSocialProof.tsx` + `payment-errors.ts`; guarantee badge + persistent decline banner; sticky mobile pay bar; desktop coupon collapsed; counts unified to 1,000+ / 127 / 4.9.
-- 2026-08-12: **CRO FIXES SHIPPED** — delivery window 6–8 → 5–7 business days; PostHog `autocapture` + `rageclick`; `src/lib/checkout-tracking.ts` micro-events. Owner REJECTED: arrival date on PDP, FAQ accordion in checkout, abandonment survey.
-- 2026-08-12: **CRO DIAGNOSIS** — checkout→purchase drop analyzed. Main driver upstream: ATC 6.6%→4.1%.
-- 2026-07-03: **OrderTrackUI.tsx fixed** — invisible white-on-white steps + STEP_TRANSLATIONS map (ES→EN).
-- 2026-06-26: DIAGNOSED PostHog dashboard "collapse" — dashboard filter pinned to old domain rodata-us.store.
-- 2026-06-26: Tracking fixes APPLIED — PayPal trackPurchase on capture; double PageView de-dup; usd/USD fallback.
-- 2026-06-24: Order Tracking page BUILT & SHIPPED — OrderTrack.tsx + OrderTrackUI.tsx, routes, nav + footer links.
+- 2026-09-04: **2-PACK AOV LEVER SHIPPED** — created volume price rule `d30f69a4` (25% off all units at qty ≥ 2 = 2 belts for $88.50); new `ProductPackSelector.tsx` replaced the quantity stepper with a quiet 1-vs-2 radio group (1 pre-selected); `ProductPageUI.tsx` now computes `effectiveUnitPrice`/`cartTotal`/`cartCompareAt` and feeds them to the main CTA, bottom CTA, both sticky bars and `ProductExpressCheckout` (prevented a $118 overcharge on wallet 2-packs). Also translated the leftover Spanish toasts in `HeadlessProduct.tsx` + `ProductAdapter.tsx` to English.
+- 2026-08-13: **PAYPAL INSTRUMENTED + ROUTING BUG FIXED + DIAGNOSIS CORRECTED** — added `checkout_paypal_shown/started/cancelled`, failure events on createOrder/capture/SDK, and `checkout_payment_succeeded`. Fixed `StripePayment.tsx` navigating to the non-existent `/pago-pendiente/:id` (real route `/pending-payment/:id`) → customers hit a 404 after paying.
+- 2026-08-13: **GOOGLE PAY MOBILE DIAGNOSIS + INSTRUMENTATION** — `checkout_wallet_timing`, `checkout_wallet_cancelled`, `checkout_wallet_load_error`. No fix applied.
+- 2026-08-12: **CHECKOUT CRO PACK v1.2** — compact social-proof strip above the mobile order summary; `MobileOrderSummary` collapsed by default; sticky pay bar kept.
+- 2026-08-12: **CHECKOUT CRO PACK v1.1** — testimonial under the order summary; ratings merged into the guarantee badge; sticky bar gated behind a payment sentinel; validation scrolls to the bad field.
+- 2026-08-12: **CHECKOUT CRO PACK v1** — `CheckoutSocialProof.tsx` + `payment-errors.ts`; guarantee badge; sticky mobile pay bar; counts unified.
+- 2026-08-12: **CRO FIXES** — delivery window 6–8 → 5–7 business days; PostHog autocapture + rageclick; `checkout-tracking.ts`.
+- 2026-07-03: **OrderTrackUI.tsx fixed** — invisible white-on-white steps + STEP_TRANSLATIONS map.
+- 2026-06-26: DIAGNOSED PostHog dashboard "collapse" — filter pinned to old domain.
+- 2026-06-26: Tracking fixes — PayPal trackPurchase on capture; PageView de-dup; usd/USD fallback.
+- 2026-06-24: Order Tracking page BUILT & SHIPPED.
 - 2026-06-18: Meta duplicate conversions fix — deterministic event_id + sessionStorage guard.
-- 2026-06-18: Footer contact → support@getrodata.com
-- 2026-06-15: Attribution fix — fbclid/fbc/fbp/UTMs flow to checkout-create + PayPal
+- 2026-06-15: Attribution fix — fbclid/fbc/fbp/UTMs flow to checkout-create + PayPal.
 
 ## 5. Image Inventory
 - Hero feature image (landing): `...message-images/f67d4ec0.../1779817823430-uv5gvuf1tv.webp?width=1000&quality=75`
 - Hero (landing): `...message-images/0f3c776b.../1775772513540-16g7elmcuii.webp?width=1400&quality=80`
 - Reviews: `...product-images/cdddcb57.../review-[1-5].webp?width=600&quality=75`
-- Avatars: `/avatar-j.webp`, `/avatar-m.webp`, `/avatar-r.webp` (public/) — used by the PDP strip AND `CheckoutSocialProof.tsx`.
+- Avatars: `/avatar-j.webp`, `/avatar-m.webp`, `/avatar-r.webp` (public/)
+- Product images (6): `product-images/products/{ikd1slcjslh,kq3m6oa30qp,4ui0bi0f6nt,0aesq7u46qs4,b5mg4lv2qbf,2l8h0ww9eb5}.webp`
 
 ## 6. Known Issues
-- **(2026-08-13) Google Pay `CALLBACK_TIMED_OUT` on mobile — NOT FIXED**, only measurable. Intermittent (owner's retry succeeded).
-- **(2026-08-13) Wallet success path never fires `checkout_payment_succeeded`** — the express handler calls `trackPurchase` but not the checkout micro-event, so wallet success/failure ratio is incomplete. Card + PayPal do fire it.
-- **(2026-08-13) `ProductExpressCheckout.tsx` (PDP wallet) is still hardcoded to Mexico**: `country: 'MX'`, currency fallback `'mxn'`, Spanish labels (`'Envío'`). It ALSO does create-order + create-intent inside the wallet callback → same timeout exposure. Verify the Stripe account country before touching `country`.
-- **(2026-08-12) `lov-search-files` is unreliable in this repo** — returns 0 matches for strings that exist. Prefer `lov-view` with inferred paths.
-- **(2026-08-12) `lov-view` with two line ranges only returns the FIRST range** — request ranges one at a time.
-- **(2026-08-12) Fulfillment must actually support 5–7 business days** — checkout promises it.
-- **(2026-08-12) PayPal settings race** — console logs `[PayPal Settings] enabled: false | clientId: null` BEFORE `[PayPal RPC] ... status: active` resolves. Button may flicker on slow mobile.
-- **PostHog dashboard filter pinned to OLD domain** (2026-06-26): fix in PostHog UI (not code).
+- **(2026-09-04) The 2-pack discount only applies to ONE cart line item.** `calcItemUnitPrice` keys off `item.quantity`, so 2 belts in **different sizes** = 2 lines of qty 1 = NO discount. Current mitigation is copy: "Both belts ship in the size selected above · free exchange if the second rider needs another". A true mixed-size 2-pack needs a cart-level rule or a bundle.
+- **(2026-09-04) `bogo` rule type is likely BROKEN in the storefront.** `create-price-rule` writes `bogo_mode: "same_products"` (plural) but `calcBogoDiscount` in `price-rule-utils.ts` checks `!== 'same_product'` (singular) and bails. This is why the 2-pack uses a `volume` rule instead. Verify before ever using a bogo rule.
+- **(2026-09-04) NOT YET VERIFIED**: that the backend applies the volume rule at order creation (Buy Now / express checkout create the order server-side). Place one 2-unit test order and confirm the charge is $88.50, not $118.
+- **(2026-09-04) `price-rule-utils.ts` has Spanish labels** in the graduated-volume path (`hasta X% OFF`) and the bogo path (`NxM aplicado`). Unused by the current flat rule, but they'd surface in the cart if the rule type changes.
+- **(2026-08-13) Google Pay `CALLBACK_TIMED_OUT` on mobile — NOT FIXED**, only measurable.
+- **(2026-08-13) Wallet success path never fires `checkout_payment_succeeded`** — card + PayPal do.
+- **(2026-08-13) `ProductExpressCheckout.tsx` is still hardcoded to Mexico**: `country: 'MX'`, currency fallback `'mxn'`, Spanish `'Envío'` label. Same in-callback timeout exposure.
+- **(2026-08-12) `lov-search-files` glob with `{a,b}` braces returns 0 matches** — use `src/**` instead.
+- **(2026-08-12) `lov-view` with two line ranges only returns the FIRST range.**
+- **(2026-08-12) Fulfillment must actually support 5–7 business days.**
+- **(2026-08-12) PayPal settings race** — `enabled: false | clientId: null` logs before the RPC resolves; button may flicker.
+- **PostHog dashboard filter pinned to OLD domain** (2026-06-26): fix in PostHog UI.
 - **Backend tracking steps come in Spanish** — translated client-side in OrderTrackUI.
-- Country name "Estados Unidos" on thank you page comes from backend data, not UI.
+- Country name "Estados Unidos" on the thank-you page comes from backend data.
 - Feature images (FEAT_IMG_1-3) still contain Spanish text overlaid.
+- `src/adapters/ProductAdapter.tsx` is `useProductCardLogic` (ProductCard only). The **PDP logic lives in `src/components/headless/HeadlessProduct.tsx`** — don't confuse them.
 
 ## 7. Pending / Future Sessions
-- **P0** Read `checkout_wallet_timing.intent_ms` by device (~24–48h of traffic) → if slow, pre-create the PaymentIntent before the wallet sheet opens.
-- **P0** Check Stripe for orphan PaymentIntents / charges created after a `CALLBACK_TIMED_OUT`.
+- **P0** Place a real 2-unit test order and confirm the charge is **$88.50** on card, wallet AND PayPal.
+- **P0** Read `checkout_wallet_timing.intent_ms` by device → if slow, pre-create the PaymentIntent before the wallet sheet opens.
+- **P0** Check Stripe for orphan PaymentIntents after a `CALLBACK_TIMED_OUT`.
 - **P0** Add `checkout_payment_succeeded` to the wallet success branch in `StripePayment.tsx`.
-- **P1** Write the v1.2 entry + v1.1 "Result" line in `.lovivo/cro-log.md` (still not done).
-- **P1** Investigate Aug 12 specifically (7 checkout views → 0 purchases) with session replays.
-- **P1** Abandoned-cart email automation (Dashboard AI) — cheapest recovery win.
-- **P1** PayPal button skeleton to kill the `enabled:false` flicker.
-- **P2** Localize `ProductExpressCheckout.tsx` to US (country/currency/labels) once Stripe account country is confirmed.
-- **P2** Replace feature images (FEAT_IMG_1-3) with English text versions.
-- **Blocked** No A/B tests on checkout until weekly conversions grow (~8/week vs ~500 needed).
-- **Owner said no** (do not re-propose): arrival date on PDP, FAQ/sizing **accordion** in checkout, abandonment survey.
+- **P1** Measure the 2-pack: attach rate (orders with qty ≥ 2 ÷ all orders) and AOV before/after 2026-09-04. Target attach rate 8–15%. If ATC rate drops at all, the selector is too loud — shrink it.
+- **P1** Mixed-size 2-pack (rider + partner, different waists) — needs cart-level discount or a bundle. This is the biggest unlock for the offer.
+- **P1** Write the v1.2 entry + v1.1 "Result" line in `.lovivo/cro-log.md`, and log the 2026-09-04 2-pack change.
+- **P1** Investigate Aug 12 (7 checkout views → 0 purchases) with session replays.
+- **P1** Abandoned-cart email automation (Dashboard AI).
+- **P2** Localize `ProductExpressCheckout.tsx` to US once the Stripe account country is confirmed.
+- **P2** Replace feature images (FEAT_IMG_1-3) with English versions.
+- **Blocked** No A/B tests on checkout until weekly conversions grow (~8/week vs ~500 needed). The 2-pack was shipped straight to 100% for this reason.
+- **Owner said no** (do not re-propose): arrival date on PDP, FAQ/sizing accordion in checkout, abandonment survey.
