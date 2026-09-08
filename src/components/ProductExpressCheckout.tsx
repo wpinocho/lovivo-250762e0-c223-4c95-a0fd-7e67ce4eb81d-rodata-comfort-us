@@ -4,13 +4,10 @@ import { Elements, PaymentRequestButtonElement, useStripe } from "@stripe/react-
 import { useNavigate } from "react-router-dom"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
 import { callEdge } from "@/lib/edge"
-import { createCheckoutFromCart } from "@/lib/checkout"
+import { createCheckoutFromCart, verifyOrderContents } from "@/lib/checkout"
 import { cartToApiItems } from "@/lib/cart-utils"
-import {
-  validateOrderMatchesRequest,
-  checkAuthorizedAmount,
-  resolveIntentChargeCents,
-} from "@/lib/order-validation"
+import { verifyOrderAmount } from "@/lib/order-validation"
+import { confirmWithVerifiedAmount, type PaymentBlock } from "@/lib/payment-gate"
 import { toCents } from "@/lib/money"
 import { useSettings } from "@/contexts/SettingsContext"
 import { useToast } from "@/hooks/use-toast"
@@ -240,22 +237,37 @@ function PaymentRequestInner({
     if (!paymentRequest || !stripe) return
 
     /** Aborts the wallet sheet and asks the shopper to confirm the new number. */
-    const rejectWithNewTotal = (ev: any, chargeCents: number, currency: string) => {
+    const rejectWithNewTotal = (ev: any, chargeCents: number, message: string) => {
       try { ev.complete('fail') } catch {}
-      const newTotal = (chargeCents / 100).toFixed(2)
       try {
         paymentRequest.update({
           total: { label: product.title, amount: chargeCents },
           displayItems: [{ label: product.title, amount: chargeCents }],
           shippingOptions: walletShippingOptions,
         })
+        // The next tap authorises the updated number, so a valid retry goes
+        // through instead of comparing against the old total forever.
         authorizedTotalRef.current = chargeCents
       } catch {}
       toast({
         title: "Total updated",
-        description: `Your order now totals ${currency.toUpperCase()} $${newTotal}. Tap the wallet button again to confirm the new amount.`,
+        description: `${message} Tap the wallet button again to confirm.`,
         variant: "destructive",
       })
+    }
+
+    /**
+     * Stops the purchase without confirming anything. Only a plain amount change
+     * in the same currency can be re-quoted in the sheet — an amount we could not
+     * read, or a different currency, is not something to re-price a wallet with.
+     */
+    const stopWithBlock = (ev: any, block: PaymentBlock) => {
+      if (block.reauthorizable && block.chargeCents) {
+        rejectWithNewTotal(ev, block.chargeCents, block.message)
+        return
+      }
+      try { ev.complete('fail') } catch {}
+      toast({ title: block.title, description: block.message, variant: "destructive" })
     }
 
     const handlePaymentMethod = async (ev: any) => {
@@ -324,12 +336,9 @@ function PaymentRequestInner({
           currencyCode,
         )
 
-        // 4. The order must be the pack that was selected — not a partial one
-        const match = validateOrderMatchesRequest(
-          requestedItems,
-          order.order,
-          order.unavailable_items as any[]
-        )
+        // 4. The order must be the pack that was selected — not a partial one.
+        //    An order we cannot read back is not an order we can charge for.
+        const match = await verifyOrderContents(requestedItems, order)
         if (!match.valid) {
           try { ev.complete('fail') } catch {}
           toast({
@@ -342,20 +351,30 @@ function PaymentRequestInner({
 
         const orderId = order.order_id
         const checkoutToken = order.checkout_token
-        const orderTotalCents = Math.max(50, toCents(order.order?.total_amount ?? selectionTotal))
 
         // 5. The persisted order total is what gets charged — if it is not what
         //    the wallet sheet showed, ask again instead of charging quietly.
-        const orderAmountCheck = checkAuthorizedAmount({
-          authorizedCents,
-          chargeCents: orderTotalCents,
-          authorizedCurrency: currency,
-          chargeCurrency: (order.order?.currency_code || currency),
-        })
+        const orderAmountCheck = verifyOrderAmount(
+          {
+            total_amount: order.order?.total_amount ?? order.total_amount,
+            currency_code: order.order?.currency_code ?? order.currency_code,
+          },
+          { authorizedCents, authorizedCurrency: currency }
+        )
         if (!orderAmountCheck.matches) {
-          rejectWithNewTotal(ev, orderTotalCents, currency)
+          stopWithBlock(ev, {
+            code: 'amount',
+            title: orderAmountCheck.title!,
+            message: orderAmountCheck.message!,
+            chargeCents: orderAmountCheck.chargeCents,
+            chargeCurrency: orderAmountCheck.chargeCurrency,
+            reauthorizable: orderAmountCheck.reauthorizable,
+            serverOrder: order.order ?? null,
+            data: order,
+          })
           return
         }
+        const orderTotalCents = orderAmountCheck.chargeCents!
 
         // 6. Create PaymentIntent — validation_data carries every selected variant
         const intentPayload = {
@@ -407,31 +426,30 @@ function PaymentRequestInner({
         }
 
         const intentData = await callEdge("payments-create-intent", intentPayload)
-        const clientSecret = intentData?.client_secret
-        if (!clientSecret) {
-          try { ev.complete('fail') } catch {}
-          throw new Error("No se recibió client_secret")
-        }
 
-        // 7. Same check against the intent's own amount, not just our local math
-        const intentChargeCents = resolveIntentChargeCents(intentData, orderTotalCents)
-        const intentAmountCheck = checkAuthorizedAmount({
+        // 7. The gate confirms only after the server's own payment amount and
+        //    currency match what the wallet sheet authorised.
+        const outcome = await confirmWithVerifiedAmount({
+          data: intentData,
           authorizedCents,
-          chargeCents: intentChargeCents,
           authorizedCurrency: currency,
-          chargeCurrency: (intentData?.currency || currency),
+          requestedItems,
+          // 8. Confirm with the wallet's PaymentMethod (do not redirect yet)
+          confirm: (clientSecret) => stripe.confirmCardPayment(
+            clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false },
+          ),
         })
-        if (!intentAmountCheck.matches) {
-          rejectWithNewTotal(ev, intentChargeCents, currency)
+
+        if (!outcome.confirmed) {
+          stopWithBlock(ev, outcome.block)
           return
         }
 
-        // 8. Confirm the PaymentIntent with the wallet's PaymentMethod (do not redirect yet)
-        const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(
-          clientSecret,
-          { payment_method: ev.paymentMethod.id },
-          { handleActions: false },
-        )
+        const clientSecret = intentData.client_secret as string
+        const intentChargeCents = outcome.chargeCents
+        const { paymentIntent, error: confirmError } = outcome.result
 
         if (confirmError) {
           try { ev.complete('fail') } catch {}

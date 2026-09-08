@@ -2,10 +2,10 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useCart } from '@/contexts/CartContext'
 import type { CartItem } from '@/contexts/CartContext'
 import { useSettings } from '@/contexts/SettingsContext'
-import { createCheckoutFromCart, createSampleOrder, updateCheckout, type CheckoutUpdatePayload } from '@/lib/checkout'
+import { createCheckoutFromCart, createSampleOrder, updateCheckout, verifyOrderContents, type CheckoutUpdatePayload } from '@/lib/checkout'
 import { getAttributionPayload } from '@/lib/tracking-utils'
 import { cartToApiItems } from '@/lib/cart-utils'
-import { validateOrderMatchesRequest, type OrderValidationResult } from '@/lib/order-validation'
+import type { OrderValidationResult } from '@/lib/order-validation'
 import { useToast } from '@/hooks/use-toast'
 import { logger } from '@/lib/logger'
 import { useCheckoutState } from './useCheckoutState'
@@ -50,16 +50,12 @@ export const useCheckout = () => {
   const itemsTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   /**
-   * Refuses to treat a partially-fulfilled order as a valid checkout.
-   * Runs before the checkout state is stored, before the cart is emptied and
-   * before any payment step, so a two-belt pack can never continue as one belt.
+   * Refuses to treat a partially-fulfilled — or unconfirmable — order as a valid
+   * checkout. Runs before the checkout state is stored, before the cart is emptied
+   * and before any payment step, so a two-belt pack can never continue as one belt.
    */
-  const assertOrderMatchesRequest = (requestedItems: any[], order: CheckoutResponse) => {
-    const result: OrderValidationResult = validateOrderMatchesRequest(
-      requestedItems,
-      order.order,
-      order.unavailable_items as any[]
-    )
+  const assertOrderMatchesRequest = async (requestedItems: any[], order: CheckoutResponse) => {
+    const result: OrderValidationResult = await verifyOrderContents(requestedItems, order)
     if (!result.valid) {
       toast({
         title: result.title || 'Your order changed',
@@ -90,7 +86,7 @@ export const useCheckout = () => {
         getAttributionPayload()
       )
 
-      assertOrderMatchesRequest(requestedItems, order)
+      await assertOrderMatchesRequest(requestedItems, order)
 
       // Guardar estado de checkout con la orden completa
       saveCheckoutState({
@@ -155,7 +151,7 @@ export const useCheckout = () => {
         getAttributionPayload()
       )
 
-      assertOrderMatchesRequest(requestedItems, order)
+      await assertOrderMatchesRequest(requestedItems, order)
 
       // Guardar en localStorage para que /pagar encuentre orderId y checkoutToken
       saveCheckoutState({

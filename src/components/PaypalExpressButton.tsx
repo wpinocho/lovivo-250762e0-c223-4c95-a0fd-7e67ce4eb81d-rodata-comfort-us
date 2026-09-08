@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
 import { getAttributionPayload, trackPurchase, tracking } from '@/lib/tracking-utils'
 import { trackCheckoutEvent, stripeErrorProps } from '@/lib/checkout-tracking'
+import { toCents } from '@/lib/money'
 
 interface PaypalExpressButtonProps {
   orderId: string
@@ -38,6 +39,12 @@ export function PaypalExpressButton({
   // One approval at a time: repeated onApprove callbacks must not capture twice.
   const captureInFlight = useRef(false)
   const capturedOrders = useRef<Set<string>>(new Set())
+  /**
+   * What this store page was showing when PayPal was opened. The popup stays open
+   * while the page can still change (quantity, coupon, shipping), and a capture
+   * must belong to the order and total the buyer actually approved.
+   */
+  const approvalRef = useRef<{ checkoutToken: string; amountCents: number; currency: string } | null>(null)
 
   console.log('[PayPal Button] paypalEnabled:', paypalEnabled, '| paypalClientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| checkoutToken:', !!checkoutToken)
 
@@ -99,6 +106,11 @@ export function PaypalExpressButton({
                 attribution,
               })
               if (!result?.id) throw new Error('PayPal order ID missing')
+              approvalRef.current = {
+                checkoutToken,
+                amountCents: toCents(amount),
+                currency: currencyUpper,
+              }
               return result.id
             } catch (err) {
               trackCheckoutEvent('checkout_payment_failed', {
@@ -111,6 +123,29 @@ export function PaypalExpressButton({
           }}
           onApprove={async (data) => {
             if (captureInFlight.current || capturedOrders.current.has(data.orderID)) return
+
+            // The capture itself is verified server-side; here we only refuse to
+            // capture an approval that no longer belongs to what is on screen.
+            const approval = approvalRef.current
+            const stillTheSameOrder =
+              approval &&
+              approval.checkoutToken === checkoutToken &&
+              approval.amountCents === toCents(amount) &&
+              approval.currency === currencyUpper
+            if (!stillTheSameOrder) {
+              trackCheckoutEvent('checkout_payment_failed', {
+                reason: 'selection_changed_during_approval',
+                method: 'paypal',
+                order_id: orderId,
+              })
+              toast({
+                title: 'Your order changed',
+                description: 'Your order changed while PayPal was open. Review the total and pay again.',
+                variant: 'destructive',
+              })
+              return
+            }
+
             captureInFlight.current = true
             try {
               const attribution = getAttributionPayload();

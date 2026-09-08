@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   checkAuthorizedAmount,
-  resolveIntentChargeCents,
+  extractOrderItems,
+  resolveIntentCharge,
+  resolveOrderCharge,
   summarizeItemUnits,
   validateOrderMatchesRequest,
+  verifyIntentAmount,
 } from '@/lib/order-validation'
 import { buildSelectedPurchaseItems } from '@/lib/pack-selection'
 import { cartToApiItems } from '@/lib/cart-utils'
@@ -21,6 +24,8 @@ const M = makeVariant('M')
 const L = makeVariant('L')
 const product = makeProduct([M, L])
 const rule = twoPackRule()
+
+const USD = { authorizedCurrency: 'usd' }
 
 const packItems = (secondVariant = L) =>
   buildSelectedPurchaseItems({
@@ -49,6 +54,12 @@ describe('validateOrderMatchesRequest', () => {
     const requested = cartToApiItems(packItems(M))
     const order = { order_items: [orderItem(M.id, 1), orderItem(M.id, 1)] }
     expect(validateOrderMatchesRequest(requested, order).valid).toBe(true)
+  })
+
+  it('reads the order nested under `order`, as checkout-create returns it', () => {
+    const requested = cartToApiItems(packItems())
+    const response = { order: { order_items: [orderItem(M.id, 1), orderItem(L.id, 1)] } }
+    expect(validateOrderMatchesRequest(requested, response).valid).toBe(true)
   })
 
   it('rejects an order that silently dropped the second belt', () => {
@@ -82,13 +93,24 @@ describe('validateOrderMatchesRequest', () => {
     expect(result.message).toContain('Rodata One (L)')
   })
 
-  it('does not reject when the response omits order_items entirely', () => {
+  it('does not approve a non-empty selection against an explicitly empty order', () => {
     const requested = cartToApiItems(packItems())
-    expect(validateOrderMatchesRequest(requested, {}).valid).toBe(true)
+    const result = validateOrderMatchesRequest(requested, { order_items: [] })
+    expect(result.valid).toBe(false)
+    expect(result.code).toBe('empty_order')
+    expect(result.verifiable).toBe(true)
+  })
+
+  it('reports a missing order detail as unverifiable, never as valid', () => {
+    const requested = cartToApiItems(packItems())
+    const result = validateOrderMatchesRequest(requested, { order_id: 'ord_1' })
+    expect(result.valid).toBe(false)
+    expect(result.verifiable).toBe(false)
+    expect(result.code).toBe('unverifiable_order')
   })
 
   it('rejects an empty selection', () => {
-    expect(validateOrderMatchesRequest([], { order_items: [] }).code).toBe('empty_order')
+    expect(validateOrderMatchesRequest([], { order_items: [] }).code).toBe('empty_selection')
   })
 
   it('aggregates duplicated request lines before comparing', () => {
@@ -100,46 +122,151 @@ describe('validateOrderMatchesRequest', () => {
   })
 })
 
+describe('extractOrderItems', () => {
+  it('tells an absent detail apart from an empty one', () => {
+    expect(extractOrderItems({ order_id: 'ord_1' })).toBeNull()
+    expect(extractOrderItems({ order_items: [] })).toEqual([])
+    expect(extractOrderItems(null)).toBeNull()
+  })
+
+  it('prefers the nested order record over a root-level list', () => {
+    const items = extractOrderItems({
+      order: { order_items: [orderItem(M.id, 2)] },
+      order_items: [orderItem(L.id, 1)],
+    })
+    expect(items).toHaveLength(1)
+    expect((items as any[])[0].variant_id).toBe(M.id)
+  })
+})
+
+describe('resolveIntentCharge', () => {
+  it('reads the realistic Lovivo response as $88.50 USD', () => {
+    const resolution = resolveIntentCharge({
+      payment_total_amount: 8850,
+      currency: 'usd',
+      currency_code: 'USD',
+      order: { total_amount: 88.5, currency_code: 'USD' },
+    })
+    expect(resolution.verifiable).toBe(true)
+    // Already cents: 8850 must not be multiplied again.
+    expect(resolution.chargeCents).toBe(8850)
+    expect(resolution.currency).toBe('usd')
+    expect(resolution.source).toBe('payment_total_amount')
+  })
+
+  it('prevails over a stale copy of the order', () => {
+    const resolution = resolveIntentCharge({
+      payment_total_amount: 11800,
+      currency: 'usd',
+      order: { total_amount: 88.5, currency_code: 'usd' },
+    })
+    expect(resolution.chargeCents).toBe(11800)
+  })
+
+  it('falls back to the order total the response carries, in main units', () => {
+    const resolution = resolveIntentCharge({ currency: 'usd', order: { total_amount: 88.5 } })
+    expect(resolution.chargeCents).toBe(8850)
+    expect(resolution.source).toBe('order_total_amount')
+  })
+
+  it('never invents an amount when the response carries none', () => {
+    const resolution = resolveIntentCharge({ currency: 'usd' })
+    expect(resolution.verifiable).toBe(false)
+    expect(resolution.chargeCents).toBeNull()
+    expect(resolution.issue).toBe('missing_amount')
+  })
+
+  it.each([
+    ['zero', 0],
+    ['negative', -8850],
+    ['not a whole number of cents', 88.5],
+    ['not finite', Number.NaN],
+  ])('refuses an amount that is %s', (_label, payment_total_amount) => {
+    const resolution = resolveIntentCharge({ payment_total_amount, currency: 'usd' })
+    expect(resolution.verifiable).toBe(false)
+  })
+
+  it('reads the effective currency from the order when the response omits it', () => {
+    expect(resolveIntentCharge({
+      payment_total_amount: 8850,
+      order: { currency_code: 'USD' },
+    }).currency).toBe('usd')
+  })
+})
+
+describe('resolveOrderCharge', () => {
+  it('converts the persisted total into cents', () => {
+    const resolution = resolveOrderCharge({ total_amount: 88.5, currency_code: 'usd' })
+    expect(resolution.chargeCents).toBe(8850)
+    expect(resolution.currency).toBe('usd')
+  })
+
+  it('is unverifiable without a total', () => {
+    expect(resolveOrderCharge({ currency_code: 'usd' }).verifiable).toBe(false)
+  })
+})
+
 describe('checkAuthorizedAmount', () => {
+  const base = { authorizedCurrency: 'usd', chargeCurrency: 'usd' }
+
   it('accepts the exact amount the shopper approved', () => {
-    expect(checkAuthorizedAmount({ authorizedCents: 8850, chargeCents: 8850 }).matches).toBe(true)
+    expect(checkAuthorizedAmount({ ...base, authorizedCents: 8850, chargeCents: 8850 }).matches).toBe(true)
   })
 
   it('rejects a higher amount', () => {
-    expect(checkAuthorizedAmount({ authorizedCents: 8850, chargeCents: 11800 }).matches).toBe(false)
+    const check = checkAuthorizedAmount({ ...base, authorizedCents: 8850, chargeCents: 11800 })
+    expect(check.matches).toBe(false)
+    expect(check.issue).toBe('amount_mismatch')
+    // A plain amount change can be re-quoted and approved again.
+    expect(check.reauthorizable).toBe(true)
+    expect(check.message).toContain('USD $118.00')
   })
 
   it('rejects a lower amount too — it is still not what was approved', () => {
-    expect(checkAuthorizedAmount({ authorizedCents: 8850, chargeCents: 5900 }).matches).toBe(false)
+    expect(checkAuthorizedAmount({ ...base, authorizedCents: 8850, chargeCents: 5900 }).matches).toBe(false)
   })
 
-  it('rejects a currency swap', () => {
-    const result = checkAuthorizedAmount({
+  it('rejects a one-cent drift', () => {
+    expect(checkAuthorizedAmount({ ...base, authorizedCents: 8850, chargeCents: 8851 }).matches).toBe(false)
+  })
+
+  it('rejects a currency swap and refuses to re-quote it', () => {
+    const check = checkAuthorizedAmount({
       authorizedCents: 8850,
       chargeCents: 8850,
       authorizedCurrency: 'usd',
       chargeCurrency: 'mxn',
     })
-    expect(result.matches).toBe(false)
-    expect(result.currencyMatches).toBe(false)
+    expect(check.matches).toBe(false)
+    expect(check.currencyMatches).toBe(false)
+    expect(check.reauthorizable).toBe(false)
   })
 
-  it('rejects a one-cent drift', () => {
-    expect(checkAuthorizedAmount({ authorizedCents: 8850, chargeCents: 8851 }).matches).toBe(false)
-  })
-})
-
-describe('resolveIntentChargeCents', () => {
-  it('prefers the intent amount over local math', () => {
-    expect(resolveIntentChargeCents({ amount: 11800 }, 8850)).toBe(11800)
-  })
-
-  it('falls back to the persisted order total', () => {
-    expect(resolveIntentChargeCents({ order: { total_amount: 88.5 } }, 5900)).toBe(8850)
+  it('does not treat an absent currency as a matching one', () => {
+    const check = checkAuthorizedAmount({
+      authorizedCents: 8850,
+      chargeCents: 8850,
+      authorizedCurrency: 'usd',
+      chargeCurrency: null,
+    })
+    expect(check.matches).toBe(false)
+    expect(check.verifiable).toBe(false)
+    expect(check.issue).toBe('missing_currency')
   })
 
-  it('falls back to the caller value when the response says nothing', () => {
-    expect(resolveIntentChargeCents({}, 8850)).toBe(8850)
+  it('does not fall back to the amount the browser expected', () => {
+    const check = verifyIntentAmount({ currency: 'usd' }, { authorizedCents: 8850, ...USD })
+    expect(check.matches).toBe(false)
+    expect(check.verifiable).toBe(false)
+    expect(check.chargeCents).toBeNull()
+  })
+
+  it('matches the case-insensitive currency Lovivo returns', () => {
+    const check = verifyIntentAmount(
+      { payment_total_amount: 8850, currency: 'usd', currency_code: 'USD' },
+      { authorizedCents: 8850, ...USD }
+    )
+    expect(check.matches).toBe(true)
   })
 })
 
@@ -161,14 +288,22 @@ describe('selection → order → payment provider → confirmation', () => {
     expect(toCents(order.total_amount)).toBe(expectedCents)
 
     // What payments-create-intent will charge.
-    const chargeCents = resolveIntentChargeCents({ amount: 8850, currency: 'usd' }, expectedCents)
+    const check = verifyIntentAmount(
+      { payment_total_amount: 8850, currency: 'usd', currency_code: 'USD' },
+      { authorizedCents: expectedCents, ...USD }
+    )
+    expect(check.matches).toBe(true)
+  })
+
+  it('agrees end to end for M + M, one line of two units', () => {
+    const items = packItems(M)
+    const requested = cartToApiItems(items)
+    const expectedCents = toCents(pricing(items).total)
+    expect(expectedCents).toBe(8850)
+
+    expect(validateOrderMatchesRequest(requested, { order_items: [orderItem(M.id, 2)] }).valid).toBe(true)
     expect(
-      checkAuthorizedAmount({
-        authorizedCents: expectedCents,
-        chargeCents,
-        authorizedCurrency: 'usd',
-        chargeCurrency: 'usd',
-      }).matches
+      verifyIntentAmount({ payment_total_amount: 8850, currency: 'usd' }, { authorizedCents: expectedCents, ...USD }).matches
     ).toBe(true)
   })
 
@@ -183,15 +318,22 @@ describe('selection → order → payment provider → confirmation', () => {
     // And even if someone ignored that, the amount check catches the difference.
     const expectedCents = toCents(pricing(items).total)
     expect(
-      checkAuthorizedAmount({ authorizedCents: expectedCents, chargeCents: toCents(59) }).matches
+      verifyIntentAmount(
+        { payment_total_amount: 5900, currency: 'usd' },
+        { authorizedCents: expectedCents, ...USD }
+      ).matches
     ).toBe(false)
   })
 
   it('stops when the intent would charge a different amount than the wallet showed', () => {
     const items = packItems()
     const expectedCents = toCents(pricing(items).total)
-    const chargeCents = resolveIntentChargeCents({ amount: 11800 }, expectedCents)
-    expect(checkAuthorizedAmount({ authorizedCents: expectedCents, chargeCents }).matches).toBe(false)
+    const check = verifyIntentAmount(
+      { payment_total_amount: 11800, currency: 'usd' },
+      { authorizedCents: expectedCents, ...USD }
+    )
+    expect(check.matches).toBe(false)
+    expect(check.chargeCents).toBe(11800)
   })
 
   it('a single belt needs no second size and charges the single price', () => {

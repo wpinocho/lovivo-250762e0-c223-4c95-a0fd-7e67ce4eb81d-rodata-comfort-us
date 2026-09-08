@@ -4,6 +4,7 @@ import { Elements, PaymentElement, LinkAuthenticationElement, AddressElement, Ex
 import { Separator } from "@/components/ui/separator"
 import { Truck, ShieldCheck, RotateCcw, AlertCircle } from "lucide-react"
 import { getPayErrorCopy, type PayErrorCopy } from "@/lib/payment-errors"
+import { confirmWithVerifiedAmount, type PaymentBlock } from "@/lib/payment-gate"
 import { Button } from "@/components/ui/button"
 import { callEdge } from "@/lib/edge"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
@@ -319,6 +320,37 @@ function PaymentForm({
     return false
   }
 
+  /**
+   * The payment was stopped before any confirmation. Show the server's own data so
+   * the shopper can retry against the updated total instead of the one we quoted.
+   */
+  const handleBlockedPayment = (block: PaymentBlock, ev?: any) => {
+    try { ev?.paymentFailed?.({ reason: 'fail' }) } catch {}
+
+    if (block.code === 'unavailable_items') {
+      handleUnavailableItems(block.data)
+      return
+    }
+
+    // Refreshing the cached order re-renders the summary and the CTA with the
+    // server's amount, so the next attempt authorises that number.
+    if (block.serverOrder) {
+      updateOrderCache(block.serverOrder)
+    }
+
+    const help = block.serverOrder
+      ? block.message
+      : `${block.message} Reload the page if the total shown here does not update.`
+
+    trackCheckoutEvent('checkout_payment_failed', {
+      reason: block.code,
+      method: ev?.expressPaymentType || 'payment_element',
+      order_id: orderId,
+    })
+    setPayError({ title: block.title, help })
+    toast({ title: block.title, description: help, variant: "destructive" })
+  }
+
   /** Blocks paying an amount that belongs to a composition the order already left behind. */
   const blockedByPendingUpdate = () => {
     if (!checkoutUpdating) return false
@@ -375,46 +407,9 @@ function PaymentForm({
       const totalCents = Math.max(0, Math.floor(amountCents || 0))
       const hasSubscription = paymentItems.some((it: any) => it.selling_plan_id)
 
-      let client_secret: string | undefined
-      let intentOrder: any = null
-
-      if (hasSubscription) {
-        const subscriptionItems = paymentItems.filter((it: any) => it.selling_plan_id)
-        const oneTimeItems = paymentItems.filter((it: any) => !it.selling_plan_id)
-        const mainItem = subscriptionItems[0]
-        const subPayload = {
-          store_id: STORE_ID,
-          selling_plan_id: mainItem.selling_plan_id,
-          recurring_items: subscriptionItems.map((i: any) => ({
-            product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity,
-          })),
-          order_id: orderId,
-          customer: { email, name },
-          one_time_items: oneTimeItems.length > 0 ? oneTimeItems.map((i: any) => ({
-            product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity, price: i.price, title: i.product_name || '',
-          })) : undefined,
-        }
-        const data = await callEdge('subscription-create', subPayload)
-        if (handleUnavailableItems(data)) return
-        client_secret = data?.client_secret
-        intentOrder = data?.order ?? null
-      } else {
-        const payload = buildPayload(paymentItems, totalCents)
-        console.log('🔍 StripePayment payload:', JSON.stringify(payload, null, 2))
-        const data = await callEdge("payments-create-intent", payload)
-        if (handleUnavailableItems(data)) return
-        client_secret = data?.client_secret
-        intentOrder = data?.order ?? null
-      }
-
-      if (!client_secret) {
-        throw new Error("No client_secret received from server")
-      }
-
-      // 3. Confirm payment with the selected method (PaymentElement handles method selection)
-      const result = await stripe.confirmPayment({
+      const confirmWithElements = (clientSecret: string) => stripe.confirmPayment({
         elements,
-        clientSecret: client_secret,
+        clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/gracias/${orderId}`,
           receipt_email: email || undefined,
@@ -436,6 +431,57 @@ function PaymentForm({
         },
         redirect: 'if_required',
       })
+
+      let result: Awaited<ReturnType<typeof confirmWithElements>>
+      let intentOrder: any = null
+
+      if (hasSubscription) {
+        const subscriptionItems = paymentItems.filter((it: any) => it.selling_plan_id)
+        const oneTimeItems = paymentItems.filter((it: any) => !it.selling_plan_id)
+        const mainItem = subscriptionItems[0]
+        const subPayload = {
+          store_id: STORE_ID,
+          selling_plan_id: mainItem.selling_plan_id,
+          recurring_items: subscriptionItems.map((i: any) => ({
+            product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity,
+          })),
+          order_id: orderId,
+          customer: { email, name },
+          one_time_items: oneTimeItems.length > 0 ? oneTimeItems.map((i: any) => ({
+            product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity, price: i.price, title: i.product_name || '',
+          })) : undefined,
+        }
+        const data = await callEdge('subscription-create', subPayload)
+        if (handleUnavailableItems(data)) return
+        if (!data?.client_secret) {
+          throw new Error("No client_secret received from server")
+        }
+        intentOrder = data?.order ?? null
+        // 3. Confirm payment with the selected method (PaymentElement handles method selection)
+        result = await confirmWithElements(data.client_secret)
+      } else {
+        const payload = buildPayload(paymentItems, totalCents)
+        console.log('🔍 StripePayment payload:', JSON.stringify(payload, null, 2))
+        const data = await callEdge("payments-create-intent", payload)
+
+        // 3. Confirm only once the server's own amount, currency and — when it
+        //    returns them — items still match the total shown on this page.
+        const outcome = await confirmWithVerifiedAmount({
+          data,
+          authorizedCents: totalCents,
+          authorizedCurrency: currency,
+          requestedItems: paymentItems,
+          confirm: confirmWithElements,
+        })
+
+        if (!outcome.confirmed) {
+          handleBlockedPayment(outcome.block)
+          return
+        }
+
+        intentOrder = outcome.serverOrder
+        result = outcome.result
+      }
 
       if (result.error) {
         trackCheckoutEvent('checkout_payment_failed', {
@@ -689,36 +735,47 @@ function PaymentForm({
         slow: intentMs > 4000,
         order_id: orderId,
       })
-      if (handleUnavailableItems(data)) return
-      const client_secret = data?.client_secret
-      const intentOrder = data?.order ?? null
-      if (!client_secret) throw new Error("No client_secret received from server")
-
-      const result = await stripe.confirmPayment({
-        elements,
-        clientSecret: client_secret,
-        confirmParams: {
-          return_url: `${window.location.origin}/gracias/${orderId}`,
-          payment_method_data: {
-            billing_details: {
-              name: walletName || undefined,
-              email: walletEmail || undefined,
-              phone: walletPhone || undefined,
-              address: effectiveShippingAddress ? {
-                line1: effectiveShippingAddress.line1 || '',
-                line2: effectiveShippingAddress.line2 || '',
-                city: effectiveShippingAddress.city || '',
-                state: effectiveShippingAddress.state || '',
-                postal_code: effectiveShippingAddress.postal_code || '',
-                country: (effectiveShippingAddress.country || '').length === 2
-                  ? effectiveShippingAddress.country
-                  : countryNameToCode(effectiveShippingAddress.country || ''),
-              } : undefined,
+      // The wallet sheet authorised `totalCents`: the same gate as the card path
+      // decides whether the server is about to charge that, and nothing else.
+      const outcome = await confirmWithVerifiedAmount({
+        data,
+        authorizedCents: totalCents,
+        authorizedCurrency: currency,
+        requestedItems: paymentItems,
+        confirm: (clientSecret) => stripe.confirmPayment({
+          elements,
+          clientSecret,
+          confirmParams: {
+            return_url: `${window.location.origin}/gracias/${orderId}`,
+            payment_method_data: {
+              billing_details: {
+                name: walletName || undefined,
+                email: walletEmail || undefined,
+                phone: walletPhone || undefined,
+                address: effectiveShippingAddress ? {
+                  line1: effectiveShippingAddress.line1 || '',
+                  line2: effectiveShippingAddress.line2 || '',
+                  city: effectiveShippingAddress.city || '',
+                  state: effectiveShippingAddress.state || '',
+                  postal_code: effectiveShippingAddress.postal_code || '',
+                  country: (effectiveShippingAddress.country || '').length === 2
+                    ? effectiveShippingAddress.country
+                    : countryNameToCode(effectiveShippingAddress.country || ''),
+                } : undefined,
+              },
             },
           },
-        },
-        redirect: 'if_required',
+          redirect: 'if_required',
+        }),
       })
+
+      if (!outcome.confirmed) {
+        handleBlockedPayment(outcome.block, ev)
+        return
+      }
+
+      const intentOrder = outcome.serverOrder
+      const result = outcome.result
 
       if (result.error) {
         trackCheckoutEvent('checkout_payment_failed', {

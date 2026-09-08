@@ -4,6 +4,45 @@ import { STORE_ID } from './config'
 import type { CartItem } from '@/contexts/CartContext'
 import type { CheckoutPayload, CheckoutResponse, CheckoutItem } from './supabase'
 import { cartToApiItems } from './cart-utils'
+import {
+  validateOrderMatchesRequest,
+  type OrderValidationResult,
+  type RequestedLine,
+} from './order-validation'
+import { logger } from './logger'
+
+/** Reads a persisted order by its checkout token — the same read `?token=` links use. */
+export const fetchOrderByToken = async (checkoutToken: string) =>
+  callEdge('order-get', { checkout_token: checkoutToken })
+
+/**
+ * Confirms a checkout response is the purchase that was requested.
+ *
+ * When the response carries only the order reference and no items, the order is
+ * read back once (never on checkouts that already answered with their items, and
+ * never through checkout-update, which exists to write). If it still cannot be
+ * verified, the caller gets an unverified result and must stop.
+ */
+export const verifyOrderContents = async (
+  requestedItems: readonly (CheckoutItem | RequestedLine)[],
+  response: (Partial<CheckoutResponse> & {
+    unavailable_items?: readonly { product_name?: string; variant_name?: string }[]
+  }) | null | undefined
+): Promise<OrderValidationResult> => {
+  const result = validateOrderMatchesRequest(requestedItems, response, response?.unavailable_items)
+  if (result.verifiable) return result
+
+  const token = response?.checkout_token
+  if (!token) return result
+
+  try {
+    const detail = await fetchOrderByToken(token)
+    return validateOrderMatchesRequest(requestedItems, detail, detail?.unavailable_items)
+  } catch (error) {
+    logger.error('order-get could not confirm the order contents:', error)
+    return result
+  }
+}
 
 export const createCheckoutFromCart = async (
   cartItems: CartItem[],
