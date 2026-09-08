@@ -5,6 +5,12 @@ import { Separator } from "@/components/ui/separator"
 import { Truck, ShieldCheck, RotateCcw, AlertCircle } from "lucide-react"
 import { getPayErrorCopy, type PayErrorCopy } from "@/lib/payment-errors"
 import { confirmWithVerifiedAmount, type PaymentBlock } from "@/lib/payment-gate"
+import {
+  PAYMENT_REVIEW_COPY,
+  PAYMENT_REVIEW_EVENT,
+  readPaymentReview,
+  type PaymentReview,
+} from "@/lib/payment-review"
 import { Button } from "@/components/ui/button"
 import { callEdge } from "@/lib/edge"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
@@ -139,6 +145,7 @@ function PaymentForm({
   const [loading, setLoading] = useState(false)
   const [linkAuthenticated, setLinkAuthenticated] = useState(false)
   const [payError, setPayError] = useState<PayErrorCopy | null>(null)
+  const [paymentReview, setPaymentReview] = useState<PaymentReview | null>(null)
   const [ctaVisible, setCtaVisible] = useState(true)
   const [reachedPayment, setReachedPayment] = useState(false)
   const ctaRef = useRef<HTMLButtonElement | null>(null)
@@ -160,6 +167,15 @@ function PaymentForm({
       console.warn('elements.update(amount) failed:', err)
     }
   }, [elements, amountCents])
+
+  // A PayPal capture under review leaves this order unpayable until the backend
+  // resolves it, in this tab as soon as it happens and on reload.
+  useEffect(() => {
+    const sync = () => setPaymentReview(readPaymentReview(orderId))
+    sync()
+    window.addEventListener(PAYMENT_REVIEW_EVENT, sync)
+    return () => window.removeEventListener(PAYMENT_REVIEW_EVENT, sync)
+  }, [orderId])
 
   // Sticky mobile pay bar: only show it while the real CTA is off-screen.
   useEffect(() => {
@@ -351,6 +367,16 @@ function PaymentForm({
     toast({ title: block.title, description: help, variant: "destructive" })
   }
 
+  /**
+   * Blocks a second payment for an order whose PayPal capture is still being
+   * reconciled: that capture may already have taken the money.
+   */
+  const blockedByPaymentReview = () => {
+    if (!paymentReview) return false
+    toast({ title: PAYMENT_REVIEW_COPY.title, description: PAYMENT_REVIEW_COPY.message })
+    return true
+  }
+
   /** Blocks paying an amount that belongs to a composition the order already left behind. */
   const blockedByPendingUpdate = () => {
     if (!checkoutUpdating) return false
@@ -367,6 +393,7 @@ function PaymentForm({
       return
     }
 
+    if (blockedByPaymentReview()) return
     if (blockedByPendingUpdate()) return
 
     if (onValidationRequired && !onValidationRequired()) {
@@ -624,6 +651,11 @@ function PaymentForm({
 
   const handleExpressCheckoutConfirm = useCallback(async (ev?: any) => {
     if (!stripe || !elements) return
+    if (readPaymentReview(orderId)) {
+      try { ev?.paymentFailed?.({ reason: 'fail' }) } catch {}
+      toast({ title: PAYMENT_REVIEW_COPY.title, description: PAYMENT_REVIEW_COPY.message })
+      return
+    }
     if (checkoutUpdating) {
       toast({
         title: "Updating your order",
@@ -1078,7 +1110,7 @@ function PaymentForm({
       <Button
         ref={ctaRef}
         onClick={() => { payMethodSource.current = 'payment_element'; handlePayment() }}
-        disabled={!stripe || loading || checkoutUpdating || !amountCents || !!shippingError}
+        disabled={!stripe || loading || checkoutUpdating || !!paymentReview || !amountCents || !!shippingError}
         className="w-full h-14 flex flex-col items-center justify-center gap-0.5"
         size="lg"
       >
@@ -1137,7 +1169,7 @@ function PaymentForm({
             </div>
             <Button
               onClick={() => { payMethodSource.current = 'sticky_bar'; handlePayment() }}
-              disabled={!stripe || loading || checkoutUpdating || !amountCents || !!shippingError}
+              disabled={!stripe || loading || checkoutUpdating || !!paymentReview || !amountCents || !!shippingError}
               className="h-12 flex-1"
             >
               {loading ? "Processing..." : "Complete Purchase"}

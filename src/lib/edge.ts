@@ -50,6 +50,48 @@ export const callEdge = async (functionName: string, body: any) => {
   }
 }
 
+export interface EdgeOnceResult {
+  ok: boolean
+  status: number
+  data: any
+}
+
+/**
+ * Posts once, keeps the body whatever the status says.
+ *
+ * callEdge() re-sends the same request when the first attempt answers non-2xx,
+ * which is harmless for a read and unacceptable for a capture: the money may
+ * already have moved. It also reduces an error response to its text, losing the
+ * state the backend put in the body. Reserved for calls that must not be
+ * repeated and whose failure body still carries information.
+ */
+export const callEdgeOnce = async (functionName: string, body: any): Promise<EdgeOnceResult> => {
+  console.log(`Calling edge function '${functionName}' once with payload:`, body)
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  const text = await response.text()
+  let data: any = null
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = { error: text }
+    }
+  }
+
+  console.log(`${functionName} answered ${response.status}:`, data)
+  return { ok: response.ok, status: response.status, data }
+}
+
 /**
  * Call edge function with direct fetch (for functions that need custom headers or handling)
  */

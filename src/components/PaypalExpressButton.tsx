@@ -1,7 +1,15 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { ShieldCheck } from 'lucide-react'
 import { useSettings } from '@/contexts/SettingsContext'
-import { callEdge } from '@/lib/edge'
+import { callEdge, callEdgeOnce } from '@/lib/edge'
+import {
+  PAYMENT_REVIEW_COPY,
+  readCaptureOutcome,
+  readPaymentReview,
+  savePaymentReview,
+  type PaymentReview,
+} from '@/lib/payment-review'
 import { STORE_ID } from '@/lib/config'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
@@ -45,6 +53,10 @@ export function PaypalExpressButton({
    * must belong to the order and total the buyer actually approved.
    */
   const approvalRef = useRef<{ checkoutToken: string; amountCents: number; currency: string } | null>(null)
+  // A capture awaiting reconciliation replaces the buttons: this order must not
+  // be paid a second time until the backend settles it.
+  const [review, setReview] = useState<PaymentReview | null>(() => readPaymentReview(orderId))
+  useEffect(() => { setReview(readPaymentReview(orderId)) }, [orderId])
 
   console.log('[PayPal Button] paypalEnabled:', paypalEnabled, '| paypalClientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| checkoutToken:', !!checkoutToken)
 
@@ -56,6 +68,28 @@ export function PaypalExpressButton({
     if (!paypalReady) return
     trackCheckoutEvent('checkout_paypal_shown', { order_id: orderId })
   }, [paypalReady, orderId])
+
+  if (review) {
+    return (
+      <div className={className}>
+        <div
+          role="status"
+          className="flex items-start gap-2.5 rounded-xl border border-brand-amber/25 bg-brand-amber/[0.06] p-3"
+        >
+          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-brand-amber" />
+          <div className="min-w-0">
+            <p className="font-inter text-sm font-semibold text-brand-offwhite">{PAYMENT_REVIEW_COPY.title}</p>
+            <p className="mt-1 font-inter text-xs leading-relaxed text-brand-smoke">{PAYMENT_REVIEW_COPY.message}</p>
+            {/* The references support has to settle it — keep them visible. */}
+            <p className="mt-1.5 font-inter text-[11px] text-brand-steel">
+              Order {review.orderId}
+              {review.captureId ? ` · PayPal capture ${review.captureId}` : ''}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!paypalReady) return null
 
@@ -86,6 +120,9 @@ export function PaypalExpressButton({
           createOrder={async () => {
             if (disabled) {
               throw new Error('Your order total is still updating. Try again in a moment.')
+            }
+            if (readPaymentReview(orderId)) {
+              throw new Error(PAYMENT_REVIEW_COPY.message)
             }
             // PayPal Express: no form validation needed — PayPal collects
             // the buyer's shipping address inside the PayPal popup.
@@ -149,15 +186,49 @@ export function PaypalExpressButton({
             captureInFlight.current = true
             try {
               const attribution = getAttributionPayload();
-              const res = await callEdge('paypal-capture-order', {
+              // Posted once and never re-sent: a repeated capture could take the
+              // money twice, and the review state travels in a non-2xx body that
+              // the retrying caller would have thrown away.
+              const { ok: httpOk, data: captureData } = await callEdgeOnce('paypal-capture-order', {
                 store_id: STORE_ID,
                 paypal_order_id: data.orderID,
                 checkout_token: checkoutToken,
                 attribution,
               })
-              if (!res?.ok || res?.status !== 'COMPLETED') {
-                throw new Error(res?.error || 'Payment not completed')
+
+              const outcome = readCaptureOutcome({
+                httpOk,
+                data: captureData,
+                orderId,
+                paypalOrderId: data.orderID,
+              })
+
+              if (outcome.status === 'requires_review') {
+                // PayPal may already hold the money. This is not a decline, so
+                // nothing here invites a second payment and nothing marks the
+                // order paid — only the backend can settle it.
+                capturedOrders.current.add(data.orderID)
+                savePaymentReview(outcome.review)
+                setReview(outcome.review)
+                trackCheckoutEvent('checkout_paypal_requires_review', {
+                  method: 'paypal',
+                  order_id: outcome.review.orderId,
+                  capture_id: outcome.review.captureId,
+                  paypal_order_id: outcome.review.paypalOrderId,
+                })
+                toast({
+                  title: PAYMENT_REVIEW_COPY.title,
+                  description: PAYMENT_REVIEW_COPY.message,
+                })
+                return
               }
+
+              if (outcome.status === 'failed') {
+                // A real decline: no capture happened, so the usual retry stands.
+                throw new Error(outcome.message)
+              }
+
+              const res = outcome.data
               capturedOrders.current.add(data.orderID)
 
               // Build a fallback order object from local props in case res.order is null

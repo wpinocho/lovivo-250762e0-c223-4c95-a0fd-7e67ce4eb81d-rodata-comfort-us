@@ -32,7 +32,13 @@ export type CheckoutEventName =
   /** Shopper opened the PayPal popup (createOrder ran). */
   | 'checkout_paypal_started'
   /** Shopper closed the PayPal popup without paying. */
-  | 'checkout_paypal_cancelled';
+  | 'checkout_paypal_cancelled'
+  /**
+   * The capture came back needing reconciliation: PayPal may already hold the
+   * money, so this is neither a success nor a decline and must not be counted
+   * as either.
+   */
+  | 'checkout_paypal_requires_review';
 
 function getContext(): Record<string, any> {
   if (typeof window === 'undefined') return {};
