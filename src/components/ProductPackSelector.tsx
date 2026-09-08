@@ -1,5 +1,19 @@
 import { cn } from '@/lib/utils'
 
+export interface PackOffer {
+  /** True while the price rules are still being fetched. */
+  loading: boolean
+  /** True only when a real volume rule was found and it lowers the price. */
+  available: boolean
+  singleTotal: number
+  packTotal: number
+  packUnitPrice: number
+  secondBeltPrice: number
+  secondBeltOffPct: number
+  savings: number
+  savingsLabel: string | null
+}
+
 interface ProductPackSelectorProps {
   /** Full price of a single unit */
   unitPrice: number
@@ -9,12 +23,12 @@ interface ProductPackSelectorProps {
   onSelect: (quantity: number) => void
   formatMoney: (value: number) => string
   /**
-   * Percentage taken off EVERY unit once 2 are in the cart.
-   * Must mirror the `volume` price rule in the database
-   * ("Rider + Partner 2-Pack") or the PDP will promise a price
-   * the cart does not honour. Default 25% = 2nd belt half price.
+   * Pack economics read from the live `volume` price rule. Never a percentage
+   * typed into the page: if the rule says something else, the cart wins, so the
+   * PDP must quote the rule.
    */
-  packDiscountPct?: number
+  offer: PackOffer
+  disabled?: boolean
 }
 
 /**
@@ -27,26 +41,23 @@ export const ProductPackSelector = ({
   quantity,
   onSelect,
   formatMoney,
-  packDiscountPct = 25,
+  offer,
+  disabled = false,
 }: ProductPackSelectorProps) => {
-  const packUnitPrice = unitPrice * (1 - packDiscountPct / 100)
-  const packTotal = packUnitPrice * 2
-  const packSavings = unitPrice * 2 - packTotal
-  /**
-   * What the buyer actually pays for the SECOND belt once the first is
-   * charged at full price. Reads far stronger than the blended per-unit
-   * price, and it is the same money either way.
-   */
-  const secondBeltPrice = packTotal - unitPrice
-  const secondBeltOffPct = Math.round((1 - secondBeltPrice / unitPrice) * 100)
   const selected = quantity >= 2 ? 2 : 1
+
+  const packNote = offer.loading
+    ? 'Checking the current offer…'
+    : offer.available
+      ? `First ${formatMoney(unitPrice)} · second only ${formatMoney(offer.secondBeltPrice)}`
+      : 'One for whoever rides with you'
 
   const options = [
     {
       qty: 1,
       label: 'One belt',
       sub: 'Just for you',
-      total: unitPrice,
+      total: offer.singleTotal,
       compareAt: null as number | null,
       badge: null as string | null,
       note: null as string | null,
@@ -55,10 +66,12 @@ export const ProductPackSelector = ({
       qty: 2,
       label: 'Two belts',
       sub: 'One for whoever rides with you',
-      total: packTotal,
-      compareAt: unitPrice * 2,
-      badge: `2nd belt ${secondBeltOffPct}% off`,
-      note: `First ${formatMoney(unitPrice)} · second only ${formatMoney(secondBeltPrice)}`,
+      total: offer.packTotal,
+      compareAt: offer.available ? unitPrice * 2 : null,
+      badge: offer.available && offer.secondBeltOffPct > 0
+        ? `2nd belt ${offer.secondBeltOffPct}% off`
+        : null,
+      note: packNote,
     },
   ]
 
@@ -72,9 +85,11 @@ export const ProductPackSelector = ({
             type="button"
             role="radio"
             aria-checked={isSelected}
+            disabled={disabled}
             onClick={() => onSelect(opt.qty)}
             className={cn(
               'w-full flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all',
+              disabled && 'opacity-60 cursor-not-allowed',
               isSelected
                 ? 'border-brand-amber bg-brand-amber/[0.07]'
                 : 'border-white/[0.12] bg-brand-graphite hover:border-brand-amber/40'
@@ -104,7 +119,7 @@ export const ProductPackSelector = ({
             </span>
 
             <span className="flex flex-col items-end flex-shrink-0 leading-tight">
-              {opt.compareAt && (
+              {opt.compareAt && opt.compareAt > opt.total && (
                 <span className="font-inter text-[11px] text-brand-steel line-through">
                   {formatMoney(opt.compareAt)}
                 </span>

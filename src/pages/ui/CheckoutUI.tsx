@@ -274,6 +274,7 @@ export default function CheckoutUI() {
                           currency={logic.currencyCode.toLowerCase()}
                           items={logic.orderItems}
                           shippingCost={logic.shippingCost}
+                          disabled={logic.isCheckoutUpdating}
                         />
                         <StripePayment
                           key={stripeKey}
@@ -342,6 +343,7 @@ export default function CheckoutUI() {
                           deliveryMethodSlot={deliveryMethodSlot}
                           showAddressElement={!logic.usePickup}
                           addressElementComplete={addressElementComplete}
+                          checkoutUpdating={logic.isCheckoutUpdating}
                           allowedCountries={allowedCountries}
                           onAddressChange={(addressValue: any, complete: boolean) => {
                             setAddressElementComplete(complete);

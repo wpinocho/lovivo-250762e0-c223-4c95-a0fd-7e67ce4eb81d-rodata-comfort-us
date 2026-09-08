@@ -113,6 +113,53 @@ const FAQS = [
   { q: 'How does the size exchange work?', a: 'Reach out via the contact options on our site and we\'ll guide you through it. We want the fit to be just right for you.' },
 ]
 
+/**
+ * Size chips shared by both belts so the second selector is visually identical to
+ * the first. Rendered as its own row of buttons — never nested inside another
+ * <button>, which the pack cards are.
+ */
+const SizeOptionButtons = ({
+  values,
+  selectedValue,
+  isValueAvailable,
+  onSelect,
+  groupLabel,
+  disabled = false,
+}: {
+  values: string[]
+  selectedValue?: string
+  isValueAvailable: (value: string) => boolean
+  onSelect: (value: string) => void
+  groupLabel: string
+  disabled?: boolean
+}) => (
+  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={groupLabel}>
+    {values.map((value) => {
+      const isSelected = selectedValue === value
+      const isAvailable = isValueAvailable(value)
+      const sg = SIZE_GUIDE.find(s => s.size === getSizeKey(value))
+      return (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={isSelected}
+          aria-label={`${groupLabel}: ${getSizeKey(value)}${isAvailable ? '' : ' (unavailable)'}`}
+          disabled={!isAvailable || disabled}
+          onClick={() => onSelect(value)}
+          className={cn("flex flex-col items-center min-w-[68px] px-3 py-2.5 rounded-xl border text-sm transition-all font-sora",
+            isSelected ? "bg-brand-amber text-brand-carbon border-brand-amber font-bold shadow-[0_0_16px_rgba(201,139,46,0.3)]"
+            : isAvailable ? "bg-brand-graphite border-white/[0.12] text-brand-smoke hover:border-brand-amber/50"
+            : "opacity-40 cursor-not-allowed bg-brand-graphite border-white/[0.08] text-brand-steel")}>
+          <span className="font-bold">{getSizeKey(value)}</span>
+          {sg && <span className={cn("text-[10px] font-inter mt-0.5", isSelected ? "text-brand-carbon/70" : "text-brand-steel")}>{sg.waist}</span>}
+          {!isAvailable && <span className="text-[9px] font-inter text-brand-steel">Sold out</span>}
+        </button>
+      )
+    })}
+  </div>
+)
+
 const Stars = ({ count, size = 14 }: { count: number; size?: number }) => (
   <div className="flex gap-0.5">
     {[1,2,3,4,5].map(s => (
@@ -170,18 +217,15 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
   const discountPct = logic.currentCompareAt && logic.currentCompareAt > logic.currentPrice
     ? Math.round((1 - logic.currentPrice / logic.currentCompareAt) * 100) : null
 
-  /**
-   * 2-pack AOV lever. MUST mirror the `volume` price rule
-   * "Rider + Partner 2-Pack" (flat 25% off every unit from qty 2),
-   * otherwise the PDP advertises a total the cart won't honour.
-   */
-  const PACK_DISCOUNT_PCT = 25
-  const isPack = logic.quantity >= 2
-  const effectiveUnitPrice = isPack
-    ? logic.currentPrice * (1 - PACK_DISCOUNT_PCT / 100)
-    : logic.currentPrice
-  const cartTotal = effectiveUnitPrice * logic.quantity
-  const cartCompareAt = logic.currentCompareAt ? logic.currentCompareAt * logic.quantity : null
+  // Pack economics come from the live `volume` price rule via the headless logic,
+  // so the PDP can never advertise a total the cart won't honour.
+  const isPack = logic.isPack
+  const packOffer = logic.packOffer
+  const cartTotal = logic.selectionTotal
+  const cartCompareAt = logic.selectionCompareAt
+  const canBuy = logic.canPurchaseSelection
+  const sizeOptions: any[] = logic.product?.options ?? []
+  const isSingleSizeOption = sizeOptions.length === 1
 
   useEffect(() => { setSelectedImage(null) }, [logic.matchingVariant])
   useEffect(() => { window.scrollTo(0, 0) }, [])
@@ -294,17 +338,21 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 </div>
               </div>
 
-              {/* Size selector */}
-              {logic.product.options?.length > 0 && (
+              {/* Size selector — first belt when the 2-pack is selected */}
+              {sizeOptions.length > 0 && (
                 <div className="border-t border-white/[0.08] pt-5 space-y-3">
-                  {logic.product.options.map((option: any) => (
+                  {sizeOptions.map((option: any) => {
+                    const label = isSingleSizeOption
+                      ? (isPack ? 'First belt size' : 'Size')
+                      : option.name
+                    return (
                     <div key={option.name}>
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-brand-smoke text-sm font-sora font-semibold">
-                          {option.name}
+                          {label}
                           {logic.selected[option.name] && <span className="text-brand-steel font-inter font-normal ml-2">· {SIZE_GUIDE.find(s => s.size === getSizeKey(logic.selected[option.name]))?.waist ?? logic.selected[option.name]}</span>}
                         </p>
-                        <button onClick={() => setShowSizeGuide(!showSizeGuide)} className="flex items-center gap-1 text-brand-amber text-xs font-inter underline underline-offset-2">
+                        <button type="button" onClick={() => setShowSizeGuide(!showSizeGuide)} className="flex items-center gap-1 text-brand-amber text-xs font-inter underline underline-offset-2">
                           Size guide {showSizeGuide ? <ChevronUp size={11}/> : <ChevronDown size={11}/>}
                         </button>
                       </div>
@@ -318,42 +366,57 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                           ))}
                         </div>
                       )}
-                      <div className="flex flex-wrap gap-2">
-                        {option.values.map((value: string) => {
-                          const isSelected = logic.selected[option.name] === value
-                          const isAvailable = logic.isOptionValueAvailable(option.name, value)
-                          const sg = SIZE_GUIDE.find(s => s.size === getSizeKey(value))
-                          return (
-                            <button key={value} disabled={!isAvailable} onClick={() => logic.handleOptionSelect(option.name, value)}
-                              className={cn("flex flex-col items-center min-w-[68px] px-3 py-2.5 rounded-xl border text-sm transition-all font-sora",
-                                isSelected ? "bg-brand-amber text-brand-carbon border-brand-amber font-bold shadow-[0_0_16px_rgba(201,139,46,0.3)]"
-                                : isAvailable ? "bg-brand-graphite border-white/[0.12] text-brand-smoke hover:border-brand-amber/50"
-                                : "opacity-40 cursor-not-allowed bg-brand-graphite border-white/[0.08] text-brand-steel")}>
-                              <span className="font-bold">{getSizeKey(value)}</span>
-                              {sg && <span className={cn("text-[10px] font-inter mt-0.5", isSelected ? "text-brand-carbon/70" : "text-brand-steel")}>{sg.waist}</span>}
-                            </button>
-                          )
-                        })}
-                      </div>
+                      <SizeOptionButtons
+                        values={option.values}
+                        selectedValue={logic.selected[option.name]}
+                        isValueAvailable={(value) => logic.isOptionValueAvailable(option.name, value)}
+                        onSelect={(value) => logic.handleOptionSelect(option.name, value)}
+                        groupLabel={label}
+                        disabled={logic.isExpressProcessing}
+                      />
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
               {/* Pack selector — 1 vs 2. Single unit stays pre-selected so the
                   default buying path is untouched; the 2-pack is opt-in. */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <ProductPackSelector
                   unitPrice={logic.currentPrice}
                   quantity={logic.quantity}
                   onSelect={logic.handleQuantityChange}
                   formatMoney={logic.formatMoney}
-                  packDiscountPct={PACK_DISCOUNT_PCT}
+                  offer={packOffer}
+                  disabled={logic.isExpressProcessing}
                 />
-                {isPack && (
-                  <p className="text-brand-smoke text-[11px] font-inter leading-relaxed">
-                    Both belts ship in the size selected above. Different size for the second rider? Just reply to your order email.
-                  </p>
+
+                {/* Second belt size — each belt keeps its own real variant */}
+                {isPack && sizeOptions.length > 0 && (
+                  <div className="rounded-xl border border-brand-amber/25 bg-brand-amber/[0.04] px-3.5 py-3 space-y-2.5">
+                    {sizeOptions.map((option: any) => (
+                      <div key={`second-${option.name}`}>
+                        <p className="text-brand-smoke text-sm font-sora font-semibold mb-2.5">
+                          {isSingleSizeOption ? 'Second belt size' : `Second belt · ${option.name}`}
+                          {logic.secondSelected[option.name] && <span className="text-brand-steel font-inter font-normal ml-2">· {SIZE_GUIDE.find(s => s.size === getSizeKey(logic.secondSelected[option.name]))?.waist ?? logic.secondSelected[option.name]}</span>}
+                        </p>
+                        <SizeOptionButtons
+                          values={option.values}
+                          selectedValue={logic.secondSelected[option.name]}
+                          isValueAvailable={(value) => logic.isSecondOptionValueAvailable(option.name, value)}
+                          onSelect={(value) => logic.handleSecondOptionSelect(option.name, value)}
+                          groupLabel={isSingleSizeOption ? 'Second belt size' : `Second belt ${option.name}`}
+                          disabled={logic.isExpressProcessing}
+                        />
+                      </div>
+                    ))}
+                    {!logic.selectionValidation?.valid && logic.selectionValidation?.message && (
+                      <p role="status" className="text-brand-amber text-[11px] font-inter leading-relaxed">
+                        {logic.selectionValidation.message}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -372,11 +435,12 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                     {/* ── Express Checkout (Apple Pay / Google Pay) ── */}
                     <ProductExpressCheckout
                       product={logic.product}
-                      variant={logic.matchingVariant}
+                      items={logic.selectedPurchaseItems}
                       sellingPlan={logic.selectedPlan ?? null}
-                      quantity={logic.quantity}
-                      unitPrice={effectiveUnitPrice}
+                      selectionTotal={cartTotal}
+                      disabled={!logic.selectionValidation?.valid}
                       onAvailabilityChange={setExpressAvailable}
+                      onProcessingChange={logic.setIsExpressProcessing}
                     />
                     {expressAvailable && (
                       <div className="flex items-center gap-3">
@@ -385,10 +449,27 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                         <div className="flex-1 h-px bg-white/[0.1]" />
                       </div>
                     )}
-                    <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora w-full text-base">
-                      <ShoppingCart size={18}/>Buy now · {logic.formatMoney(cartTotal)}
+                    <button
+                      type="button"
+                      onClick={handlePrimary}
+                      disabled={!canBuy || logic.isBuyingNow}
+                      className={cn("btn-amber-lg amber-glow font-sora w-full text-base", (!canBuy || logic.isBuyingNow) && "opacity-50 cursor-not-allowed")}
+                    >
+                      <ShoppingCart size={18}/>{logic.isBuyingNow ? 'Processing…' : `Buy now · ${logic.formatMoney(cartTotal)}`}
                     </button>
-                    <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora w-full">Add to cart</button>
+                    <button
+                      type="button"
+                      onClick={logic.handleAddToCart}
+                      disabled={!canBuy}
+                      className={cn("btn-outline-light font-sora w-full", !canBuy && "opacity-50 cursor-not-allowed")}
+                    >
+                      Add to cart
+                    </button>
+                    {!canBuy && logic.selectionValidation?.message && (
+                      <p role="status" className="text-brand-amber text-[11px] font-inter text-center">
+                        {logic.selectionValidation.message}
+                      </p>
+                    )}
                     <p className="text-brand-steel text-[11px] font-inter text-center">
                       🔒 Secure checkout · Free shipping · 30-day trial
                     </p>
@@ -656,7 +737,10 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
             <span className="font-sora font-bold text-brand-offwhite text-4xl">{logic.formatMoney(cartTotal)}</span>
             {cartCompareAt && cartCompareAt > cartTotal && <span className="text-brand-steel text-xl line-through font-inter">{logic.formatMoney(cartCompareAt)}</span>}
           </div>
-          <button onClick={handlePrimary} className="btn-amber-lg amber-glow font-sora text-base px-12">Buy now<ChevronRight size={18}/></button>
+          <button type="button" onClick={handlePrimary} disabled={!canBuy || logic.isBuyingNow} className={cn("btn-amber-lg amber-glow font-sora text-base px-12", (!canBuy || logic.isBuyingNow) && "opacity-50 cursor-not-allowed")}>Buy now<ChevronRight size={18}/></button>
+          {!canBuy && logic.selectionValidation?.message && (
+            <p role="status" className="mt-3 text-brand-amber text-[11px] font-inter">{logic.selectionValidation.message}</p>
+          )}
         </div>
       </section>
 
@@ -674,8 +758,8 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <button onClick={handlePrimary} className="btn-amber amber-glow font-sora px-8"><ShoppingCart size={14}/>Buy now</button>
-                <button onClick={logic.handleAddToCart} className="btn-outline-light font-sora">Add to cart</button>
+                <button type="button" onClick={handlePrimary} disabled={!canBuy || logic.isBuyingNow} className={cn("btn-amber amber-glow font-sora px-8", (!canBuy || logic.isBuyingNow) && "opacity-50 cursor-not-allowed")}><ShoppingCart size={14}/>Buy now</button>
+                <button type="button" onClick={logic.handleAddToCart} disabled={!canBuy} className={cn("btn-outline-light font-sora", !canBuy && "opacity-50 cursor-not-allowed")}>Add to cart</button>
               </div>
             </div>
             <div className="md:hidden flex items-center gap-3">
@@ -684,9 +768,9 @@ export const ProductPageUI = ({ logic }: ProductPageUIProps) => {
                   {logic.formatMoney(cartTotal)}
                   {isPack && <span className="text-brand-amber text-[11px] font-semibold ml-1.5">2 belts</span>}
                 </p>
-                <p className="text-brand-steel text-xs font-inter truncate">{logic.product.title}</p>
+                <p className="text-brand-steel text-xs font-inter truncate">{canBuy ? logic.product.title : (logic.selectionValidation?.message || logic.product.title)}</p>
               </div>
-              <button onClick={handlePrimary} className="btn-amber amber-glow font-sora flex-shrink-0"><ShoppingCart size={14}/>Buy now</button>
+              <button type="button" onClick={handlePrimary} disabled={!canBuy || logic.isBuyingNow} className={cn("btn-amber amber-glow font-sora flex-shrink-0", (!canBuy || logic.isBuyingNow) && "opacity-50 cursor-not-allowed")}><ShoppingCart size={14}/>Buy now</button>
             </div>
           </div>
         </div>

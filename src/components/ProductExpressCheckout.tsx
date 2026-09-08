@@ -1,17 +1,22 @@
-import { useMemo, useCallback, useState, useEffect, useRef } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { loadStripe, type Stripe, type PaymentRequest } from "@stripe/stripe-js"
 import { Elements, PaymentRequestButtonElement, useStripe } from "@stripe/react-stripe-js"
 import { useNavigate } from "react-router-dom"
 import { STORE_ID, STRIPE_PUBLISHABLE_KEY } from "@/lib/config"
 import { callEdge } from "@/lib/edge"
 import { createCheckoutFromCart } from "@/lib/checkout"
+import { cartToApiItems } from "@/lib/cart-utils"
+import {
+  validateOrderMatchesRequest,
+  checkAuthorizedAmount,
+  resolveIntentChargeCents,
+} from "@/lib/order-validation"
+import { toCents } from "@/lib/money"
 import { useSettings } from "@/contexts/SettingsContext"
-import { useCart } from "@/contexts/CartContext"
 import { useToast } from "@/hooks/use-toast"
 import { trackPurchase, tracking } from "@/lib/tracking-utils"
-import { countryNamesToIsoCodes } from "@/lib/country-codes"
-import type { Product, ProductVariant, SellingPlan } from "@/lib/supabase"
-import type { CartItem } from "@/contexts/CartContext"
+import type { Product, SellingPlan } from "@/lib/supabase"
+import type { CartProductItem } from "@/contexts/CartContext"
 
 /**
  * ProductExpressCheckout (PDP)
@@ -33,10 +38,14 @@ import type { CartItem } from "@/contexts/CartContext"
 
 interface ProductExpressCheckoutProps {
   product: Product
-  variant?: ProductVariant
+  /**
+   * The full PDP selection — one entry per variant. A two-belt pack in two sizes
+   * arrives here as two entries and must be paid for as two entries.
+   */
+  items: CartProductItem[]
   sellingPlan?: SellingPlan | null
-  quantity: number
-  unitPrice: number
+  /** Selection total including the volume discount, excluding shipping. */
+  selectionTotal: number
   disabled?: boolean
   /**
    * Called when Stripe finishes detecting whether a wallet is available.
@@ -45,24 +54,28 @@ interface ProductExpressCheckoutProps {
    * to hide separators / labels when nothing is available.
    */
   onAvailabilityChange?: (available: boolean) => void
+  /** Lets the parent freeze the selection while a wallet purchase is in flight. */
+  onProcessingChange?: (processing: boolean) => void
 }
 
 function PaymentRequestInner({
   product,
-  variant,
+  items,
   sellingPlan,
-  quantity,
-  unitPrice,
+  selectionTotal,
   disabled,
   onAvailabilityChange,
+  onProcessingChange,
 }: ProductExpressCheckoutProps) {
   const stripe = useStripe()
   const navigate = useNavigate()
   const { toast } = useToast()
   const { currencyCode, deliveryExpectations, shippingCoverageV2 } = useSettings()
-  const { clearCart } = useCart()
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null)
   const [processing, setProcessing] = useState(false)
+
+  const hasSelection = Array.isArray(items) && items.length > 0
+  const blocked = Boolean(disabled) || !hasSelection
 
   // Allowed countries (ISO codes) from store shipping coverage
   const allowedCountryCodes = useMemo<string[]>(() => {
@@ -92,13 +105,27 @@ function PaymentRequestInner({
     })
   }, [deliveryExpectations])
 
-  const subtotalCents = Math.max(50, Math.round(unitPrice * quantity * 100))
+  // Prices the whole selection, not just the first variant.
+  const subtotalCents = Math.max(50, toCents(selectionTotal))
   const defaultShipCents = walletShippingOptions[0]?.amount ?? 0
   const totalCents = subtotalCents + defaultShipCents
 
+  /**
+   * The exact amount currently displayed in the wallet sheet. Confirming any
+   * other number would charge money the shopper never approved, so every
+   * comparison below is against this.
+   */
+  const authorizedTotalRef = useRef(totalCents)
+  useEffect(() => { authorizedTotalRef.current = totalCents }, [totalCents])
+
+  // One purchase at a time: wallets can fire `paymentmethod` more than once.
+  const inFlightRef = useRef(false)
+
+  useEffect(() => { onProcessingChange?.(processing) }, [processing, onProcessingChange])
+
   // Initialize PaymentRequest and check wallet availability
   useEffect(() => {
-    if (!stripe || disabled) return
+    if (!stripe || blocked) return
 
     const pr = stripe.paymentRequest({
       country: 'MX',
@@ -121,8 +148,6 @@ function PaymentRequestInner({
     let cancelled = false
     pr.canMakePayment().then((result) => {
       if (cancelled) return
-      // DEBUG: log lo que Stripe reporta para este device/browser
-      console.log('[PDP ExpressCheckout] canMakePayment result:', result)
       // Solo montamos el botón si hay un wallet REAL autenticado en el device
       // (Apple Pay con tarjeta guardada o Google Pay con tarjeta guardada).
       // Ignoramos Link a propósito: Stripe lo reporta como disponible incluso
@@ -130,7 +155,6 @@ function PaymentRequestInner({
       // email + tarjeta sobre la marcha. En PDP eso es ruido visual y diluye
       // el CTA principal. Los users con Link logueado igual lo verán en /pagar.
       const hasRealWallet = !!(result?.applePay || result?.googlePay)
-      console.log('[PDP ExpressCheckout] hasRealWallet:', hasRealWallet, '→', hasRealWallet ? 'mostrando botón' : 'ocultando botón')
       if (hasRealWallet) {
         setPaymentRequest(pr)
         onAvailabilityChange?.(true)
@@ -149,9 +173,9 @@ function PaymentRequestInner({
     return () => {
       cancelled = true
     }
-  }, [stripe, disabled, currencyCode, product.title, totalCents, subtotalCents, defaultShipCents, walletShippingOptions, onAvailabilityChange])
+  }, [stripe, blocked, currencyCode, product.title, totalCents, subtotalCents, defaultShipCents, walletShippingOptions, onAvailabilityChange])
 
-  // Keep the total in sync if quantity / price changes after init
+  // Keep the total in sync if the selection or its discount changes after init
   useEffect(() => {
     if (!paymentRequest) return
     paymentRequest.update({
@@ -178,6 +202,7 @@ function PaymentRequestInner({
         return
       }
       const firstShip = walletShippingOptions[0]?.amount ?? 0
+      authorizedTotalRef.current = subtotalCents + firstShip
       ev.updateWith({
         status: 'success',
         total: { label: product.title, amount: subtotalCents + firstShip },
@@ -191,6 +216,7 @@ function PaymentRequestInner({
 
     const onShippingOptionChange = (ev: any) => {
       const ship = Number(ev?.shippingOption?.amount || 0)
+      authorizedTotalRef.current = subtotalCents + ship
       ev.updateWith({
         status: 'success',
         total: { label: product.title, amount: subtotalCents + ship },
@@ -213,19 +239,51 @@ function PaymentRequestInner({
   useEffect(() => {
     if (!paymentRequest || !stripe) return
 
+    /** Aborts the wallet sheet and asks the shopper to confirm the new number. */
+    const rejectWithNewTotal = (ev: any, chargeCents: number, currency: string) => {
+      try { ev.complete('fail') } catch {}
+      const newTotal = (chargeCents / 100).toFixed(2)
+      try {
+        paymentRequest.update({
+          total: { label: product.title, amount: chargeCents },
+          displayItems: [{ label: product.title, amount: chargeCents }],
+          shippingOptions: walletShippingOptions,
+        })
+        authorizedTotalRef.current = chargeCents
+      } catch {}
+      toast({
+        title: "Total updated",
+        description: `Your order now totals ${currency.toUpperCase()} $${newTotal}. Tap the wallet button again to confirm the new amount.`,
+        variant: "destructive",
+      })
+    }
+
     const handlePaymentMethod = async (ev: any) => {
+      // Repeated callbacks must not create a second order or a second charge.
+      if (inFlightRef.current) {
+        try { ev.complete('fail') } catch {}
+        return
+      }
+
+      if (!hasSelection) {
+        try { ev.complete('fail') } catch {}
+        toast({
+          title: "Select both sizes",
+          description: "Choose a size for each belt before paying.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      inFlightRef.current = true
+      const currency = (currencyCode || 'mxn').toLowerCase()
+      const authorizedCents = authorizedTotalRef.current
+
       try {
         setProcessing(true)
 
-        // 1. Build a one-item cart from current PDP selection
-        const buyNowItems: CartItem[] = [{
-          key: `${product.id}:${variant?.id || ''}:${sellingPlan?.id || ''}`,
-          type: 'product' as const,
-          product,
-          variant,
-          sellingPlan: sellingPlan || undefined,
-          quantity,
-        }]
+        // 1. The purchase is exactly what the PDP built — every variant, every unit
+        const requestedItems = cartToApiItems(items)
 
         // 2. Extract customer + shipping info from the wallet event
         const payerEmail = ev.payerEmail as string | undefined
@@ -257,7 +315,7 @@ function PaymentRequestInner({
         try { pendingDiscount = sessionStorage.getItem('pendingDiscount') || undefined } catch {}
 
         const order = await createCheckoutFromCart(
-          buyNowItems,
+          items,
           customerInfo,
           pendingDiscount,
           shippingAddress,
@@ -266,18 +324,46 @@ function PaymentRequestInner({
           currencyCode,
         )
 
+        // 4. The order must be the pack that was selected — not a partial one
+        const match = validateOrderMatchesRequest(
+          requestedItems,
+          order.order,
+          order.unavailable_items as any[]
+        )
+        if (!match.valid) {
+          try { ev.complete('fail') } catch {}
+          toast({
+            title: match.title || "Your order changed",
+            description: match.message || "Review your sizes and try again.",
+            variant: "destructive",
+          })
+          return
+        }
+
         const orderId = order.order_id
         const checkoutToken = order.checkout_token
-        const totalAmount = (order.order?.total_amount ?? unitPrice * quantity)
-        const orderTotalCents = Math.max(50, Math.round(totalAmount * 100))
+        const orderTotalCents = Math.max(50, toCents(order.order?.total_amount ?? selectionTotal))
 
-        // 4. Create PaymentIntent
+        // 5. The persisted order total is what gets charged — if it is not what
+        //    the wallet sheet showed, ask again instead of charging quietly.
+        const orderAmountCheck = checkAuthorizedAmount({
+          authorizedCents,
+          chargeCents: orderTotalCents,
+          authorizedCurrency: currency,
+          chargeCurrency: (order.order?.currency_code || currency),
+        })
+        if (!orderAmountCheck.matches) {
+          rejectWithNewTotal(ev, orderTotalCents, currency)
+          return
+        }
+
+        // 6. Create PaymentIntent — validation_data carries every selected variant
         const intentPayload = {
           store_id: STORE_ID,
           order_id: orderId,
           checkout_token: checkoutToken,
           amount: orderTotalCents,
-          currency: (currencyCode || 'mxn').toLowerCase(),
+          currency,
           expected_total: orderTotalCents,
           delivery_fee: order.order?.shipping_amount ? Math.round((order.order.shipping_amount as number) * 100) : 0,
           description: `Pedido #${orderId}`,
@@ -310,23 +396,37 @@ function PaymentRequestInner({
               country: shippingAddress.country,
               name: `${shippingAddress.first_name} ${shippingAddress.last_name}`.trim(),
             } : null,
-            items: [{
-              product_id: product.id,
-              quantity,
-              ...(variant?.id ? { variant_id: variant.id } : {}),
-              price: Math.round(unitPrice * 100),
-            }],
+            items: items.map((item) => ({
+              product_id: item.product.id,
+              quantity: item.quantity,
+              ...(item.variant?.id ? { variant_id: item.variant.id } : {}),
+              // Per-unit catalog price in cents, as the current contract expects.
+              price: toCents((item.variant?.price ?? item.product.price) || 0),
+            })),
           },
         }
 
         const intentData = await callEdge("payments-create-intent", intentPayload)
         const clientSecret = intentData?.client_secret
         if (!clientSecret) {
-          ev.complete('fail')
+          try { ev.complete('fail') } catch {}
           throw new Error("No se recibió client_secret")
         }
 
-        // 5. Confirm the PaymentIntent with the wallet's PaymentMethod (do not redirect yet)
+        // 7. Same check against the intent's own amount, not just our local math
+        const intentChargeCents = resolveIntentChargeCents(intentData, orderTotalCents)
+        const intentAmountCheck = checkAuthorizedAmount({
+          authorizedCents,
+          chargeCents: intentChargeCents,
+          authorizedCurrency: currency,
+          chargeCurrency: (intentData?.currency || currency),
+        })
+        if (!intentAmountCheck.matches) {
+          rejectWithNewTotal(ev, intentChargeCents, currency)
+          return
+        }
+
+        // 8. Confirm the PaymentIntent with the wallet's PaymentMethod (do not redirect yet)
         const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(
           clientSecret,
           { payment_method: ev.paymentMethod.id },
@@ -334,7 +434,7 @@ function PaymentRequestInner({
         )
 
         if (confirmError) {
-          ev.complete('fail')
+          try { ev.complete('fail') } catch {}
           toast({
             title: "Error de pago",
             description: confirmError.message || "No se pudo procesar el pago",
@@ -369,17 +469,22 @@ function PaymentRequestInner({
           if (!alreadyTracked) {
             try { sessionStorage.setItem(ptKey, '1') } catch {}
             trackPurchase({
-              products: [tracking.createTrackingProduct({
+              // Two belts report two units and the amount actually paid.
+              products: items.map((item) => tracking.createTrackingProduct({
                 id: product.id,
                 title: product.title,
-                price: unitPrice,
+                price: (item.variant?.price ?? product.price) || 0,
                 category: 'product',
-                variant,
-              })],
-              value: totalAmount,
+                variant: item.variant,
+              })),
+              value: intentChargeCents / 100,
               currency: tracking.getCurrencyFromSettings(currencyCode),
               order_id: orderId,
-              custom_parameters: { payment_method: 'payment_request_button', checkout_token: checkoutToken },
+              custom_parameters: {
+                payment_method: 'payment_request_button',
+                checkout_token: checkoutToken,
+                num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+              },
             })
           }
 
@@ -392,7 +497,8 @@ function PaymentRequestInner({
             }
           } catch {}
 
-          clearCart()
+          // No clearCart(): this is a direct PDP purchase, whatever else the
+          // shopper had in their cart is not part of it.
           navigate(`/gracias/${orderId}`)
           toast({ title: "¡Pago exitoso!", description: "Tu compra ha sido procesada correctamente." })
         } else {
@@ -418,6 +524,7 @@ function PaymentRequestInner({
           })
         }
       } finally {
+        inFlightRef.current = false
         setProcessing(false)
       }
     }
@@ -426,9 +533,9 @@ function PaymentRequestInner({
     return () => {
       paymentRequest.off('paymentmethod', handlePaymentMethod)
     }
-  }, [paymentRequest, stripe, product, variant, sellingPlan, quantity, unitPrice, currencyCode, clearCart, navigate, toast])
+  }, [paymentRequest, stripe, product, items, hasSelection, selectionTotal, currencyCode, walletShippingOptions, navigate, toast])
 
-  if (disabled || !paymentRequest) return null
+  if (blocked || !paymentRequest) return null
 
   return (
     <div className="relative">

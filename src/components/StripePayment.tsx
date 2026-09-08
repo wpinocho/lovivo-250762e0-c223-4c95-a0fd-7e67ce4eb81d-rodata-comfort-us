@@ -76,6 +76,12 @@ interface StripePaymentProps {
   addressElementComplete?: boolean
   shippingError?: string | null
   onLinkAuthChange?: (authenticated: boolean) => void
+  /**
+   * True while a checkout-update (items, quantities, coupon, shipping) is still
+   * in flight. Paying now would authorise a total that belongs to the previous
+   * composition of the order.
+   */
+  checkoutUpdating?: boolean
 }
 
 /** Build Stripe ExpressCheckoutElement shippingRates from store deliveryExpectations */
@@ -124,6 +130,7 @@ function PaymentForm({
   addressElementComplete = false,
   shippingError,
   onLinkAuthChange,
+  checkoutUpdating = false,
 }: StripePaymentProps) {
   const stripe = useStripe()
   const elements = useElements()
@@ -312,11 +319,23 @@ function PaymentForm({
     return false
   }
 
+  /** Blocks paying an amount that belongs to a composition the order already left behind. */
+  const blockedByPendingUpdate = () => {
+    if (!checkoutUpdating) return false
+    toast({
+      title: "Updating your order",
+      description: "Hold on a second while we finish updating your order total.",
+    })
+    return true
+  }
+
   const handlePayment = async () => {
     if (!stripe || !elements) {
       toast({ title: "Error", description: "Stripe is not ready yet", variant: "destructive" })
       return
     }
+
+    if (blockedByPendingUpdate()) return
 
     if (onValidationRequired && !onValidationRequired()) {
       scrollToFirstInvalid()
@@ -559,6 +578,14 @@ function PaymentForm({
 
   const handleExpressCheckoutConfirm = useCallback(async (ev?: any) => {
     if (!stripe || !elements) return
+    if (checkoutUpdating) {
+      toast({
+        title: "Updating your order",
+        description: "Your order total is still updating. Try the wallet again in a moment.",
+        variant: "destructive",
+      })
+      return
+    }
     try {
       setLoading(true)
       trackCheckoutEvent('checkout_pay_clicked', {
@@ -741,7 +768,7 @@ function PaymentForm({
     } finally {
       setLoading(false)
     }
-  }, [stripe, elements, amountCents, orderId, email, name, phone, shippingAddress, billingAddress, deliveryFee, navigate, clearCart])
+  }, [stripe, elements, amountCents, orderId, email, name, phone, shippingAddress, billingAddress, deliveryFee, navigate, clearCart, checkoutUpdating])
 
   const handleExpressShippingAddressChange = useCallback(async (ev: any) => {
     try {
@@ -994,7 +1021,7 @@ function PaymentForm({
       <Button
         ref={ctaRef}
         onClick={() => { payMethodSource.current = 'payment_element'; handlePayment() }}
-        disabled={!stripe || loading || !amountCents || !!shippingError}
+        disabled={!stripe || loading || checkoutUpdating || !amountCents || !!shippingError}
         className="w-full h-14 flex flex-col items-center justify-center gap-0.5"
         size="lg"
       >
@@ -1053,7 +1080,7 @@ function PaymentForm({
             </div>
             <Button
               onClick={() => { payMethodSource.current = 'sticky_bar'; handlePayment() }}
-              disabled={!stripe || loading || !amountCents || !!shippingError}
+              disabled={!stripe || loading || checkoutUpdating || !amountCents || !!shippingError}
               className="h-12 flex-1"
             >
               {loading ? "Processing..." : "Complete Purchase"}

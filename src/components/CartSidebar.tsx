@@ -16,7 +16,7 @@ import { STORE_ID } from "@/lib/config"
 import { validateDiscount, type Discount } from "@/lib/discount-utils"
 import { intervalLabel, calcSubscriptionPrice } from "@/lib/subscription-utils"
 import { usePriceRules } from "@/hooks/usePriceRules"
-import { calcItemUnitPrice } from "@/lib/price-rule-utils"
+import { priceCartItems } from "@/lib/cart-pricing"
 import { BOGOGiftBanner } from "@/components/ui/BOGOGiftBanner"
 
 interface CartSidebarProps {
@@ -30,7 +30,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { checkout, isLoading: isCreatingOrder } = useCheckout()
   const { currencyCode, formatMoney } = useSettings()
   const { toast } = useToast()
-  const { getVolumeRulesForProduct, getBogoRulesForProduct, priceRules } = usePriceRules()
+  const { priceRules } = usePriceRules()
 
   // Discount state
   const [couponCode, setCouponCode] = useState("")
@@ -99,27 +99,21 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
     }
   }
 
-  // Calculate adjusted total with volume + bogo discounts
-  const adjustedTotal = useMemo(() => {
-    let total = 0
-    for (const item of state.items) {
-      if (item.type === 'bundle') {
-        total += item.bundle.bundle_price * item.quantity
-      } else {
-        if ((item as CartProductItem).isBogoGift) continue
-        const basePrice = (item.variant?.price ?? item.product.price) || 0
-        const volumeRules = getVolumeRulesForProduct(item.product.id)
-        const bogoRules = getBogoRulesForProduct(item.product.id)
-        const sp = (item as CartProductItem).sellingPlan || null
-        const { unitPrice } = calcItemUnitPrice(basePrice, item.quantity, volumeRules, sp, calcSubscriptionPrice, bogoRules)
-        total += unitPrice * item.quantity
-      }
-    }
-    return total
-  }, [state.items, getVolumeRulesForProduct, getBogoRulesForProduct])
-
+  const volumeRules = useMemo(() => priceRules.filter(r => r.rule_type === 'volume'), [priceRules])
   const bogoRules = useMemo(() => priceRules.filter(r => r.rule_type === 'bogo'), [priceRules])
 
+  // Same calculation the cart page uses, so line prices, savings labels and the
+  // total can never disagree between the two views.
+  const cartPricing = useMemo(
+    () => priceCartItems(state.items, {
+      volumeRules,
+      bogoRules,
+      calcSubscriptionPriceFn: calcSubscriptionPrice,
+    }),
+    [state.items, volumeRules, bogoRules]
+  )
+
+  const adjustedTotal = cartPricing.total
   const finalTotal = adjustedTotal
 
   return (
@@ -267,16 +261,13 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                   </div>
                                   <div className="text-right">
                                     {(() => {
-                                      const basePrice = (item.variant?.price ?? item.product.price) || 0
-                                      const volumeRules = getVolumeRulesForProduct(item.product.id)
-                                      const bogoRulesForItem = getBogoRulesForProduct(item.product.id)
-                                      const sp = (item as CartProductItem).sellingPlan || null
-                                      const { unitPrice, volumeDiscount, bogoDiscount } = calcItemUnitPrice(basePrice, item.quantity, volumeRules, sp, calcSubscriptionPrice, bogoRulesForItem)
-                                      const activeDiscount = volumeDiscount || bogoDiscount
+                                      const priced = cartPricing.lines.get(item.key)
+                                      const lineTotal = priced?.lineTotal ?? ((item.variant?.price ?? item.product.price) || 0) * item.quantity
+                                      const activeDiscount = priced?.volumeDiscount || priced?.bogoDiscount
                                       return (
                                         <>
                                           <div className="font-semibold text-sm" style={{ color: '#C9840A' }}>
-                                            {formatMoney(unitPrice * item.quantity)}
+                                            {formatMoney(lineTotal)}
                                           </div>
                                           {activeDiscount && (
                                             <>

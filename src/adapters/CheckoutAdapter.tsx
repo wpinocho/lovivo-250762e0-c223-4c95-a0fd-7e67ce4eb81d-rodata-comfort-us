@@ -36,6 +36,7 @@ export const useCheckoutLogic = () => {
     updateBillingAddress,
     updateDiscountCode,
     updateStates,
+    isUpdatingCheckout,
     appliedRules,
     backendDiscountAmount
   } = useCheckout();
@@ -108,6 +109,9 @@ export const useCheckoutLogic = () => {
   // Loading states for shipping and total calculations
   const isCalculatingShipping = updateStates.updating_address || updatingItems.size > 0;
   const isCalculatingTotal = updateStates.updating_address || updatingItems.size > 0;
+  // Any in-flight change to items, coupon, address or notes leaves the total
+  // provisional — paying against it would authorise a stale composition.
+  const isCheckoutUpdating = isUpdatingCheckout || updatingItems.size > 0;
 
   // Update shipping from order items updates
   useEffect(() => {
@@ -703,6 +707,7 @@ export const useCheckoutLogic = () => {
     backendDiscountAmount,
     isCalculatingShipping,
     isCalculatingTotal,
+    isCheckoutUpdating,
     canPay,
     requiresDeliveryMethod,
     

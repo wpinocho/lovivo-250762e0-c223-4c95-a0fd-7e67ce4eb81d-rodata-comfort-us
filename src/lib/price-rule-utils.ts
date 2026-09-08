@@ -7,14 +7,42 @@ export interface VolumeDiscountResult {
 }
 
 /**
+ * Resolves how many units count towards a rule's tiers. A two-belt pack in sizes
+ * M and L sits on two cart lines of one unit each, but the backend adds up every
+ * unit inside the rule's scope — so tier eligibility must be asked per rule, not
+ * read off the line.
+ */
+export type EligibleQuantityResolver = (rule: PriceRule) => number
+
+/** True when the rule's scope covers this product. Mirrors usePriceRules filtering. */
+export function ruleAppliesToProduct(
+  rule: PriceRule,
+  productId: string,
+  collectionIds?: string[]
+): boolean {
+  if (!rule) return false
+  if (rule.applies_to === 'all') return true
+  if (rule.applies_to === 'specific_products') return !!rule.product_ids?.includes(productId)
+  if (rule.applies_to === 'specific_collections') {
+    return !!(collectionIds && rule.collection_ids?.some(cid => collectionIds.includes(cid)))
+  }
+  return false
+}
+
+/**
  * Calcula el descuento de volumen aplicable para un producto dado su precio base,
  * cantidad en el carrito y las reglas de volumen que le aplican.
  * Retorna null si no aplica ningún descuento.
+ *
+ * `eligibleQuantityFor` decide cuántas unidades activan los tiers de cada regla
+ * (por defecto, la cantidad del renglón). El precio resultante siempre se aplica
+ * a `quantity` unidades de este renglón.
  */
 export function calcVolumeDiscount(
   basePrice: number,
   quantity: number,
-  volumeRules: PriceRule[]
+  volumeRules: PriceRule[],
+  eligibleQuantityFor?: EligibleQuantityResolver
 ): VolumeDiscountResult | null {
   if (!volumeRules.length || quantity < 1) return null
 
@@ -25,6 +53,11 @@ export function calcVolumeDiscount(
     const conditions = rule.conditions as any
     if (!conditions?.tiers?.length) continue
 
+    const eligibleQuantity = Math.max(
+      quantity,
+      eligibleQuantityFor ? (eligibleQuantityFor(rule) || 0) : quantity
+    )
+
     const discountType = conditions.discount_type || 'percentage'
     const tierMode = conditions.tier_mode || 'flat'
     const sortedTiers = (conditions.tiers as any[])
@@ -32,11 +65,13 @@ export function calcVolumeDiscount(
       .sort((a: any, b: any) => (a.min_quantity || 0) - (b.min_quantity || 0))
 
     if (tierMode === 'graduated') {
-      // Graduated: each unit gets the discount of its tier bracket
+      // Graduated: each unit gets the discount of its tier bracket.
+      // Units are indexed across the whole eligible group, then the resulting
+      // average unit price is what this line pays.
       let totalCost = 0
       let maxDiscountValue = 0
 
-      for (let u = 1; u <= quantity; u++) {
+      for (let u = 1; u <= eligibleQuantity; u++) {
         // Find the highest tier where u >= min_quantity
         let tierForUnit: any = null
         for (const t of sortedTiers) {
@@ -56,8 +91,8 @@ export function calcVolumeDiscount(
         }
       }
 
-      const avgUnitPrice = totalCost / quantity
-      const savings = basePrice * quantity - totalCost
+      const avgUnitPrice = totalCost / eligibleQuantity
+      const savings = (basePrice - avgUnitPrice) * quantity
       if (savings > bestSavings) {
         bestSavings = savings
         const label = discountType === 'percentage'
@@ -72,7 +107,7 @@ export function calcVolumeDiscount(
     } else {
       // Flat: single tier applies to all units
       const applicableTiers = sortedTiers
-        .filter((t: any) => quantity >= (t.min_quantity || 0))
+        .filter((t: any) => eligibleQuantity >= (t.min_quantity || 0))
         .sort((a: any, b: any) => (b.min_quantity || 0) - (a.min_quantity || 0))
 
       const tier = applicableTiers[0]
@@ -164,14 +199,15 @@ export function calcItemUnitPrice(
   volumeRules: PriceRule[],
   sellingPlan?: any,
   calcSubscriptionPriceFn?: (price: number, plan: any) => number,
-  bogoRules?: PriceRule[]
+  bogoRules?: PriceRule[],
+  eligibleQuantityFor?: EligibleQuantityResolver
 ): { unitPrice: number; volumeDiscount: VolumeDiscountResult | null; bogoDiscount: BogoDiscountResult | null } {
   let price = basePrice
   if (sellingPlan && calcSubscriptionPriceFn) {
     price = calcSubscriptionPriceFn(basePrice, sellingPlan)
   }
 
-  const volumeDiscount = calcVolumeDiscount(price, quantity, volumeRules)
+  const volumeDiscount = calcVolumeDiscount(price, quantity, volumeRules, eligibleQuantityFor)
   const bogoDiscount = bogoRules ? calcBogoDiscount(price, quantity, bogoRules) : null
 
   // Pick the best discount

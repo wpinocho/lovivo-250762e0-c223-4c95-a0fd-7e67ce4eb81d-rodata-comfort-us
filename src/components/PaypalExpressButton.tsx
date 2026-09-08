@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { useSettings } from '@/contexts/SettingsContext'
 import { callEdge } from '@/lib/edge'
@@ -17,6 +17,8 @@ interface PaypalExpressButtonProps {
   shippingCost: number
   className?: string    // outer wrapper className
   showDivider?: boolean // show "or pay with" label above (default true)
+  /** True while a checkout-update is still in flight — the total is not final yet. */
+  disabled?: boolean
 }
 
 export function PaypalExpressButton({
@@ -28,10 +30,14 @@ export function PaypalExpressButton({
   shippingCost,
   className,
   showDivider = true,
+  disabled = false,
 }: PaypalExpressButtonProps) {
   const { paypalEnabled, paypalClientId, paypalEnvironment } = useSettings()
   const { toast } = useToast()
   const navigate = useNavigate()
+  // One approval at a time: repeated onApprove callbacks must not capture twice.
+  const captureInFlight = useRef(false)
+  const capturedOrders = useRef<Set<string>>(new Set())
 
   console.log('[PayPal Button] paypalEnabled:', paypalEnabled, '| paypalClientId:', paypalClientId ? paypalClientId.slice(0,12)+'...' : null, '| checkoutToken:', !!checkoutToken)
 
@@ -69,7 +75,11 @@ export function PaypalExpressButton({
         <PayPalButtons
           style={{ layout: 'horizontal', height: 45, tagline: false, color: 'gold' }}
           fundingSource="paypal"
+          disabled={disabled}
           createOrder={async () => {
+            if (disabled) {
+              throw new Error('Your order total is still updating. Try again in a moment.')
+            }
             // PayPal Express: no form validation needed — PayPal collects
             // the buyer's shipping address inside the PayPal popup.
             const attribution = getAttributionPayload();
@@ -100,6 +110,8 @@ export function PaypalExpressButton({
             }
           }}
           onApprove={async (data) => {
+            if (captureInFlight.current || capturedOrders.current.has(data.orderID)) return
+            captureInFlight.current = true
             try {
               const attribution = getAttributionPayload();
               const res = await callEdge('paypal-capture-order', {
@@ -111,6 +123,7 @@ export function PaypalExpressButton({
               if (!res?.ok || res?.status !== 'COMPLETED') {
                 throw new Error(res?.error || 'Payment not completed')
               }
+              capturedOrders.current.add(data.orderID)
 
               // Build a fallback order object from local props in case res.order is null
               const internalOrderId = res.order?.id || res.order_id
@@ -174,6 +187,8 @@ export function PaypalExpressButton({
                 description: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
                 variant: 'destructive',
               })
+            } finally {
+              captureInFlight.current = false
             }
           }}
           onError={(err: unknown) => {

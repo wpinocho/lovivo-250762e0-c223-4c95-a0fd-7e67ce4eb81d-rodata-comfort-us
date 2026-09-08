@@ -5,6 +5,7 @@ import { useSettings } from '@/contexts/SettingsContext'
 import { createCheckoutFromCart, createSampleOrder, updateCheckout, type CheckoutUpdatePayload } from '@/lib/checkout'
 import { getAttributionPayload } from '@/lib/tracking-utils'
 import { cartToApiItems } from '@/lib/cart-utils'
+import { validateOrderMatchesRequest, type OrderValidationResult } from '@/lib/order-validation'
 import { useToast } from '@/hooks/use-toast'
 import { logger } from '@/lib/logger'
 import { useCheckoutState } from './useCheckoutState'
@@ -48,9 +49,36 @@ export const useCheckout = () => {
   const notesTimerRef = useRef<NodeJS.Timeout | null>(null)
   const itemsTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  /**
+   * Refuses to treat a partially-fulfilled order as a valid checkout.
+   * Runs before the checkout state is stored, before the cart is emptied and
+   * before any payment step, so a two-belt pack can never continue as one belt.
+   */
+  const assertOrderMatchesRequest = (requestedItems: any[], order: CheckoutResponse) => {
+    const result: OrderValidationResult = validateOrderMatchesRequest(
+      requestedItems,
+      order.order,
+      order.unavailable_items as any[]
+    )
+    if (!result.valid) {
+      toast({
+        title: result.title || 'Your order changed',
+        description: result.message || 'Review your selection and try again.',
+        variant: 'destructive',
+      })
+      logger.error('Order does not match the requested selection', result)
+      const error = new Error(result.message || 'Order does not match the requested selection')
+      ;(error as any).code = result.code
+      ;(error as any).validation = result
+      throw error
+    }
+  }
+
   const checkout = async (options: CheckoutOptions = {}): Promise<CheckoutResponse> => {
     setIsLoading(true)
     try {
+      const requestedItems = cartToApiItems(cart.items)
+
       const order = await createCheckoutFromCart(
         cart.items,
         options.customerInfo,
@@ -61,6 +89,8 @@ export const useCheckout = () => {
         options.currencyCode || currencyCode,
         getAttributionPayload()
       )
+
+      assertOrderMatchesRequest(requestedItems, order)
 
       // Guardar estado de checkout con la orden completa
       saveCheckoutState({
@@ -74,22 +104,6 @@ export const useCheckout = () => {
       console.log('Checkout state saved with order:', order.order)
 
       setLastOrder(order)
-      
-      // Handle unavailable items notification
-      if (order.unavailable_items && order.unavailable_items.length > 0) {
-        const unavailableCount = order.unavailable_items.length
-        const itemText = unavailableCount === 1 ? 'item' : 'items'
-        toast({
-          title: "Items out of stock",
-          description: `${unavailableCount} ${itemText} removed from your order due to insufficient stock`,
-          variant: "destructive",
-        })
-        
-        // Auto dismiss after 3 seconds
-        setTimeout(() => {
-          // Toast will auto-dismiss based on shadcn default behavior
-        }, 3000)
-      }
 
       // Limpiar carrito después de crear la orden
       clearCart()
@@ -97,7 +111,10 @@ export const useCheckout = () => {
       return order
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      
+
+      // assertOrderMatchesRequest already surfaced a precise message
+      if ((error as any)?.validation) throw error
+
       // Si el error es de productos inexistentes, limpiar carrito
       if (errorMessage.includes("don't exist") || errorMessage.includes("not active")) {
         clearCart()
@@ -125,6 +142,8 @@ export const useCheckout = () => {
     try {
       if (items.length === 0) throw new Error('El carrito está vacío')
 
+      const requestedItems = cartToApiItems(items)
+
       const order = await createCheckoutFromCart(
         items,
         options.customerInfo,
@@ -135,6 +154,8 @@ export const useCheckout = () => {
         options.currencyCode || currencyCode,
         getAttributionPayload()
       )
+
+      assertOrderMatchesRequest(requestedItems, order)
 
       // Guardar en localStorage para que /pagar encuentre orderId y checkoutToken
       saveCheckoutState({
@@ -147,19 +168,12 @@ export const useCheckout = () => {
 
       setLastOrder(order)
 
-      if (order.unavailable_items && order.unavailable_items.length > 0) {
-        toast({
-          title: "Items out of stock",
-          description: `${order.unavailable_items.length} item(s) removed from your order due to insufficient stock`,
-          variant: "destructive",
-        })
-      }
-
       // NO clearCart() — Buy Now no agrega al carrito real,
       // otros productos en carrito deben permanecer
       return order
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      if ((error as any)?.validation) throw error
       if (errorMessage.includes("don't exist") || errorMessage.includes("not active")) {
         clearCart()
         toast({ title: "Carrito desactualizado", description: "Los productos ya no están disponibles." })
@@ -581,6 +595,13 @@ export const useCheckout = () => {
     isLoading,
     isUpdating,
     updateStates,
+    // True mientras haya una actualización de checkout en vuelo: pagar con un
+    // total anterior cobraría una composición que ya cambió.
+    isUpdatingCheckout:
+      updateStates.updating_items ||
+      updateStates.updating_address ||
+      updateStates.updating_discount ||
+      updateStates.updating_notes,
     
     // Funciones de actualización
     updateItems,

@@ -9,8 +9,7 @@ import { callEdgeFetch } from "@/lib/edge"
 import { STORE_ID } from "@/lib/config"
 import { validateDiscount, type Discount } from "@/lib/discount-utils"
 import { usePriceRules } from "@/hooks/usePriceRules"
-import { calcItemUnitPrice } from "@/lib/price-rule-utils"
-import type { BogoDiscountResult } from "@/lib/price-rule-utils"
+import { priceCartItems } from "@/lib/cart-pricing"
 import { calcSubscriptionPrice } from "@/lib/subscription-utils"
 import type { BogoConditions } from "@/lib/supabase"
 
@@ -20,28 +19,47 @@ export const useCartLogic = () => {
   const { checkout, isLoading: isCreatingOrder } = useCheckout()
   const { currencyCode } = useSettings()
   const { toast } = useToast()
-  const { getVolumeRulesForProduct, getBogoRulesForProduct, priceRules } = usePriceRules()
+  const { priceRules } = usePriceRules()
+
+  const volumeRules = useMemo(() => priceRules.filter(r => r.rule_type === 'volume'), [priceRules])
+  const allBogoRules = useMemo(() => priceRules.filter(r => r.rule_type === 'bogo'), [priceRules])
+
+  /**
+   * Single source of truth for line prices and the cart total. Volume tiers are
+   * resolved against every eligible unit in scope, so an M and an L reach the
+   * two-unit tier together instead of each line asking on its own.
+   */
+  const cartPricing = useMemo(
+    () => priceCartItems(state.items, {
+      volumeRules,
+      bogoRules: allBogoRules,
+      calcSubscriptionPriceFn: calcSubscriptionPrice,
+    }),
+    [state.items, volumeRules, allBogoRules]
+  )
 
   const getItemVolumeDiscount = useCallback((item: any) => {
-    if (item.type === 'bundle') {
-      return { unitPrice: item.bundle.bundle_price, volumeDiscount: null, bogoDiscount: null }
+    const line = cartPricing.lines.get(item.key)
+    if (line) {
+      return {
+        unitPrice: line.unitPrice,
+        lineTotal: line.lineTotal,
+        volumeDiscount: line.volumeDiscount,
+        bogoDiscount: line.bogoDiscount,
+      }
     }
-    const basePrice = (item.variant?.price ?? item.product.price) || 0
-    const volumeRules = getVolumeRulesForProduct(item.product.id)
-    const bogoRules = getBogoRulesForProduct(item.product.id)
-    const sp = (item as CartProductItem).sellingPlan || null
-    return calcItemUnitPrice(basePrice, item.quantity, volumeRules, sp, calcSubscriptionPrice, bogoRules)
-  }, [getVolumeRulesForProduct, getBogoRulesForProduct])
+    const fallbackPrice = item.type === 'bundle'
+      ? item.bundle.bundle_price
+      : (item.variant?.price ?? item.product?.price) || 0
+    return {
+      unitPrice: fallbackPrice,
+      lineTotal: fallbackPrice * item.quantity,
+      volumeDiscount: null,
+      bogoDiscount: null,
+    }
+  }, [cartPricing])
 
-  const adjustedTotal = useMemo(() => {
-    let total = 0
-    for (const item of state.items) {
-      if (item.type === 'product' && (item as CartProductItem).isBogoGift) continue
-      const { unitPrice } = getItemVolumeDiscount(item)
-      total += unitPrice * item.quantity
-    }
-    return total
-  }, [state.items, getItemVolumeDiscount])
+  const adjustedTotal = cartPricing.total
 
   // Discount state
   const [couponCode, setCouponCode] = useState("")
@@ -108,7 +126,7 @@ export const useCartLogic = () => {
       console.error('Error in handleCreateCheckout:', error)
     }
   }
-  const bogoRules = useMemo(() => priceRules.filter(r => r.rule_type === 'bogo'), [priceRules])
+  const bogoRules = allBogoRules
 
   // Auto-remove orphaned BOGO gift items
   useEffect(() => {
@@ -168,6 +186,8 @@ export const useCartLogic = () => {
     removeCoupon,
     // Volume & BOGO
     adjustedTotal,
+    cartBaseTotal: cartPricing.baseTotal,
+    cartSavings: cartPricing.savings,
     getItemVolumeDiscount,
     bogoRules,
   }
