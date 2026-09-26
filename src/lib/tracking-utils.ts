@@ -91,11 +91,15 @@ class TrackingUtility {
     };
   }
 
-  // Generate deterministic event ID for deduplication.
-  // When a stableId is provided (e.g. order_id, product_id) the resulting ID
-  // is always the same for the same (event, resource) pair, so Meta/CAPI
-  // correctly deduplicates re-fires (Stripe 3DS return, double-click, etc.).
-  // PageView intentionally never passes a stableId so every page visit counts.
+  // Generate the event ID shared by Browser Pixel + CAPI + PostHog for ONE
+  // occurrence of an event.
+  // - No stableId → fresh random UUID. This is the default: every real
+  //   occurrence must get its own ID.
+  // - stableId → deterministic `${event}_${stableId}`. ONLY pass a key that
+  //   identifies a single business occurrence (e.g. order_id for Purchase), so
+  //   re-fires of that same occurrence (3DS return, thank-you reload) dedupe.
+  //   NEVER pass product_id, search query, etc. — those are shared across
+  //   users/occurrences and would make Meta drop real events as duplicates.
   private generateEventId(eventName: string = 'evt', stableId?: string): string {
     const ev = eventName.toLowerCase();
     if (stableId && String(stableId).length > 0) {
@@ -213,7 +217,8 @@ class TrackingUtility {
         content_category
       };
 
-      this.trackHybrid('ViewContent', browserParams, customData, products?.[0]?.id);
+      // No stableId: every view is a distinct occurrence → fresh UUID.
+      this.trackHybrid('ViewContent', browserParams, customData);
     } catch (error) {
       this.logError('ViewContent', error);
     }
@@ -244,7 +249,8 @@ class TrackingUtility {
         num_items: params.num_items || products.length
       };
 
-      this.trackHybrid('AddToCart', browserParams, customData, products?.[0]?.id);
+      // No stableId: every add-to-cart is a distinct occurrence → fresh UUID.
+      this.trackHybrid('AddToCart', browserParams, customData);
     } catch (error) {
       this.logError('AddToCart', error);
     }
@@ -279,8 +285,9 @@ class TrackingUtility {
         num_items: browserParams.num_items
       };
 
-      const icStableId = params.order_id || products?.[0]?.id;
-      this.trackHybrid('InitiateCheckout', browserParams, customData, icStableId);
+      // order_id (when present) identifies one real checkout → dedupe re-fires.
+      // No product_id fallback: when undefined, a fresh UUID is generated.
+      this.trackHybrid('InitiateCheckout', browserParams, customData, params.order_id);
     } catch (error) {
       this.logError('InitiateCheckout', error);
     }
@@ -330,7 +337,8 @@ class TrackingUtility {
         return;
       }
 
-      const eventId = this.generateEventId('Search', search_string?.trim().toLowerCase());
+      // No stableId: two searches for the same text are two real events.
+      const eventId = this.generateEventId('Search');
       const browserParams = {
         search_string: search_string.trim(),
         ...(products && products.length > 0 && {
